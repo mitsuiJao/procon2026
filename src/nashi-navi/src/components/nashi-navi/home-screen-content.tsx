@@ -2,13 +2,14 @@ import React from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 import { styles } from "@/components/nashi-navi/styles";
-import type { DayEntry, HistoryItem, TodayWeather, WeatherByDate } from "@/components/nashi-navi/types";
+import type { DayEntry, DiseaseRisk, HistoryItem, TodayWeather, WeatherByDate } from "@/components/nashi-navi/types";
 
 type HomeScreenContentProps = {
   y: number;
   m: number;
   todayStr: string;
   todayWeather: TodayWeather | null;
+  activeRisks: DiseaseRisk[];
   monthData: Record<string, DayEntry>;
   weatherByDate: WeatherByDate;
   historyItems: HistoryItem[];
@@ -21,6 +22,7 @@ type HomeScreenContentProps = {
   dateKeyOf: (year: number, month: number, day: number) => string;
   changeMonth: (delta: number) => void;
   openDay: (day: number) => void;
+  onPressRisk: (risk: DiseaseRisk) => void;
 };
 
 export function HomeScreenContent({
@@ -28,6 +30,7 @@ export function HomeScreenContent({
   m,
   todayStr,
   todayWeather,
+  activeRisks,
   monthData,
   weatherByDate,
   historyItems,
@@ -40,13 +43,14 @@ export function HomeScreenContent({
   dateKeyOf,
   changeMonth,
   openDay,
+  onPressRisk,
 }: HomeScreenContentProps) {
   return (
     <ScrollView contentContainerStyle={styles.wrap}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.title}>梨ナビ</Text>
-          <Text style={styles.subtitle}>梨園の栽培日誌</Text>
+          <Text style={styles.title}>ワイングレープロテクト</Text>
+          <Text style={styles.subtitle}>圃場の栽培日誌</Text>
         </View>
         <View style={styles.weatherMini}>
           {todayWeather ? (
@@ -62,6 +66,27 @@ export function HomeScreenContent({
           )}
         </View>
       </View>
+
+      {activeRisks.length > 0 && (
+        <View style={styles.warningContainer}>
+          {activeRisks.map((risk) => (
+            <TouchableOpacity
+              key={risk.id}
+              style={styles.warningBanner}
+              onPress={() => onPressRisk(risk)}
+            >
+              <View style={styles.warningBannerInner}>
+                <Text style={styles.warningIcon}>⚠️</Text>
+                <View>
+                  <Text style={styles.warningTitle}>{risk.name} の感染リスク上昇</Text>
+                  <Text style={styles.warningSub}>現在の気象が発病条件と一致しています</Text>
+                </View>
+              </View>
+              <Text style={styles.warningArrow}>›</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
       <View style={styles.monthNav}>
         <TouchableOpacity style={styles.navBtn} onPress={() => changeMonth(-1)}>

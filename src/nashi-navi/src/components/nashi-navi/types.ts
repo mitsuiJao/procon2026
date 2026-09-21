@@ -46,3 +46,23 @@ export type FormState = {
   pestNote: string;
   memo: string;
 };
+
+export type PesticideMasterItem = {
+  name: string;
+  frac: string;
+  dilution: string;
+  max: string;
+  note: string;
+};
+
+export type PesticidesById = Record<string, PesticideMasterItem>;
+
+export type DiseaseRisk = {
+  id: string;
+  name: string;
+  season: number[];
+  checkRisk: (temp: number, humidity: number, code: number) => boolean;
+  triggerText: string;
+  symptom: string;
+  pesticides: string[];
+};

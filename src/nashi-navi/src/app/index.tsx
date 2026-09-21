@@ -3,10 +3,29 @@ import { SafeAreaView } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { DayDetailModal } from "@/components/nashi-navi/day-detail-modal";
+import { DiseaseRiskModal } from "@/components/nashi-navi/disease-risk-modal";
 import { HomeScreenContent } from "@/components/nashi-navi/home-screen-content";
 import { styles } from "@/components/nashi-navi/styles";
-import type { DayEntry, FormState, HistoryItem, MonthData, TodayWeather, WeatherByDate } from "@/components/nashi-navi/types";
-import { dateKeyOf, emptyForm, monthKeyOf, pad, WEEKDAYS, wIcon } from "@/components/nashi-navi/utils";
+import type {
+  DayEntry,
+  DiseaseRisk,
+  FormState,
+  HistoryItem,
+  MonthData,
+  PesticideMasterItem,
+  TodayWeather,
+  WeatherByDate,
+} from "@/components/nashi-navi/types";
+import {
+  dateKeyOf,
+  DISEASES,
+  emptyForm,
+  monthKeyOf,
+  pad,
+  PESTICIDES,
+  WEEKDAYS,
+  wIcon,
+} from "@/components/nashi-navi/utils";
 
 const LAT = 35.4265;
 const LON = 133.3306;
@@ -22,6 +41,10 @@ export default function App() {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saveFlash, setSaveFlash] = useState("");
+
+  const [activeRisks, setActiveRisks] = useState<DiseaseRisk[]>([]);
+  const [diseaseModalVisible, setDiseaseModalVisible] = useState(false);
+  const [selectedDisease, setSelectedDisease] = useState<DiseaseRisk | null>(null);
 
   const y = current.getFullYear();
   const m = current.getMonth();
@@ -62,14 +85,24 @@ export default function App() {
 
       setWeatherByDate(map);
       if (data.current) {
-        setTodayWeather({
+        const currentW: TodayWeather = {
           temp: data.current.temperature_2m,
           humidity: data.current.relative_humidity_2m,
           code: data.current.weathercode,
-        });
+        };
+        setTodayWeather(currentW);
+
+        const currentMonth = new Date().getMonth() + 1;
+        const risks = DISEASES.filter(
+          (disease) =>
+            disease.season.includes(currentMonth) &&
+            disease.checkRisk(currentW.temp, currentW.humidity, currentW.code),
+        );
+        setActiveRisks(risks);
       }
     } catch {
       setTodayWeather(null);
+      setActiveRisks([]);
     }
   }, []);
 
@@ -173,6 +206,23 @@ export default function App() {
     }
   };
 
+  const applyPesticide = (pestObj: PesticideMasterItem, diseaseName: string) => {
+    const now = new Date();
+    setCurrent(now);
+    setSelectedDay(now.getDate());
+
+    setForm({
+      ...emptyForm,
+      pestName: pestObj.name,
+      pestDilution: pestObj.dilution,
+      pestTarget: diseaseName,
+      pestNote: pestObj.note,
+    });
+
+    setDiseaseModalVisible(false);
+    setModalVisible(true);
+  };
+
   const first = new Date(y, m, 1);
   const startDow = first.getDay();
   const daysInMonth = new Date(y, m + 1, 0).getDate();
@@ -199,6 +249,7 @@ export default function App() {
         m={m}
         todayStr={todayStr}
         todayWeather={todayWeather}
+        activeRisks={activeRisks}
         monthData={monthData}
         weatherByDate={weatherByDate}
         historyItems={historyItems}
@@ -211,6 +262,17 @@ export default function App() {
         dateKeyOf={dateKeyOf}
         changeMonth={changeMonth}
         openDay={openDay}
+        onPressRisk={(risk) => {
+          setSelectedDisease(risk);
+          setDiseaseModalVisible(true);
+        }}
+      />
+      <DiseaseRiskModal
+        visible={diseaseModalVisible}
+        selectedDisease={selectedDisease}
+        pesticides={PESTICIDES}
+        onClose={() => setDiseaseModalVisible(false)}
+        onApply={applyPesticide}
       />
       <DayDetailModal
         visible={modalVisible}
