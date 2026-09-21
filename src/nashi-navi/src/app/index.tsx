@@ -1,14 +1,3 @@
-/**
- * 梨ナビ（梨園栽培日誌） - React Native (Expo) 版
- *
- * 必要なパッケージ:
- *   npx create-expo-app nashi-navi
- *   cd nashi-navi
- *   npm install @react-native-async-storage/async-storage
- *
- * このファイルを App.js として置き換えてください。
- * 天気情報は Open-Meteo API（無料・APIキー不要）を使用しています。
- */
 import React, { useState, useEffect, useCallback } from "react";
 import {
   SafeAreaView,
@@ -23,6 +12,48 @@ import {
   StatusBar,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
+// ── 農薬・病害データ ─────────────────────────
+const PESTICIDES = {
+  P001: { name: "ICボルドー66D水和剤", frac: "M01", dilution: "500倍", max: "制限なし", note: "収穫前日まで使用可能。散布後の果実の汚れに注意。" },
+  P002: { name: "アミスター10フロアブル", frac: "11", dilution: "2000倍", max: "年3回まで", note: "耐性菌が発生しやすいため連続使用を避ける。" },
+  P003: { name: "オーソサイド水和剤80", frac: "M04", dilution: "800倍", max: "年5回まで", note: "発病前の予防散布が基本。" },
+  P004: { name: "ベンレート水和剤", frac: "1", dilution: "2000倍", max: "年3回まで", note: "予防と治療の両方に効果あり。他剤とローテーションする。" },
+  P005: { name: "セイビアーフロアブル20", frac: "12", dilution: "1000倍", max: "年2回まで", note: "開花直前〜落花期の予防散布が特に有効。" }
+};
+
+const DISEASES = [
+  {
+    id: "D001",
+    name: "べと病",
+    season: [5, 6, 7],
+    // 条件: 20℃以上かつ降雨（WMOコード50以上を雨天と判定）
+    checkRisk: (temp, humidity, code) => temp >= 20 && code >= 50,
+    triggerText: "平均気温20℃以上＋降雨継続",
+    symptom: "葉に黄白色の病斑が出現し、裏面に白いカビが生えます。",
+    pesticides: ["P001", "P002"]
+  },
+  {
+    id: "D002",
+    name: "晩腐病",
+    season: [7, 8, 9],
+    // 条件: 25℃以上かつ多湿（湿度75%以上）
+    checkRisk: (temp, humidity, code) => temp >= 25 && humidity >= 75,
+    triggerText: "気温25℃前後＋多湿",
+    symptom: "着色期以降に果実が褐色になり腐敗します。",
+    pesticides: ["P003", "P004"]
+  },
+  {
+    id: "D003",
+    name: "灰色かび病",
+    season: [5, 6, 8, 9, 10],
+    // 条件: 15〜20℃かつ多湿
+    checkRisk: (temp, humidity, code) => temp >= 15 && temp <= 22 && humidity >= 70,
+    triggerText: "気温15〜20℃＋多湿",
+    symptom: "開花期や成熟期に花カスや果実に灰色のカビが生えます。",
+    pesticides: ["P005"]
+  }
+];
 
 // ── 位置情報（鳥取県 米子付近）─────────────────────────
 const LAT = 35.4265;
@@ -64,6 +95,11 @@ export default function App() {
   const [form, setForm] = useState(emptyForm);
   const [saveFlash, setSaveFlash] = useState("");
 
+  // アラートおよびサジェスト用の状態
+  const [activeRisks, setActiveRisks] = useState([]);
+  const [diseaseModalVisible, setDiseaseModalVisible] = useState(false);
+  const [selectedDisease, setSelectedDisease] = useState(null);
+
   const y = current.getFullYear();
   const m = current.getMonth();
   const key = monthKeyOf(y, m);
@@ -102,11 +138,20 @@ export default function App() {
       }
       setWeatherByDate(map);
       if (data.current) {
-        setTodayWeather({
+        const currentW = {
           temp: data.current.temperature_2m,
           humidity: data.current.relative_humidity_2m,
           code: data.current.weathercode,
-        });
+        };
+        setTodayWeather(currentW);
+
+        // 病害リスクの判定
+        const currentMonth = new Date().getMonth() + 1;
+        const risks = DISEASES.filter(d => 
+          d.season.includes(currentMonth) && 
+          d.checkRisk(currentW.temp, currentW.humidity, currentW.code)
+        );
+        setActiveRisks(risks);
       }
     } catch (e) {
       setTodayWeather(null);
@@ -210,6 +255,26 @@ export default function App() {
     }
   };
 
+  // ── 農薬情報の自動入力 ──────────────────────────────
+  const applyPesticide = (pestObj, diseaseName) => {
+    // 表示月を現在の月に合わせ、選択日を「今日」にする
+    const now = new Date();
+    setCurrent(now);
+    setSelectedDay(now.getDate());
+    
+    // フォームに推奨農薬を自動セット
+    setForm({
+      ...emptyForm,
+      pestName: pestObj.name,
+      pestDilution: pestObj.dilution,
+      pestTarget: diseaseName,
+      pestNote: pestObj.note
+    });
+    
+    setDiseaseModalVisible(false);
+    setModalVisible(true);
+  };
+
   // ── カレンダー描画用データ ──────────────────────────────
   const first = new Date(y, m, 1);
   const startDow = first.getDay();
@@ -234,8 +299,8 @@ export default function App() {
         {/* ヘッダー */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>梨ナビ</Text>
-            <Text style={styles.subtitle}>梨園の栽培日誌</Text>
+            <Text style={styles.title}>ワイングレープロテクト</Text>
+            <Text style={styles.subtitle}>圃場の栽培日誌</Text>
           </View>
           <View style={styles.weatherMini}>
             {todayWeather ? (
@@ -251,6 +316,31 @@ export default function App() {
             )}
           </View>
         </View>
+
+        {/* ⚠️ 警告バナー表示（リスクがある場合のみ） */}
+        {activeRisks.length > 0 && (
+          <View style={styles.warningContainer}>
+            {activeRisks.map((risk) => (
+              <TouchableOpacity 
+                key={risk.id} 
+                style={styles.warningBanner}
+                onPress={() => {
+                  setSelectedDisease(risk);
+                  setDiseaseModalVisible(true);
+                }}
+              >
+                <View style={styles.warningBannerInner}>
+                  <Text style={styles.warningIcon}>⚠️</Text>
+                  <View>
+                    <Text style={styles.warningTitle}>{risk.name} の感染リスク上昇</Text>
+                    <Text style={styles.warningSub}>現在の気象が発病条件と一致しています</Text>
+                  </View>
+                </View>
+                <Text style={styles.warningArrow}>›</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         {/* 月ナビ */}
         <View style={styles.monthNav}>
@@ -339,6 +429,50 @@ export default function App() {
           気象データ: Open-Meteo（実測に近い過去データ・予報を表示。アメダス実測値とは誤差があります）
         </Text>
       </ScrollView>
+
+      {/* 病害・農薬詳細モーダル */}
+      <Modal visible={diseaseModalVisible} animationType="fade" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.diseaseModal}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>⚠️ {selectedDisease?.name} 警告</Text>
+              <TouchableOpacity onPress={() => setDiseaseModalVisible(false)}>
+                <Text style={styles.closeBtn}>×</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.diseaseScroll}>
+              <Text style={styles.dSectionTitle}>発生条件</Text>
+              <Text style={styles.dText}>{selectedDisease?.triggerText}</Text>
+              
+              <Text style={styles.dSectionTitle}>主な症状</Text>
+              <Text style={styles.dText}>{selectedDisease?.symptom}</Text>
+
+              <Text style={[styles.dSectionTitle, {marginTop: 20, color: COLORS.primaryDark}]}>推奨される対応農薬</Text>
+              {selectedDisease?.pesticides.map(pId => {
+                const pest = PESTICIDES[pId];
+                return (
+                  <View key={pId} style={styles.pestCard}>
+                    <Text style={styles.pestName}>{pest.name}</Text>
+                    <View style={styles.pestInfoRow}>
+                      <Text style={styles.pestLabel}>FRAC: <Text style={styles.pestValue}>{pest.frac}</Text></Text>
+                      <Text style={styles.pestLabel}>希釈: <Text style={styles.pestValue}>{pest.dilution}</Text></Text>
+                      <Text style={styles.pestLabel}>上限: <Text style={styles.pestValue}>{pest.max}</Text></Text>
+                    </View>
+                    <Text style={styles.pestNote}>{pest.note}</Text>
+                    <TouchableOpacity 
+                      style={styles.applyBtn}
+                      onPress={() => applyPesticide(pest, selectedDisease.name)}
+                    >
+                      <Text style={styles.applyBtnText}>本日の日誌に散布を記録する</Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
       {/* 日付詳細モーダル */}
       <Modal visible={modalVisible} animationType="slide" onRequestClose={() => setModalVisible(false)}>
@@ -449,38 +583,56 @@ export default function App() {
 }
 
 // ── スタイル ──────────────────────────────
+// 元のコードで参照されていたスタイルに加え、警告バナーおよび病害モーダル用のスタイルを追記しています。
 const COLORS = {
-  bg: "#EFE9D6",
-  surface: "#FFFDF6",
-  ink: "#2B3320",
-  inkSoft: "#5B6650",
-  primary: "#5C7A3E",
-  primaryDark: "#3F5729",
-  accent: "#C6852F",
-  line: "#D9CFAE",
-  danger: "#A5502E",
+  bg: "#EFE9D6", surface: "#FFFDF6", ink: "#2B3320", inkSoft: "#5B6650",
+  primary: "#5C7A3E", primaryDark: "#3F5729", accent: "#C6852F", line: "#D9CFAE", danger: "#D35400",
 };
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg, paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0 },
   wrap: { padding: 16, paddingBottom: 48 },
-
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", borderBottomWidth: 2, borderBottomColor: COLORS.ink, paddingBottom: 12, marginBottom: 16 },
-  title: { fontSize: 26, fontWeight: "700", color: COLORS.ink },
+  title: { fontSize: 24, fontWeight: "700", color: COLORS.ink },
   subtitle: { fontSize: 12, color: COLORS.inkSoft, marginTop: 2 },
   weatherMini: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.line, borderRadius: 4, paddingVertical: 6, paddingHorizontal: 10 },
   weatherIcon: { fontSize: 22 },
   weatherTemp: { fontSize: 14, fontWeight: "700", color: COLORS.ink },
   weatherSub: { fontSize: 11, color: COLORS.inkSoft },
 
+  // アラート用スタイル
+  warningContainer: { marginBottom: 16, gap: 8 },
+  warningBanner: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: "#FDEBD0", borderWidth: 1, borderColor: COLORS.danger, borderRadius: 6, padding: 12 },
+  warningBannerInner: { flexDirection: "row", alignItems: "center", gap: 12 },
+  warningIcon: { fontSize: 24 },
+  warningTitle: { fontSize: 14, fontWeight: "700", color: COLORS.danger, marginBottom: 2 },
+  warningSub: { fontSize: 11, color: "#935116" },
+  warningArrow: { fontSize: 20, color: COLORS.danger, fontWeight: "300" },
+
+  // 病害モーダル用スタイル
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: 20 },
+  diseaseModal: { width: "100%", maxHeight: "80%", backgroundColor: COLORS.surface, borderRadius: 8, overflow: "hidden", elevation: 5, shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 5 },
+  modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: "#FDEBD0", padding: 16, borderBottomWidth: 1, borderBottomColor: COLORS.danger },
+  modalTitle: { fontSize: 18, fontWeight: "700", color: COLORS.danger },
+  diseaseScroll: { padding: 16 },
+  dSectionTitle: { fontSize: 13, fontWeight: "700", color: COLORS.inkSoft, marginBottom: 4, marginTop: 12 },
+  dText: { fontSize: 14, color: COLORS.ink, lineHeight: 20 },
+  pestCard: { backgroundColor: "#fff", borderWidth: 1, borderColor: COLORS.line, borderRadius: 6, padding: 12, marginTop: 12, marginBottom: 4 },
+  pestName: { fontSize: 15, fontWeight: "700", color: COLORS.ink, marginBottom: 8 },
+  pestInfoRow: { flexDirection: "row", gap: 12, marginBottom: 8 },
+  pestLabel: { fontSize: 11, color: COLORS.inkSoft },
+  pestValue: { fontWeight: "700", color: COLORS.primaryDark },
+  pestNote: { fontSize: 12, color: COLORS.ink, backgroundColor: "#F5F1E4", padding: 8, borderRadius: 4, marginBottom: 12 },
+  applyBtn: { backgroundColor: COLORS.primary, paddingVertical: 10, borderRadius: 4, alignItems: "center" },
+  applyBtnText: { color: "#fff", fontSize: 13, fontWeight: "700" },
+
+  // カレンダー用スタイル
   monthNav: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
   navBtn: { width: 30, height: 30, borderWidth: 1, borderColor: COLORS.ink, borderRadius: 4, alignItems: "center", justifyContent: "center" },
   navBtnText: { fontSize: 16, color: COLORS.ink },
   monthLabel: { fontSize: 17, fontWeight: "700", color: COLORS.ink },
-
   weekRow: { flexDirection: "row", marginBottom: 4 },
   weekLabel: { flex: 1, textAlign: "center", fontSize: 11, color: COLORS.inkSoft },
-
   grid: { flexDirection: "row", flexWrap: "wrap", backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.line },
   cell: { width: "14.28%", height: 68, borderWidth: 0.5, borderColor: COLORS.line, padding: 4 },
   cellEmpty: { width: "14.28%", height: 68, borderWidth: 0.5, borderColor: COLORS.line, backgroundColor: "#F5F1E4" },
@@ -495,41 +647,41 @@ const styles = StyleSheet.create({
   dotSpray: { backgroundColor: COLORS.danger },
   dotMeasure: { backgroundColor: COLORS.accent },
   dotMemo: { backgroundColor: COLORS.primary },
-
   legend: { flexDirection: "row", gap: 14, marginTop: 10, marginBottom: 16, flexWrap: "wrap" },
   legendItem: { flexDirection: "row", alignItems: "center", gap: 5 },
   legendText: { fontSize: 11, color: COLORS.inkSoft },
 
-  sideCard: { backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.line, borderRadius: 4, padding: 14, marginBottom: 14 },
-  sideCardTitle: { fontSize: 14, fontWeight: "700", color: COLORS.ink, borderBottomWidth: 1, borderBottomColor: COLORS.line, paddingBottom: 6, marginBottom: 8 },
-  statRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 3 },
-  statLabel: { fontSize: 12, color: COLORS.inkSoft },
-  statValue: { fontSize: 14, fontWeight: "700", color: COLORS.ink },
-  emptyNote: { fontSize: 12, color: COLORS.inkSoft },
-  historyItem: { borderBottomWidth: 1, borderBottomColor: COLORS.line, borderStyle: "dashed", paddingVertical: 6 },
-  historyDate: { fontSize: 11, color: COLORS.accent, fontWeight: "700" },
-  historyName: { fontSize: 12, color: COLORS.ink },
+  // サイドカード（まとめ・履歴）
+  sideCard: { backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.line, borderRadius: 6, padding: 12, marginBottom: 16 },
+  sideCardTitle: { fontSize: 13, fontWeight: "700", color: COLORS.ink, borderBottomWidth: 1, borderBottomColor: COLORS.line, paddingBottom: 6, marginBottom: 8 },
+  statRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
+  statLabel: { fontSize: 13, color: COLORS.inkSoft },
+  statValue: { fontSize: 13, fontWeight: "700", color: COLORS.ink },
+  historyItem: { flexDirection: "row", gap: 8, marginBottom: 6 },
+  historyDate: { fontSize: 12, color: COLORS.inkSoft, width: 45 },
+  historyName: { fontSize: 13, color: COLORS.ink, flex: 1 },
+  emptyNote: { fontSize: 12, color: COLORS.inkSoft, fontStyle: "italic", textAlign: "center", marginVertical: 8 },
+  footer: { fontSize: 10, color: COLORS.inkSoft, textAlign: "center", marginTop: 8, marginBottom: 12 },
 
-  footer: { fontSize: 10, color: COLORS.inkSoft, textAlign: "center", marginTop: 8 },
-
-  panel: { padding: 18, paddingBottom: 48 },
-  panelHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderBottomWidth: 2, borderBottomColor: COLORS.ink, paddingBottom: 10, marginBottom: 14 },
-  panelDate: { fontSize: 19, fontWeight: "700", color: COLORS.ink },
-  closeBtn: { fontSize: 22, color: COLORS.inkSoft },
-  legend2: { fontSize: 14, fontWeight: "700", color: COLORS.primaryDark, marginTop: 14, marginBottom: 8 },
-  amedasBox: { backgroundColor: "#F4EFDD", borderWidth: 1, borderColor: COLORS.line, borderRadius: 4, padding: 10 },
-  amedasRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 2 },
-  amedasLabel: { fontSize: 12, color: COLORS.inkSoft },
-  amedasValue: { fontSize: 12, fontWeight: "700", color: COLORS.ink },
-  fieldRow: { flexDirection: "row", gap: 10, marginBottom: 8 },
+  // 日付詳細モーダル
+  panel: { backgroundColor: COLORS.bg, padding: 20 },
+  panelHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20, borderBottomWidth: 2, borderBottomColor: COLORS.ink, paddingBottom: 10 },
+  panelDate: { fontSize: 20, fontWeight: "700", color: COLORS.ink },
+  closeBtn: { fontSize: 24, color: COLORS.inkSoft },
+  legend2: { fontSize: 14, fontWeight: "700", color: COLORS.ink, backgroundColor: COLORS.line, paddingVertical: 4, paddingHorizontal: 8, marginTop: 12, marginBottom: 8 },
+  amedasBox: { backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.line, padding: 12, borderRadius: 4, marginBottom: 8 },
+  amedasRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 4 },
+  amedasLabel: { fontSize: 13, color: COLORS.inkSoft },
+  amedasValue: { fontSize: 13, fontWeight: "700", color: COLORS.ink },
+  fieldRow: { flexDirection: "row", gap: 12, marginBottom: 8 },
   fieldHalf: { flex: 1 },
-  label: { fontSize: 11, color: COLORS.inkSoft, marginBottom: 3, marginTop: 4 },
-  input: { borderWidth: 1, borderColor: COLORS.line, borderRadius: 4, paddingVertical: 8, paddingHorizontal: 10, fontSize: 13, backgroundColor: "#FFFEFA", color: COLORS.ink },
-  textarea: { minHeight: 80, textAlignVertical: "top" },
-  panelActions: { flexDirection: "row", gap: 10, marginTop: 18 },
-  btn: { flex: 1, backgroundColor: COLORS.ink, borderRadius: 4, paddingVertical: 12, alignItems: "center" },
-  btnText: { color: "#fff", fontSize: 13, fontWeight: "700" },
-  btnSecondary: { flex: 1, borderWidth: 1, borderColor: COLORS.danger, borderRadius: 4, paddingVertical: 12, alignItems: "center" },
-  btnSecondaryText: { color: COLORS.danger, fontSize: 13, fontWeight: "700" },
-  saveFlash: { fontSize: 12, color: COLORS.primaryDark, textAlign: "center", marginTop: 8 },
+  label: { fontSize: 12, color: COLORS.inkSoft, marginBottom: 4 },
+  input: { backgroundColor: "#fff", borderWidth: 1, borderColor: COLORS.line, borderRadius: 4, padding: 10, fontSize: 14, color: COLORS.ink, marginBottom: 12 },
+  textarea: { height: 80, textAlignVertical: "top" },
+  panelActions: { flexDirection: "row", justifyContent: "space-between", marginTop: 12 },
+  btnSecondary: { backgroundColor: "#fff", borderWidth: 1, borderColor: COLORS.inkSoft, paddingVertical: 12, paddingHorizontal: 20, borderRadius: 4 },
+  btnSecondaryText: { color: COLORS.inkSoft, fontSize: 14, fontWeight: "700" },
+  btn: { backgroundColor: COLORS.primary, paddingVertical: 12, paddingHorizontal: 30, borderRadius: 4 },
+  btnText: { color: "#fff", fontSize: 14, fontWeight: "700" },
+  saveFlash: { textAlign: "center", color: COLORS.primary, marginTop: 12, fontWeight: "700" },
 });
