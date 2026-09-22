@@ -1,7 +1,7 @@
 // src/db.ts
 import { Pool } from "pg";
 
-export const pool = new Pool({
+const pool = new Pool({
   host: process.env.PGHOST ?? "localhost",
   port: Number(process.env.PGPORT ?? 5432),
   user: process.env.PGUSER ?? "myuser",
@@ -25,7 +25,7 @@ export async function checkConnection(): Promise<void> {
 
 export async function insertReading(topic: string, payload: string): Promise<void> {
   await pool.query(
-    "INSERT INTO readings (topic, payload) VALUES ($1, $2)",
+    "INSERT INTO measure (topic, payload) VALUES ($1, $2)",
     [topic, payload],
   );
 }

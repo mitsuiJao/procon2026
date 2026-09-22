@@ -17,4 +17,4 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
-COPY db ./db
+COPY migrations ./migrations
