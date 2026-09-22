@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      - POSTGRES_USER=${PGUSER}
+      - POSTGRES_PASSWORD=${PGPASSWORD}
+      - POSTGRES_DB=${PGDATABASE}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PGUSER} -d ${PGDATABASE}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    build:
+      context: ./mqtt
+    command: npx node-pg-migrate up
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgres://${PGUSER}:${PGPASSWORD}@db:5432/${PGDATABASE}
+  
+  mqtt-bro:
+    build:
+      context: ./mqtt
+    command: node dist/bro.js
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  mqtt-sub:
+    build:
+      context: ./mqtt
+    command: node dist/sub.js
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      mqtt-bro:
+        condition: service_started
+    environment:
+      - MQTT_BROKER_URL=mqtt://mqtt-bro:1883
+      - PGHOST=db
+      - PGPORT=5432
+      - PGUSER=${PGUSER}
+      - PGPASSWORD=${PGPASSWORD}
+      - PGDATABASE=${PGDATABASE}
+
+
+volumes:
+  db-data:

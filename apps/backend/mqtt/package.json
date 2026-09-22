@@ -3,10 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/main.ts",
+    "dev": "concurrently \"tsx watch src/bro.ts\" \"tsx watch src/sub.ts\"",
     "typecheck": "tsc --noEmit",
     "build": "tsc",
-    "start": "node dist/main.js",
+    "start:bro": "node dist/bro.js",
+    "start:sub": "node dist/sub.js",
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down",
     "migrate": "node-pg-migrate -j sql --envPath .env",
@@ -17,11 +18,13 @@
   "dependencies": {
     "aedes": "^1.0.0",
     "mqtt": "^5.16.0",
+    "node-pg-migrate": "^9.0.0",
     "pg": "^8.23.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/pg": "^8.23.1",
+    "concurrently": "^10.0.5",
     "node-pg-migrate": "^9.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0"
