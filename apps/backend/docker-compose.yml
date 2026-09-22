@@ -1,15 +1,16 @@
 services:
   db:
+    image: postgres:16
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${PGUSER}
+      - POSTGRES_PASSWORD=${PGPASSWORD}
+      - POSTGRES_DB=${PGDATABASE}
     ports:
       - "5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -u ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${PGUSER} -d ${PGDATABASE}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -22,17 +23,32 @@ services:
       db:
         condition: service_healthy
     environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - DATABASE_URL=postgres://${PGUSER}:${PGPASSWORD}@db:5432/${PGDATABASE}
   
-  mqtt-client:
+  mqtt-bro:
     build:
       context: ./mqtt
-    command: node dist/main.js
+    command: node dist/bro.js
     depends_on:
       migrate:
         condition: service_completed_successfully
+
+  mqtt-sub:
+    build:
+      context: ./mqtt
+    command: node dist/sub.js
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      mqtt-bro:
+        condition: service_started
     environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - MQTT_BROKER_URL=mqtt://mqtt-bro:1883
+      - PGHOST=db
+      - PGPORT=5432
+      - PGUSER=${PGUSER}
+      - PGPASSWORD=${PGPASSWORD}
+      - PGDATABASE=${PGDATABASE}
 
 
 volumes:
