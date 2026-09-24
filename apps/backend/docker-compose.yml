@@ -50,6 +50,22 @@ services:
       - PGPASSWORD=${PGPASSWORD}
       - PGDATABASE=${PGDATABASE}
 
+  api:
+    build:
+      context: ./api
+    command: node dist/index.js
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      mqtt-bro:
+        condition: service_started
+    environment:
+      - PGHOST=db
+      - PGPORT=5432
+      - PGUSER=${PGUSER}
+      - PGPASSWORD=${PGPASSWORD}
+      - PGDATABASE=${PGDATABASE}
+
 
 volumes:
   db-data:
