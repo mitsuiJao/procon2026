@@ -1,4 +1,3 @@
-// src/db.ts
 import { Pool } from "pg";
 
 const pool = new Pool({
@@ -23,9 +22,9 @@ export async function checkConnection(): Promise<void> {
   }
 }
 
-export async function insertReading(topic: string, payload: string): Promise<void> {
+export async function insertReading(device: string, value: number): Promise<void> {
   await pool.query(
-    "INSERT INTO measure (topic, payload) VALUES ($1, $2)",
-    [topic, payload],
+    "INSERT INTO measure (device, value) VALUES ($1, $2)",
+    [device, value],
   );
 }
