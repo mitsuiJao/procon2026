@@ -3,7 +3,8 @@ import { checkConnection, insertReading } from './db.js'
 
 const client = mqtt.connect(process.env.MQTT_BROKER_URL ?? 'mqtt://localhost:1883')
 
-const subTopic = 'sensor/#'
+const topicPrefix = 'sensor/'
+const subTopic = `${topicPrefix}#`
 
 
 async function main() {
@@ -17,11 +18,19 @@ async function main() {
     })
 
     client.on('message', async (topic, payload) => {
-        const value = payload.toString()
-        console.log(`${topic}: ${value}`)
+        const raw = payload.toString().trim()
+        console.log(`${topic}: ${raw}`)
+
+        const value = Number(raw)
+        if (raw === '' || !Number.isFinite(value)) {
+            console.warn(`invalid payload skipped: ${topic}: ${raw}`)
+            return
+        }
+
+        const device = topic.slice(topicPrefix.length)
 
         try {
-            await insertReading(topic, value)
+            await insertReading(device, value)
             console.log('DB write done')
         } catch (err) {
             console.error('DB write failed:', err)
