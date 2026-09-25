@@ -9,6 +9,12 @@ type sprayRecord = {
   note?: string,
 }
 
+/**
+ * 指定期間の散布記録を取得
+ * @param start 開始日 YYYY-MM-DD 閉区間
+ * @param end 終了日 YYYY-MM-DD　閉区間)
+ * @returns 散布記録の配列 sprayRecord型 日付, id昇順
+ */
 export async function getSprayRecordsByRange(start: string, end: string) {
   const { rows } = await pool.query(
     `SELECT id,
@@ -22,6 +28,11 @@ export async function getSprayRecordsByRange(start: string, end: string) {
   return rows;
 }
 
+/**
+ * 散布記録を追加
+ * @param record 散布日・農薬名などの記録
+ * @returns 記録id
+ */
 export async function writeSprayRecord(record: sprayRecord): Promise<number> {
   const { rows } = await pool.query(
     `INSERT INTO spray_records (sprayed_on, pesticide, dilution, amount, target, note)
@@ -39,10 +50,18 @@ export async function writeSprayRecord(record: sprayRecord): Promise<number> {
   return rows[0].id;
 }
 
+/**
+ * 散布記録をidで削除する
+ * @param id 散布記録の id
+ */
 export async function deleteSprayRecord(id: number) {
   await pool.query("DELETE FROM spray_records WHERE id = $1", [id]);
 }
 
+/**
+ * 指定日の散布記録をすべて削除
+ * @param date 散布日
+ */
 export async function deleteSprayRecordsByDate(date: string) {
   await pool.query("DELETE FROM spray_records WHERE sprayed_on = $1", [date]);
 }
