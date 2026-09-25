@@ -53,15 +53,12 @@ export function pointsFromForecast(
   }));
 }
 
-export function pointsFromMeasures(
-  rows: { metric: string; value: number; received_at: Date }[],
-): Sample[] {
-  return rows.flatMap((r): Sample[] => {
-    const date = jstDate(r.received_at);
-    if (r.metric === "temp") return [{ date, temperature: r.value }];
-    if (r.metric === "humidity") return [{ date, humidity: r.value }];
-    return [];
-  });
+export function sensorToDaily(
+  sensor: Record<string, { tmax: number | null; tmin: number | null; humidity: number | null }>,
+): Record<string, DailyWeather> {
+  return Object.fromEntries(
+    Object.entries(sensor).map(([date, s]) => [date, { ...s, code: null }]),
+  );
 }
 
 export function mergeDaily(
