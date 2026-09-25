@@ -1,0 +1,7 @@
+CREATE TABLE diary_entries (
+  id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  entry_date DATE NOT NULL UNIQUE,
+  memo       TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
