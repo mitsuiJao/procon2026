@@ -1,0 +1,18 @@
+# 入力変数の定義。ルールの when 内の var は、ここの id だけを使える。
+# kind:
+#   scalar … 1つの数値（閾値ルールの when で使う）
+#   series … 時別の配列（evaluator が内部で使う。when では使わない）
+# origin:
+#   weather … 気象データ（センサー／API）から得る
+#   derived … 気象データから計算して得る
+#   user    … 利用者が入力する
+# 値が取得できないとき、その変数を使うルールは「判定不能」になる。
+
+- { id: tempMeanC,      kind: scalar, unit: "℃",  origin: derived, description: 日平均気温 }
+- { id: rain24hMm,      kind: scalar, unit: mm,   origin: derived, description: 直近24時間の降水量 }
+- { id: rainyDayStreak, kind: scalar, unit: 日,   origin: derived, description: 日降水量1mm以上の日の連続日数 }
+- { id: rhPercent,      kind: scalar, unit: "%",  origin: weather, description: 相対湿度 }
+- { id: stage,          kind: scalar, unit: 順序値, origin: user,  description: 生育ステージ（stages.yaml の value） }
+
+- { id: hourlyTempC,    kind: series, unit: "℃",  origin: weather, description: 時別の気温（Broome式・Gubler-Thomas指数の入力） }
+- { id: hourlyRhPercent, kind: series, unit: "%", origin: weather, description: 時別の相対湿度（Broome式の濡れ判定の入力） }

@@ -1,0 +1,12 @@
+# FRAC コードの再分類（旧コード → 新コード）。古い資料やラベルの表記と照合するための表。
+# 出典: FRAC Code List 2026 の本文（S063）。PDF に年の記載があるものだけ year を入れる。
+# 旧コードは新しいグループには再利用されない、と PDF に明記されている。
+
+- { oldCode: "44",  newCode: BM02, year: 2020, note: "Bacillus amyloliquefaciens 系（旧 F6）" }
+- { oldCode: "46",  newCode: BM01, year: 2021, note: "ティーツリー油・植物油（旧 F7）" }
+- { oldCode: "33",  newCode: P07,  year: 2018, note: "ホスホネート（PDF は「code 33」と表記）" }
+- { oldCode: U33,   newCode: P07,  year: 2018, note: "PDF の P07 欄の記載" }
+- { oldCode: "42",  newCode: M12,  year: 2018, note: "メタスルホカルブ（PDF は U42 とも表記）" }
+- { oldCode: U8,    newCode: "50", year: 2018, note: "ピリオフェノン" }
+- { oldCode: U15,   newCode: "49", year: null, note: "OSBPI（PDF の F9 欄に「previously U15」）" }
+- { oldCode: "26",  newCode: U18,  year: null, note: "バリダマイシン（旧 H3）" }

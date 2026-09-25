@@ -1,0 +1,297 @@
+# 有効成分マスター。ISO 共通名 → FRAC コード。農薬（商品）データが有効成分を介して FRAC コードを引くための表。
+# 出典: FRAC Code List 2026 の (ISO) COMMON NAME 欄 = sources.yaml の S063。
+#
+# id            共通名の小文字（空白・記号はハイフン）。不変。
+# nameEn        PDF の表記。
+# nameJa        日本語名（任意）。このプロジェクトの資料で使ったものだけ。
+# fracCode      frac.yaml の code。
+# chemicalGroup PDF の Chemical or Biological Group 欄。
+# aliases       別名（任意）。
+# note          補足（任意）。
+#
+# 収録範囲: 化学的な有効成分。微生物株（BM02 の多数の株、P06）、植物抽出物（BM01）、未分類（NC）は収録していない。
+#           そのため frac.yaml の P06 / NC / BM01 には、対応する有効成分の行がない。
+#           ブドウの灰色かび病で使われる Bacillus subtilis だけは収録している。
+#           ※ 商品名・登録状況・使用基準はこの表の対象外（農林水産省の農薬登録情報提供システムで確認する）。
+
+# ---- A ----
+- { id: benalaxyl,        nameEn: benalaxyl,        fracCode: "4", chemicalGroup: acylalanines }
+- { id: benalaxyl-m,      nameEn: benalaxyl-M,      fracCode: "4", chemicalGroup: acylalanines, aliases: [kiralaxyl] }
+- { id: furalaxyl,        nameEn: furalaxyl,        fracCode: "4", chemicalGroup: acylalanines }
+- { id: metalaxyl,        nameEn: metalaxyl,        fracCode: "4", chemicalGroup: acylalanines }
+- { id: metalaxyl-m,      nameEn: metalaxyl-M,      fracCode: "4", chemicalGroup: acylalanines, aliases: [mefenoxam] }
+- { id: oxadixyl,         nameEn: oxadixyl,         fracCode: "4", chemicalGroup: oxazolidinones }
+- { id: ofurace,          nameEn: ofurace,          fracCode: "4", chemicalGroup: butyrolactones }
+- { id: bupirimate,       nameEn: bupirimate,       fracCode: "8", chemicalGroup: "hydroxy-(2-amino-)pyrimidines" }
+- { id: dimethirimol,     nameEn: dimethirimol,     fracCode: "8", chemicalGroup: "hydroxy-(2-amino-)pyrimidines" }
+- { id: ethirimol,        nameEn: ethirimol,        fracCode: "8", chemicalGroup: "hydroxy-(2-amino-)pyrimidines" }
+- { id: hymexazole,       nameEn: hymexazole,       fracCode: "32", chemicalGroup: isoxazoles }
+- { id: octhilinone,      nameEn: octhilinone,      fracCode: "32", chemicalGroup: isothiazolinones }
+- { id: flumetylsulforim, nameEn: flumetylsulforim, fracCode: "32", chemicalGroup: imino-tosyl pyrimidinone }
+- { id: oxolinic-acid,    nameEn: oxolinic acid,    fracCode: "31", chemicalGroup: carboxylic acids }
+- { id: ipflufenoquin,    nameEn: ipflufenoquin,    fracCode: "52", chemicalGroup: phenyl-propanol }
+- { id: quinofumelin,     nameEn: quinofumelin,     fracCode: "52", chemicalGroup: dihydroisoquinoline }
+- { id: feneptamidoquin,  nameEn: feneptamidoquin,  fracCode: "52", chemicalGroup: quinoline amide }
+- { id: flufenoxadiazam,  nameEn: flufenoxadiazam,  fracCode: "56", chemicalGroup: oxadiazol benzamides }
+
+# ---- B ----
+- { id: benomyl,          nameEn: benomyl,          nameJa: ベノミル, fracCode: "1", chemicalGroup: benzimidazoles }
+- { id: carbendazim,      nameEn: carbendazim,      fracCode: "1", chemicalGroup: benzimidazoles }
+- { id: fuberidazole,     nameEn: fuberidazole,     fracCode: "1", chemicalGroup: benzimidazoles }
+- { id: thiabendazole,    nameEn: thiabendazole,    fracCode: "1", chemicalGroup: benzimidazoles }
+- { id: thiophanate,      nameEn: thiophanate,      fracCode: "1", chemicalGroup: thiophanates }
+- { id: thiophanate-methyl, nameEn: thiophanate-methyl, fracCode: "1", chemicalGroup: thiophanates }
+- { id: diethofencarb,    nameEn: diethofencarb,    fracCode: "10", chemicalGroup: N-phenyl carbamates }
+- { id: zoxamide,         nameEn: zoxamide,         fracCode: "22", chemicalGroup: toluamides }
+- { id: ethaboxam,        nameEn: ethaboxam,        fracCode: "22", chemicalGroup: ethylamino-thiazole-carboxamide }
+- { id: pencycuron,       nameEn: pencycuron,       fracCode: "20", chemicalGroup: phenylureas }
+- { id: fluopicolide,     nameEn: fluopicolide,     fracCode: "43", chemicalGroup: pyridinylmethyl-benzamides }
+- { id: fluopimomide,     nameEn: fluopimomide,     fracCode: "43", chemicalGroup: pyridinylmethyl-benzamides }
+- { id: phenamacril,      nameEn: phenamacril,      fracCode: "47", chemicalGroup: aminocyanoacrylates }
+- { id: metrafenone,      nameEn: metrafenone,      fracCode: "50", chemicalGroup: benzophenone }
+- { id: pyriofenone,      nameEn: pyriofenone,      fracCode: "50", chemicalGroup: benzoylpyridine }
+- { id: pyridachlometyl,  nameEn: pyridachlometyl,  fracCode: "53", chemicalGroup: pyridazine }
+
+# ---- C ----
+- { id: diflumetorim,     nameEn: diflumetorim,     fracCode: "39", chemicalGroup: pyrimidinamines }
+- { id: tolfenpyrad,      nameEn: tolfenpyrad,      fracCode: "39", chemicalGroup: pyrazole-5-carboxamides }
+- { id: fenpyroximate,    nameEn: fenpyroximate,    fracCode: "39", chemicalGroup: 4-benzyloxyimino-methyl-pyrazole }
+- { id: fenazaquin,       nameEn: fenazaquin,       fracCode: "39", chemicalGroup: quinazoline }
+- { id: benodanil,        nameEn: benodanil,        fracCode: "7", chemicalGroup: phenyl-benzamides }
+- { id: flutolanil,       nameEn: flutolanil,       fracCode: "7", chemicalGroup: phenyl-benzamides }
+- { id: mepronil,         nameEn: mepronil,         fracCode: "7", chemicalGroup: phenyl-benzamides }
+- { id: isofetamid,       nameEn: isofetamid,       fracCode: "7", chemicalGroup: phenyl-oxo-ethyl thiophene amide }
+- { id: fluopyram,        nameEn: fluopyram,        fracCode: "7", chemicalGroup: pyridinyl-ethyl-benzamides }
+- { id: cyclobutrifluram, nameEn: cyclobutrifluram, fracCode: "7", chemicalGroup: phenyl-cyclobutyl-pyridineamide }
+- { id: fenfuram,         nameEn: fenfuram,         fracCode: "7", chemicalGroup: furan-carboxamides }
+- { id: carboxin,         nameEn: carboxin,         fracCode: "7", chemicalGroup: oxathiin-carboxamides }
+- { id: oxycarboxin,      nameEn: oxycarboxin,      fracCode: "7", chemicalGroup: oxathiin-carboxamides }
+- { id: thifluzamide,     nameEn: thifluzamide,     fracCode: "7", chemicalGroup: thiazole-carboxamides }
+- { id: benzovindiflupyr, nameEn: benzovindiflupyr, fracCode: "7", chemicalGroup: pyrazole-4-carboxamides }
+- { id: bixafen,          nameEn: bixafen,          fracCode: "7", chemicalGroup: pyrazole-4-carboxamides }
+- { id: fluindapyr,       nameEn: fluindapyr,       fracCode: "7", chemicalGroup: pyrazole-4-carboxamides }
+- { id: fluxapyroxad,     nameEn: fluxapyroxad,     fracCode: "7", chemicalGroup: pyrazole-4-carboxamides }
+- { id: furametpyr,       nameEn: furametpyr,       fracCode: "7", chemicalGroup: pyrazole-4-carboxamides }
+- { id: inpyrfluxam,      nameEn: inpyrfluxam,      fracCode: "7", chemicalGroup: pyrazole-4-carboxamides }
+- { id: isopyrazam,       nameEn: isopyrazam,       fracCode: "7", chemicalGroup: pyrazole-4-carboxamides }
+- { id: penflufen,        nameEn: penflufen,        fracCode: "7", chemicalGroup: pyrazole-4-carboxamides }
+- { id: penthiopyrad,     nameEn: penthiopyrad,     nameJa: ペンチオピラド, fracCode: "7", chemicalGroup: pyrazole-4-carboxamides }
+- { id: sedaxane,         nameEn: sedaxane,         fracCode: "7", chemicalGroup: pyrazole-4-carboxamides }
+- { id: isoflucypram,     nameEn: isoflucypram,     fracCode: "7", chemicalGroup: N-cyclopropyl-N-benzyl-pyrazole-carboxamides }
+- { id: pydiflumetofen,   nameEn: pydiflumetofen,   fracCode: "7", chemicalGroup: N-methoxy-(phenyl-ethyl)-pyrazole-carboxamides }
+- { id: boscalid,         nameEn: boscalid,         fracCode: "7", chemicalGroup: pyridine-carboxamides }
+- { id: pyraziflumid,     nameEn: pyraziflumid,     fracCode: "7", chemicalGroup: pyrazine-carboxamides }
+- { id: azoxystrobin,     nameEn: azoxystrobin,     fracCode: "11", chemicalGroup: methoxy-acrylates }
+- { id: bifemetstrobin,   nameEn: bifemetstrobin,   fracCode: "11", chemicalGroup: methoxy-acrylates }
+- { id: coumoxystrobin,   nameEn: coumoxystrobin,   fracCode: "11", chemicalGroup: methoxy-acrylates }
+- { id: enoxastrobin,     nameEn: enoxastrobin,     fracCode: "11", chemicalGroup: methoxy-acrylates }
+- { id: flufenoxystrobin, nameEn: flufenoxystrobin, fracCode: "11", chemicalGroup: methoxy-acrylates }
+- { id: picoxystrobin,    nameEn: picoxystrobin,    fracCode: "11", chemicalGroup: methoxy-acrylates }
+- { id: pyraoxystrobin,   nameEn: pyraoxystrobin,   fracCode: "11", chemicalGroup: methoxy-acrylates }
+- { id: mandestrobin,     nameEn: mandestrobin,     nameJa: マンデストロビン, fracCode: "11", chemicalGroup: methoxy-acetamide }
+- { id: pyraclostrobin,   nameEn: pyraclostrobin,   fracCode: "11", chemicalGroup: methoxy-carbamates }
+- { id: pyrametostrobin,  nameEn: pyrametostrobin,  fracCode: "11", chemicalGroup: methoxy-carbamates }
+- { id: triclopyricarb,   nameEn: triclopyricarb,   fracCode: "11", chemicalGroup: methoxy-carbamates }
+- { id: kresoxim-methyl,  nameEn: kresoxim-methyl,  nameJa: クレソキシムメチル, fracCode: "11", chemicalGroup: oximino-acetates }
+- { id: trifloxystrobin,  nameEn: trifloxystrobin,  fracCode: "11", chemicalGroup: oximino-acetates }
+- { id: dimoxystrobin,    nameEn: dimoxystrobin,    fracCode: "11", chemicalGroup: oximino-acetamides }
+- { id: fenaminstrobin,   nameEn: fenaminstrobin,   fracCode: "11", chemicalGroup: oximino-acetamides }
+- { id: metominostrobin,  nameEn: metominostrobin,  fracCode: "11", chemicalGroup: oximino-acetamides }
+- { id: orysastrobin,     nameEn: orysastrobin,     fracCode: "11", chemicalGroup: oximino-acetamides }
+- { id: famoxadone,       nameEn: famoxadone,       nameJa: ファモキサドン, fracCode: "11", chemicalGroup: oxazolidine-diones }
+- { id: fluoxastrobin,    nameEn: fluoxastrobin,    fracCode: "11", chemicalGroup: dihydro-dioxazines }
+- { id: fenamidone,       nameEn: fenamidone,       fracCode: "11", chemicalGroup: imidazolinones }
+- { id: pyribencarb,      nameEn: pyribencarb,      fracCode: "11", chemicalGroup: benzyl-carbamates }
+- { id: metyltetraprole,  nameEn: metyltetraprole,  fracCode: "11A", chemicalGroup: tetrazolinones }
+- { id: cyazofamid,       nameEn: cyazofamid,       nameJa: シアゾファミド, fracCode: "21", chemicalGroup: cyano-imidazole }
+- { id: amisulbrom,       nameEn: amisulbrom,       nameJa: アミスルブロム, fracCode: "21", chemicalGroup: sulfamoyl-triazole }
+- { id: fenpicoxamid,     nameEn: fenpicoxamid,     fracCode: "21", chemicalGroup: picolinamides }
+- { id: florylpicoxamid,  nameEn: florylpicoxamid,  fracCode: "21", chemicalGroup: picolinamides }
+- { id: metarylpicoxamid, nameEn: metarylpicoxamid, fracCode: "21", chemicalGroup: picolinamides }
+- { id: binapacryl,       nameEn: binapacryl,       fracCode: "29", chemicalGroup: dinitrophenyl-crotonates }
+- { id: meptyldinocap,    nameEn: meptyldinocap,    fracCode: "29", chemicalGroup: dinitrophenyl-crotonates }
+- { id: dinocap,          nameEn: dinocap,          fracCode: "29", chemicalGroup: dinitrophenyl-crotonates }
+- { id: fluazinam,        nameEn: fluazinam,        fracCode: "29", chemicalGroup: "2,6-dinitro-anilines", note: "PDF: 日本で灰色かび病菌の耐性が主張されている" }
+- { id: fentin-acetate,   nameEn: fentin acetate,   fracCode: "30", chemicalGroup: tri-phenyl tin compounds }
+- { id: fentin-chloride,  nameEn: fentin chloride,  fracCode: "30", chemicalGroup: tri-phenyl tin compounds }
+- { id: fentin-hydroxide, nameEn: fentin hydroxide, fracCode: "30", chemicalGroup: tri-phenyl tin compounds }
+- { id: silthiofam,       nameEn: silthiofam,       fracCode: "38", chemicalGroup: thiophene-carboxamides }
+- { id: ametoctradin,     nameEn: ametoctradin,     fracCode: "45", chemicalGroup: triazolo-pyrimidylamine }
+
+# ---- D ----
+- { id: cyprodinil,       nameEn: cyprodinil,       nameJa: シプロジニル, fracCode: "9", chemicalGroup: anilino-pyrimidines }
+- { id: mepanipyrim,      nameEn: mepanipyrim,      fracCode: "9", chemicalGroup: anilino-pyrimidines }
+- { id: pyrimethanil,     nameEn: pyrimethanil,     fracCode: "9", chemicalGroup: anilino-pyrimidines }
+- { id: blasticidin-s,    nameEn: blasticidin-S,    fracCode: "23", chemicalGroup: enopyranuronic acid antibiotic }
+- { id: kasugamycin,      nameEn: kasugamycin,      fracCode: "24", chemicalGroup: hexopyranosyl antibiotic }
+- { id: streptomycin,     nameEn: streptomycin,     fracCode: "25", chemicalGroup: glucopyranosyl antibiotic }
+- { id: oxytetracycline,  nameEn: oxytetracycline,  fracCode: "41", chemicalGroup: tetracycline antibiotic }
+- { id: tavaborole,       nameEn: tavaborole,       fracCode: "54", chemicalGroup: benzoxaboroles }
+
+# ---- E ----
+- { id: quinoxyfen,       nameEn: quinoxyfen,       fracCode: "13", chemicalGroup: aryloxyquinoline }
+- { id: proquinazid,      nameEn: proquinazid,      fracCode: "13", chemicalGroup: quinazolinone }
+- { id: fenpiclonil,      nameEn: fenpiclonil,      fracCode: "12", chemicalGroup: phenylpyrroles }
+- { id: fludioxonil,      nameEn: fludioxonil,      nameJa: フルジオキソニル, fracCode: "12", chemicalGroup: phenylpyrroles }
+- { id: chlozolinate,     nameEn: chlozolinate,     fracCode: "2", chemicalGroup: dicarboximides }
+- { id: dimethachlone,    nameEn: dimethachlone,    fracCode: "2", chemicalGroup: dicarboximides }
+- { id: iprodione,        nameEn: iprodione,        fracCode: "2", chemicalGroup: dicarboximides }
+- { id: procymidone,      nameEn: procymidone,      fracCode: "2", chemicalGroup: dicarboximides }
+- { id: vinclozolin,      nameEn: vinclozolin,      fracCode: "2", chemicalGroup: dicarboximides }
+
+# ---- F ----
+- { id: edifenphos,       nameEn: edifenphos,       fracCode: "6", chemicalGroup: phosphoro-thiolates }
+- { id: iprobenfos,       nameEn: iprobenfos,       fracCode: "6", chemicalGroup: phosphoro-thiolates, aliases: [IBP] }
+- { id: pyrazophos,       nameEn: pyrazophos,       fracCode: "6", chemicalGroup: phosphoro-thiolates }
+- { id: isoprothiolane,   nameEn: isoprothiolane,   fracCode: "6", chemicalGroup: dithiolanes }
+- { id: biphenyl,         nameEn: biphenyl,         fracCode: "14", chemicalGroup: aromatic hydrocarbons }
+- { id: chloroneb,        nameEn: chloroneb,        fracCode: "14", chemicalGroup: aromatic hydrocarbons }
+- { id: dicloran,         nameEn: dicloran,         fracCode: "14", chemicalGroup: aromatic hydrocarbons }
+- { id: quintozene,       nameEn: quintozene,       fracCode: "14", chemicalGroup: aromatic hydrocarbons, aliases: [PCNB] }
+- { id: tecnazene,        nameEn: tecnazene,        fracCode: "14", chemicalGroup: aromatic hydrocarbons, aliases: [TCNB] }
+- { id: tolclofos-methyl, nameEn: tolclofos-methyl, fracCode: "14", chemicalGroup: aromatic hydrocarbons }
+- { id: etridiazole,      nameEn: etridiazole,      fracCode: "14", chemicalGroup: "1,2,4-thiadiazoles" }
+- { id: iodocarb,         nameEn: iodocarb,         fracCode: "28", chemicalGroup: carbamates }
+- { id: propamocarb,      nameEn: propamocarb,      fracCode: "28", chemicalGroup: carbamates }
+- { id: prothiocarb,      nameEn: prothiocarb,      fracCode: "28", chemicalGroup: carbamates }
+- { id: natamycin,        nameEn: natamycin,        fracCode: "48", chemicalGroup: amphoteric macrolide antifungal antibiotic, aliases: [pimaricin] }
+- { id: oxathiapiprolin,  nameEn: oxathiapiprolin,  nameJa: オキサチアピプロリン, fracCode: "49", chemicalGroup: piperidinyl-thiazole-isoxazolines }
+- { id: fluoxapiprolin,   nameEn: fluoxapiprolin,   fracCode: "49", chemicalGroup: piperidinyl-thiazole-isoxazolines }
+- { id: polypeptide-asfbiof01-02, nameEn: polypeptide ASFBIOF01-02, fracCode: "51", chemicalGroup: polypeptide }
+
+# ---- G ----
+- { id: triforine,        nameEn: triforine,        fracCode: "3", chemicalGroup: piperazines }
+- { id: pyrifenox,        nameEn: pyrifenox,        fracCode: "3", chemicalGroup: pyridines }
+- { id: pyrisoxazole,     nameEn: pyrisoxazole,     fracCode: "3", chemicalGroup: pyridines }
+- { id: fenarimol,        nameEn: fenarimol,        fracCode: "3", chemicalGroup: pyrimidines }
+- { id: nuarimol,         nameEn: nuarimol,         fracCode: "3", chemicalGroup: pyrimidines }
+- { id: imazalil,         nameEn: imazalil,         fracCode: "3", chemicalGroup: imidazoles }
+- { id: oxpoconazole,     nameEn: oxpoconazole,     fracCode: "3", chemicalGroup: imidazoles }
+- { id: pefurazoate,      nameEn: pefurazoate,      fracCode: "3", chemicalGroup: imidazoles }
+- { id: prochloraz,       nameEn: prochloraz,       fracCode: "3", chemicalGroup: imidazoles }
+- { id: triflumizole,     nameEn: triflumizole,     fracCode: "3", chemicalGroup: imidazoles }
+- { id: azaconazole,      nameEn: azaconazole,      fracCode: "3", chemicalGroup: triazoles }
+- { id: bitertanol,       nameEn: bitertanol,       fracCode: "3", chemicalGroup: triazoles }
+- { id: bromuconazole,    nameEn: bromuconazole,    fracCode: "3", chemicalGroup: triazoles }
+- { id: cyproconazole,    nameEn: cyproconazole,    fracCode: "3", chemicalGroup: triazoles }
+- { id: difenoconazole,   nameEn: difenoconazole,   fracCode: "3", chemicalGroup: triazoles }
+- { id: diniconazole,     nameEn: diniconazole,     fracCode: "3", chemicalGroup: triazoles }
+- { id: epoxiconazole,    nameEn: epoxiconazole,    fracCode: "3", chemicalGroup: triazoles }
+- { id: etaconazole,      nameEn: etaconazole,      fracCode: "3", chemicalGroup: triazoles }
+- { id: fenbuconazole,    nameEn: fenbuconazole,    nameJa: フェンブコナゾール, fracCode: "3", chemicalGroup: triazoles }
+- { id: fluquinconazole,  nameEn: fluquinconazole,  fracCode: "3", chemicalGroup: triazoles }
+- { id: flusilazole,      nameEn: flusilazole,      fracCode: "3", chemicalGroup: triazoles }
+- { id: flutriafol,       nameEn: flutriafol,       fracCode: "3", chemicalGroup: triazoles }
+- { id: hexaconazole,     nameEn: hexaconazole,     fracCode: "3", chemicalGroup: triazoles }
+- { id: imibenconazole,   nameEn: imibenconazole,   fracCode: "3", chemicalGroup: triazoles }
+- { id: ipconazole,       nameEn: ipconazole,       fracCode: "3", chemicalGroup: triazoles }
+- { id: mefentrifluconazole, nameEn: mefentrifluconazole, fracCode: "3", chemicalGroup: triazoles }
+- { id: metconazole,      nameEn: metconazole,      fracCode: "3", chemicalGroup: triazoles }
+- { id: myclobutanil,     nameEn: myclobutanil,     fracCode: "3", chemicalGroup: triazoles }
+- { id: penconazole,      nameEn: penconazole,      fracCode: "3", chemicalGroup: triazoles }
+- { id: propiconazole,    nameEn: propiconazole,    fracCode: "3", chemicalGroup: triazoles }
+- { id: simeconazole,     nameEn: simeconazole,     fracCode: "3", chemicalGroup: triazoles }
+- { id: tebuconazole,     nameEn: tebuconazole,     nameJa: テブコナゾール, fracCode: "3", chemicalGroup: triazoles }
+- { id: tetraconazole,    nameEn: tetraconazole,    fracCode: "3", chemicalGroup: triazoles }
+- { id: triadimefon,      nameEn: triadimefon,      fracCode: "3", chemicalGroup: triazoles }
+- { id: triadimenol,      nameEn: triadimenol,      fracCode: "3", chemicalGroup: triazoles }
+- { id: triticonazole,    nameEn: triticonazole,    fracCode: "3", chemicalGroup: triazoles }
+- { id: prothioconazole,  nameEn: prothioconazole,  fracCode: "3", chemicalGroup: triazolinthiones }
+- { id: aldimorph,        nameEn: aldimorph,        fracCode: "5", chemicalGroup: morpholines }
+- { id: dodemorph,        nameEn: dodemorph,        fracCode: "5", chemicalGroup: morpholines }
+- { id: fenpropimorph,    nameEn: fenpropimorph,    fracCode: "5", chemicalGroup: morpholines }
+- { id: tridemorph,       nameEn: tridemorph,       fracCode: "5", chemicalGroup: morpholines }
+- { id: fenpropidin,      nameEn: fenpropidin,      fracCode: "5", chemicalGroup: piperidines }
+- { id: piperalin,        nameEn: piperalin,        fracCode: "5", chemicalGroup: piperidines }
+- { id: spiroxamine,      nameEn: spiroxamine,      fracCode: "5", chemicalGroup: spiroketal-amines }
+- { id: fenhexamid,       nameEn: fenhexamid,       fracCode: "17", chemicalGroup: hydroxyanilides }
+- { id: fenpyrazamine,    nameEn: fenpyrazamine,    fracCode: "17", chemicalGroup: amino-pyrazolinone }
+- { id: pyributicarb,     nameEn: pyributicarb,     fracCode: "18", chemicalGroup: thiocarbamates }
+- { id: naftifine,        nameEn: naftifine,        fracCode: "18", chemicalGroup: allylamines, note: "PDF: 医療用のみ" }
+- { id: terbinafine,      nameEn: terbinafine,      fracCode: "18", chemicalGroup: allylamines, note: "PDF: 医療用のみ" }
+
+# ---- H ----
+- { id: polyoxin,         nameEn: polyoxin,         fracCode: "19", chemicalGroup: peptidyl pyrimidine nucleoside }
+- { id: dimethomorph,     nameEn: dimethomorph,     fracCode: "40", chemicalGroup: cinnamic acid amides }
+- { id: flumorph,         nameEn: flumorph,         fracCode: "40", chemicalGroup: cinnamic acid amides }
+- { id: pyrimorph,        nameEn: pyrimorph,        fracCode: "40", chemicalGroup: cinnamic acid amides }
+- { id: benthiavalicarb,  nameEn: benthiavalicarb,  nameJa: ベンチアバリカルブイソプロピル, fracCode: "40", chemicalGroup: valinamide carbamates, note: "資料の商品はイソプロピル塩（benthiavalicarb-isopropyl）として記載" }
+- { id: iprovalicarb,     nameEn: iprovalicarb,     fracCode: "40", chemicalGroup: valinamide carbamates }
+- { id: valifenalate,     nameEn: valifenalate,     fracCode: "40", chemicalGroup: valinamide carbamates }
+- { id: mandipropamid,    nameEn: mandipropamid,    nameJa: マンジプロパミド, fracCode: "40", chemicalGroup: mandelic acid amides }
+- { id: aminopyrifen,     nameEn: aminopyrifen,     fracCode: "55", chemicalGroup: pyridine carboxylates }
+
+# ---- I ----
+- { id: fthalide,         nameEn: fthalide,         fracCode: "16.1", chemicalGroup: isobenzo-furanone }
+- { id: pyroquilon,       nameEn: pyroquilon,       fracCode: "16.1", chemicalGroup: pyrrolo-quinolinone }
+- { id: tricyclazole,     nameEn: tricyclazole,     fracCode: "16.1", chemicalGroup: triazolobenzo-thiazole }
+- { id: carpropamid,      nameEn: carpropamid,      fracCode: "16.2", chemicalGroup: cyclopropane-carboxamide }
+- { id: diclocymet,       nameEn: diclocymet,       fracCode: "16.2", chemicalGroup: carboxamide }
+- { id: fenoxanil,        nameEn: fenoxanil,        fracCode: "16.2", chemicalGroup: propionamide }
+- { id: tolprocarb,       nameEn: tolprocarb,       fracCode: "16.3", chemicalGroup: trifluoroethyl-carbamate }
+
+# ---- J ----
+- { id: erysichrona,      nameEn: erysichrona,      fracCode: "57", chemicalGroup: RNA interference mediated target suppressor, note: "標的は Erysiphe necator の CYP51（ERG11）" }
+
+# ---- M ----
+- { id: copper,           nameEn: copper (different salts), nameJa: 銅, fracCode: M1, chemicalGroup: inorganic, note: "PDF: 有機銅錯体にも当てはまる" }
+- { id: sulphur,          nameEn: sulphur,          nameJa: 硫黄, fracCode: M2, chemicalGroup: inorganic, note: "石灰硫黄合剤（多硫化カルシウム）はこの PDF に明記なし。M2 かどうかは要確認" }
+- { id: amobam,           nameEn: amobam,           fracCode: M3, chemicalGroup: dithio-carbamates and relatives }
+- { id: ferbam,           nameEn: ferbam,           fracCode: M3, chemicalGroup: dithio-carbamates and relatives }
+- { id: mancozeb,         nameEn: mancozeb,         nameJa: マンゼブ, fracCode: M3, chemicalGroup: dithio-carbamates and relatives }
+- { id: maneb,            nameEn: maneb,            fracCode: M3, chemicalGroup: dithio-carbamates and relatives }
+- { id: metiram,          nameEn: metiram,          fracCode: M3, chemicalGroup: dithio-carbamates and relatives }
+- { id: propineb,         nameEn: propineb,         fracCode: M3, chemicalGroup: dithio-carbamates and relatives }
+- { id: thiram,           nameEn: thiram,           fracCode: M3, chemicalGroup: dithio-carbamates and relatives }
+- { id: zinc-thiazole,    nameEn: zinc thiazole,    fracCode: M3, chemicalGroup: dithio-carbamates and relatives }
+- { id: zineb,            nameEn: zineb,            fracCode: M3, chemicalGroup: dithio-carbamates and relatives }
+- { id: ziram,            nameEn: ziram,            fracCode: M3, chemicalGroup: dithio-carbamates and relatives }
+- { id: captan,           nameEn: captan,           nameJa: キャプタン, fracCode: M4, chemicalGroup: phthalimides }
+- { id: captafol,         nameEn: captafol,         fracCode: M4, chemicalGroup: phthalimides }
+- { id: folpet,           nameEn: folpet,           fracCode: M4, chemicalGroup: phthalimides }
+- { id: chlorothalonil,   nameEn: chlorothalonil,   fracCode: M5, chemicalGroup: chloronitriles (phthalonitriles) }
+- { id: dichlofluanid,    nameEn: dichlofluanid,    fracCode: M6, chemicalGroup: sulfamides }
+- { id: tolylfluanid,     nameEn: tolylfluanid,     fracCode: M6, chemicalGroup: sulfamides }
+- { id: guazatine,        nameEn: guazatine,        fracCode: M7, chemicalGroup: bis-guanidines }
+- { id: iminoctadine,     nameEn: iminoctadine,     nameJa: イミノクタジン, fracCode: M7, chemicalGroup: bis-guanidines }
+- { id: anilazine,        nameEn: anilazine,        fracCode: M8, chemicalGroup: triazines }
+- { id: dithianon,        nameEn: dithianon,        nameJa: ジチアノン, fracCode: M9, chemicalGroup: quinones (anthraquinones) }
+- { id: chinomethionat,   nameEn: chinomethionat / quinomethionate, fracCode: M10, chemicalGroup: quinoxalines, aliases: [quinomethionate] }
+- { id: fluoroimide,      nameEn: fluoroimide,      fracCode: M11, chemicalGroup: maleimide }
+- { id: methasulfocarb,   nameEn: methasulfocarb,   fracCode: M12, chemicalGroup: thiocarbamate }
+- { id: zinc-oxide,       nameEn: zinc oxide,       fracCode: M13, chemicalGroup: inorganic }
+
+# ---- P ----
+- { id: acibenzolar-s-methyl, nameEn: acibenzolar-S-methyl, fracCode: P01, chemicalGroup: benzo-thiadiazole (BTH) }
+- { id: probenazole,      nameEn: probenazole,      fracCode: P02, chemicalGroup: benzisothiazole }
+- { id: tiadinil,         nameEn: tiadinil,         fracCode: P03, chemicalGroup: thiadiazole-carboxamide }
+- { id: isotianil,        nameEn: isotianil,        fracCode: P03, chemicalGroup: thiadiazole-carboxamide }
+- { id: laminarin,        nameEn: laminarin,        fracCode: P04, chemicalGroup: polysaccharides }
+- { id: reynoutria-sachalinensis-extract, nameEn: extract from Reynoutria sachalinensis (giant knotweed), fracCode: P05, chemicalGroup: "complex mixture, ethanol extract (anthraquinones, resveratrol)" }
+- { id: fosetyl-al,       nameEn: fosetyl-Al,       fracCode: P07, chemicalGroup: ethyl phosphonates }
+- { id: phosphorous-acid, nameEn: phosphorous acid and salts, fracCode: P07, chemicalGroup: phosphonates }
+- { id: dichlobentiazox,  nameEn: dichlobentiazox,  fracCode: P08, chemicalGroup: isothiazolylmethyl ether }
+- { id: flg22-bt,         nameEn: Flg22-Bt peptide, fracCode: P09, chemicalGroup: peptide derived from Bacillus thuringiensis flagellin }
+- { id: ascr-18,          nameEn: ascr#18,          fracCode: P10, chemicalGroup: ascaroside }
+- { id: beet-extract,     nameEn: beet extract (Beta vulgaris), fracCode: P11, chemicalGroup: "botanical (plant-derived) lead compound: trimethylglycine" }
+
+# ---- U ----
+- { id: cymoxanil,        nameEn: cymoxanil,        nameJa: シモキサニル, fracCode: "27", chemicalGroup: cyanoacetamide-oxime }
+- { id: tecloftalam,      nameEn: tecloftalam,      fracCode: "34", chemicalGroup: phthalamic acids, note: "PDF: 殺細菌剤" }
+- { id: triazoxide,       nameEn: triazoxide,       fracCode: "35", chemicalGroup: benzotriazines }
+- { id: flusulfamide,     nameEn: flusulfamide,     fracCode: "36", chemicalGroup: benzene-sulphonamides }
+- { id: diclomezine,      nameEn: diclomezine,      fracCode: "37", chemicalGroup: pyridazinones }
+- { id: cyflufenamid,     nameEn: cyflufenamid,     fracCode: U06, chemicalGroup: phenyl-acetamide }
+- { id: dodine,           nameEn: dodine,           fracCode: U12, chemicalGroup: guanidines }
+- { id: flutianil,        nameEn: flutianil,        fracCode: U13, chemicalGroup: cyano-methylene-thiazolidines }
+- { id: ferimzone,        nameEn: ferimzone,        fracCode: U14, chemicalGroup: pyrimidinone-hydrazones, note: "2012年に C5（コード29）から再分類" }
+- { id: tebufloquin,      nameEn: tebufloquin,      fracCode: U16, chemicalGroup: 4-quinolyl-acetates }
+- { id: picarbutrazox,    nameEn: picarbutrazox,    fracCode: U17, chemicalGroup: tetrazolyloximes }
+- { id: validamycin,      nameEn: validamycin,      fracCode: U18, chemicalGroup: glucopyranosyl antibiotics, note: "以前は H3（コード26）" }
+- { id: cartap,           nameEn: cartap,           fracCode: U19, chemicalGroup: nereistoxin analogues }
+
+# ---- BM（ブドウ関連のみ） ----
+- { id: bacillus-subtilis, nameEn: Bacillus subtilis, nameJa: 枯草菌（Bacillus subtilis）, fracCode: BM02, chemicalGroup: bacterial Bacillus spp., note: "PDF に収録の株: AFS032321, Y1336, HAI-0404, RTI477。商品の株との一致はラベルで要確認" }
+- { id: cinnamaldehyde,   nameEn: cinnamaldehyde,   fracCode: BM03, chemicalGroup: nature-derived or nature-identical single molecules }
+- { id: d-tagatose,       nameEn: D-tagatose,       fracCode: BM03, chemicalGroup: nature-derived or nature-identical single molecules }
+- { id: choline-pelargonate, nameEn: choline pelargonate, fracCode: BM03, chemicalGroup: nature-derived or nature-identical single molecules }
