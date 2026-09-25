@@ -1,11 +1,11 @@
 import { getPlace } from "../db/settings";
 import { getForecastByRange } from "../db/weather";
-import { getMeasuresByRange } from "../db/measure";
+import { getSensorDailyByRange } from "../db/measure";
 import {
   jstDate,
   mergeDaily,
   pointsFromForecast,
-  pointsFromMeasures,
+  sensorToDaily,
   summarizeDaily,
   type DailyWeather,
 } from "./weather-daily";
@@ -22,13 +22,13 @@ export async function getCalendarWeather(start: string, end: string) {
   const to = new Date(new Date(`${end}T00:00:00+09:00`).getTime() + 24 * 60 * 60 * 1000);
 
   const place = await getPlace();
-  const [forecastRows, measureRows] = await Promise.all([
+  const [forecastRows, sensorDaily] = await Promise.all([
     getForecastByRange(from, to, place.latitude, place.longitude),
-    getMeasuresByRange(from, to),
+    getSensorDailyByRange(from, to),
   ]);
 
   const value = mergeDaily(
-    summarizeDaily(pointsFromMeasures(measureRows)),
+    sensorToDaily(sensorDaily),
     summarizeDaily(pointsFromForecast(forecastRows)),
     jstDate(new Date()),
   );
