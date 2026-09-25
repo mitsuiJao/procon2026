@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server"
 import { cors } from "hono/cors";
+import { startWeatherCron } from "./utils/cron-weather";
 
 const app = new Hono();
 
@@ -15,3 +16,5 @@ serve({
     port: 3000,
     hostname: "0.0.0.0"
 });
+
+startWeatherCron();
