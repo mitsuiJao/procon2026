@@ -58,6 +58,6 @@ async function job() {
 
 export function startWeatherCron() {
   cron.schedule("0 * * * *", job, { timezone: "Asia/Tokyo" });
-  void job(); // 起動直後にも1回実行
+  void job(); // 起動直後1回実行
   console.log("scheduler started");
 }
