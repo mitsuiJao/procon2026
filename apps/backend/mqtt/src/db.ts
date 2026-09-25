@@ -1,4 +1,3 @@
-// src/db.ts
 import { Pool } from "pg";
 
 const pool = new Pool({
@@ -10,7 +9,7 @@ const pool = new Pool({
 });
 
 pool.on("error", (err) => {
-  console.error("[DB] 予期しないエラー:", err.message);
+  console.error("[DB] anything went wrong:", err.message);
 });
 
 export async function checkConnection(): Promise<void> {
@@ -23,9 +22,9 @@ export async function checkConnection(): Promise<void> {
   }
 }
 
-export async function insertReading(topic: string, payload: string): Promise<void> {
+export async function insertReading(device: string, metric: string, value: number): Promise<void> {
   await pool.query(
-    "INSERT INTO measure (topic, payload) VALUES ($1, $2)",
-    [topic, payload],
+    "INSERT INTO measure (device, metric, value) VALUES ($1, $2, $3)",
+    [device, metric, value],
   );
 }
