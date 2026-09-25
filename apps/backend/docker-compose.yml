@@ -19,6 +19,8 @@ services:
     build:
       context: ./mqtt
     command: npx node-pg-migrate up
+    volumes:
+      - ./migrations:/app/migrations:ro
     depends_on:
       db:
         condition: service_healthy
