@@ -65,6 +65,8 @@ services:
       - PGUSER=${PGUSER}
       - PGPASSWORD=${PGPASSWORD}
       - PGDATABASE=${PGDATABASE}
+      - LATITUDE=${LATITUDE}
+      - LONGITUDE=${LONGITUDE}
 
 
 volumes:
