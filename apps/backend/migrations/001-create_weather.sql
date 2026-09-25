@@ -1,4 +1,4 @@
-CREATE TABLE weather_observations (
+CREATE TABLE weather_forecasts (
     id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     observed_at   TIMESTAMPTZ      NOT NULL,
     temperature   NUMERIC(4,1)     NOT NULL,
@@ -10,5 +10,5 @@ CREATE TABLE weather_observations (
     UNIQUE (observed_at, latitude, longitude)
 );
 
-CREATE INDEX idx_weather_observations_observed_at
-    ON weather_observations (observed_at);
+CREATE INDEX idx_weather_forecasts_observed_at
+    ON weather_forecasts (observed_at);
