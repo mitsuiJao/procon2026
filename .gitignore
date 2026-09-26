@@ -4,3 +4,4 @@ dist/
 *.log
 weather_forcast.json
 node_modules/
+.expo
