@@ -1,0 +1,223 @@
+# 病害リスクルール。参照先はすべて data/vocab/ で定義する。
+#   diseaseId    → vocab/diseases.yaml の id
+#   var          → vocab/variables.yaml の id（when では kind: scalar のみ）
+#   stage の値   → vocab/stages.yaml の value
+#   candidateFrac → vocab/frac.yaml の code（"21" のような数字は引用符付き）
+#   sourceIds    → vocab/sources.yaml の id
+#
+# 書き方
+#   when       閾値ルール。all / any / not の入れ子と、var・op・value の比較で書く。
+#   evaluator  式モデル。name（TS側の関数名）と params（係数・閾値）を持つ。
+#   両方あるとき、when は前提条件（ゲート）。when が真のときだけ evaluator を評価する。
+#   入力が足りない変数を使うルールは「判定不能」になる（false ではない）。
+#
+# level
+#   when のみのルールに必須。near_threshold（閾値に近い）/ conditions_met（感染条件に該当）。
+#   evaluator を持つルールでは書かない。結果は params の mid / high で決まる。
+#     値 >= mid  → near_threshold
+#     値 >= high → conditions_met
+#
+# enabled
+#   出す／出さないの切り替え（既定値）。false のルールは B（設計値・要検証）。
+# confidence
+#   A = 文献に式・閾値あり / B = 国内資料の定性的な記述からの設計値。記録用で、ロジックでは使わない。
+
+# ===============================================================
+# A：文献に式・閾値があるもの（既定で有効）
+# ===============================================================
+
+# べと病（一次感染）：豪州版 10-10-24 の簡易形
+#   新梢長10cmの条件は、展葉期以降（stage >= 2）で代用している。原型と完全には一致しない。
+- id: DM-1
+  diseaseId: downy_mildew
+  enabled: true
+  when:
+    all:
+      - { var: stage, op: ">=", value: 2 }
+      - { var: tempMeanC, op: ">=", value: 10 }
+      - { var: rain24hMm, op: ">=", value: 10 }
+  level: conditions_met
+  candidateFrac: [M3, M4, "21"]
+  confidence: A
+  sourceIds: [S037, S036]
+
+# 灰色かび病：Broome 式（UC IPM 実装仕様）
+#   logit = b0 + bW*W + bWT*W*T + bWT2*W*T^2
+#   W = 濡れ時間[h]、T = 濡れ期間の平均気温[℃]
+#   T は tMin〜tMax に丸める（tMin 未満は tMin、tMax 超は tMax）。tHardMax 超は感染不適。
+#   濡れ: 時別 RH >= wetRhMin。乾燥が dryResetHours を超えたら積算をリセット。
+- id: BOT-1
+  diseaseId: botrytis
+  enabled: true
+  evaluator:
+    name: broome
+    params:
+      b0: -2.647866
+      bW: -0.374927
+      bWT: 0.061601
+      bWT2: -0.001511
+      tMin: 12
+      tMax: 32
+      tHardMax: 40
+      wetRhMin: 95
+      dryResetHours: 4
+      mid: 0.5
+      high: 1.0
+  candidateFrac: [M4, BM02, "9", "12", "3", "7"]
+  confidence: A
+  sourceIds: [S032, S033]
+
+# うどんこ病：Gubler-Thomas 指数（0〜indexMax、日次で更新）
+#   開始: startTempMin〜startTempMax ℃が startHours 時間以上の日が startDays 日連続
+#   開始後の毎日:
+#     goodTempMin〜goodTempMax ℃が goodHours 時間を超えた日 → +gain
+#     それ以外の日 → -loss
+#     日最高気温が hotDayMaxC 以上の日 → -loss
+#   高温側の閾値は改訂研究（S040）があるため、今後 hotDayMaxC を見直す余地あり。
+- id: PM-1
+  diseaseId: powdery_mildew
+  enabled: true
+  evaluator:
+    name: gublerThomas
+    params:
+      startTempMin: 21
+      startTempMax: 30
+      startHours: 6
+      startDays: 3
+      goodTempMin: 21.1
+      goodTempMax: 29.4
+      goodHours: 6
+      gain: 20
+      loss: 10
+      hotDayMaxC: 35
+      indexMax: 100
+      mid: 40
+      high: 60
+  candidateFrac: [M2, "3", "7", "11"]
+  confidence: A
+  sourceIds: [S031, S056]
+
+# ===============================================================
+# B：設計値・要検証（既定で無効）
+#   雨量 1mm や連続 2 日などの閾値は文献に根拠がない。自園地のデータで調整する前提。
+# ===============================================================
+
+# 灰色かび病：開花期前後と着色期以降は、Broome 式の注意閾値を 0.3 に下げる
+#   ゲート: 開花直前〜落花直後（stage 3〜5）、または着色期以降（stage >= 8）
+- id: BOT-2
+  diseaseId: botrytis
+  enabled: false
+  when:
+    any:
+      - all:
+          - { var: stage, op: ">=", value: 3 }
+          - { var: stage, op: "<=", value: 5 }
+      - { var: stage, op: ">=", value: 8 }
+  evaluator:
+    name: broome
+    params:
+      b0: -2.647866
+      bW: -0.374927
+      bWT: 0.061601
+      bWT2: -0.001511
+      tMin: 12
+      tMax: 32
+      tHardMax: 40
+      wetRhMin: 95
+      dryResetHours: 4
+      mid: 0.3
+      high: 1.0
+  candidateFrac: [M4, BM02, "9", "12", "3", "7"]
+  confidence: B
+  sourceIds: [S032, S006]
+
+# べと病（二次感染）：展葉期以降、11〜30℃で降雨があった日
+- id: DM-2
+  diseaseId: downy_mildew
+  enabled: false
+  when:
+    all:
+      - { var: stage, op: ">=", value: 2 }
+      - { var: tempMeanC, op: ">=", value: 11 }
+      - { var: tempMeanC, op: "<=", value: 30 }
+      - { var: rain24hMm, op: ">=", value: 1 }
+  level: near_threshold
+  candidateFrac: [M3, M4, "21"]
+  confidence: B
+  sourceIds: [S001, S010]
+
+# 晩腐病：開花直前〜幼果期（潜伏感染の時期）の降雨
+#   24時間で10mm以上、または日降水1mm以上が2日連続。
+- id: RR-1
+  diseaseId: ripe_rot
+  enabled: false
+  when:
+    all:
+      - { var: stage, op: ">=", value: 3 }
+      - { var: stage, op: "<=", value: 6 }
+      - any:
+          - { var: rain24hMm, op: ">=", value: 10 }
+          - { var: rainyDayStreak, op: ">=", value: 2 }
+  level: conditions_met
+  candidateFrac: [M9, M3, M4, "3"]
+  confidence: B
+  sourceIds: [S059, S002]
+
+# 晩腐病：着色期以降の降雨（発病果の除去を促す時期）
+- id: RR-2
+  diseaseId: ripe_rot
+  enabled: false
+  when:
+    all:
+      - { var: stage, op: ">=", value: 8 }
+      - { var: rain24hMm, op: ">=", value: 1 }
+  level: near_threshold
+  candidateFrac: [M4, "3"]
+  confidence: B
+  sourceIds: [S002, S021]
+
+# 黒とう病：萌芽〜肥大期の降雨
+- id: ANT-1
+  diseaseId: anthracnose
+  enabled: false
+  when:
+    all:
+      - { var: stage, op: ">=", value: 1 }
+      - { var: stage, op: "<=", value: 7 }
+      - { var: rain24hMm, op: ">=", value: 1 }
+  level: near_threshold
+  candidateFrac: [M9, M3, M4, M1]
+  confidence: B
+  sourceIds: [S003, S016]
+
+# 黒とう病：ANT-1 に加えて、平均気温 15〜20℃の冷雨（冷雨で重みを上げる設計値）
+- id: ANT-2
+  diseaseId: anthracnose
+  enabled: false
+  when:
+    all:
+      - { var: stage, op: ">=", value: 1 }
+      - { var: stage, op: "<=", value: 7 }
+      - { var: rain24hMm, op: ">=", value: 1 }
+      - { var: tempMeanC, op: ">=", value: 15 }
+      - { var: tempMeanC, op: "<=", value: 20 }
+  level: conditions_met
+  candidateFrac: [M9, M3, M4, M1]
+  confidence: B
+  sourceIds: [S003, S016]
+
+# さび病：肥大期以降で、気温 20〜25℃・湿度がほぼ飽和
+#   rhPercent >= 95 は「湿度100%程度・水滴」の代替として置いた設計値。
+- id: RUST-1
+  diseaseId: rust
+  enabled: false
+  when:
+    all:
+      - { var: stage, op: ">=", value: 7 }
+      - { var: tempMeanC, op: ">=", value: 20 }
+      - { var: tempMeanC, op: "<=", value: 25 }
+      - { var: rhPercent, op: ">=", value: 95 }
+  level: near_threshold
+  candidateFrac: [M3, M4, "7"]
+  confidence: B
+  sourceIds: [S005]
