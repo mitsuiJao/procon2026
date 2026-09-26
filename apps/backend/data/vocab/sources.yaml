@@ -1,0 +1,77 @@
+# 出典マスター。id はレポートの参考文献番号（[1] → S001）。
+# 欠番（S015, S044, S054, S058）はレポート側で未使用。
+# type: public（公的機関・試験場）/ paper（論文）/ maker（メーカー資料）/ calendar（防除暦・JA）/ other
+# reliability: 既定は normal。民間ブログ等の根拠が弱いものだけ low を付ける。
+
+# --- 公的機関・試験場・県資料 ---
+- { id: S001, type: public, publisher: 島根県, year: null, title: ブドウのべと病, url: "https://www.pref.shimane.lg.jp/industry/norin/gijutsu/nougyo_tech/byougaityuu/byougaityuu-index/budou/gr130.html" }
+- { id: S002, type: public, publisher: 島根県, year: null, title: 晩腐病, url: "https://www.pref.shimane.lg.jp/industry/norin/gijutsu/nougyo_tech/byougaityuu/byougaityuu-index/budou/gr128.html" }
+- { id: S003, type: public, publisher: 島根県, year: null, title: 黒とう病, url: "https://www.pref.shimane.lg.jp/industry/norin/gijutsu/nougyo_tech/byougaityuu/byougaityuu-index/budou/gr131.html" }
+- { id: S004, type: public, publisher: 島根県, year: null, title: 褐斑病・うどんこ病, url: "https://www.pref.shimane.lg.jp/industry/norin/gijutsu/nougyo_tech/byougaityuu/byougaityuu-index/budou/gr132.html" }
+- { id: S005, type: public, publisher: 島根県, year: null, title: さび病, url: "https://www.pref.shimane.lg.jp/industry/norin/gijutsu/nougyo_tech/byougaityuu/byougaityuu-index/budou/gr129.html" }
+- { id: S006, type: public, publisher: 島根県, year: null, title: 灰色かび病、枝枯菌核病, url: "https://www.pref.shimane.lg.jp/industry/norin/gijutsu/nougyo_tech/byougaityuu/byougaityuu-index/budou/gr133.html" }
+- { id: S007, type: public, publisher: 島根県, year: null, title: ペスタロチアつる枯病、つる割病、枝膨病, url: "https://www.pref.shimane.lg.jp/industry/norin/gijutsu/nougyo_tech/byougaityuu/byougaityuu-index/budou/gr135.html" }
+- { id: S008, type: public, publisher: 島根県, year: null, title: ブドウ病害虫データベース 目次, url: "https://www.pref.shimane.lg.jp/industry/norin/gijutsu/nougyo_tech/byougaityuu/byougaityuu-index/budou/" }
+- { id: S009, type: public, publisher: 奈良県農業研究開発センター, year: 2026, title: ブドウの病害, url: "https://www.pref.nara.lg.jp/n128/16486.html" }
+- { id: S010, type: public, publisher: 茨城県病害虫防除所, year: null, title: ブドウ-べと病, url: "https://www.pref.ibaraki.jp/nourinsuisan/nosose/byobo/boujosidou/shiryoshitsu/shiryo-budobeto.html" }
+- { id: S011, type: public, publisher: 茨城県, year: null, title: ブドウ主要病害の特徴と今後の防除対策, url: "https://www.pref.ibaraki.jp/nourinsuisan/nosose/byobo/boujosidou/byougaityuukannrennjouhou/documents/budou_syuyoubyougaityuu.pdf" }
+- { id: S012, type: public, publisher: 茨城県農業総合センター, year: 2012, title: QoI剤耐性ブドウべと病菌発生圃場における効果的な防除体系, url: "https://www.pref.ibaraki.jp/nourinsuisan/enken/seika/kajyu/budo/documents/s24_07.pdf", note: 平成24年頃 }
+- { id: S013, type: public, publisher: 茨城県農業総合センター, year: 2009, title: QoI剤耐性ブドウ褐斑病菌の発生状況, url: "https://www.pref.ibaraki.jp/nourinsuisan/enken/seika/kajyu/budo/documents/s21k10.pdf", note: 平成21年頃 }
+- { id: S014, type: public, publisher: 佐賀県果樹試験場, year: null, title: ブドウべと病対策について, url: "https://www.pref.saga.lg.jp/kiji00322997/3_22997_144035_up_704t4c6s.pdf" }
+- { id: S016, type: public, publisher: 山梨県農業技術課, year: 2023, title: ブドウ黒とう病対策について（第2報）, url: "https://www.pref.yamanashi.jp/documents/78114/0706kokutodai2.pdf" }
+- { id: S017, type: public, publisher: 岡山県農林水産総合センター, year: null, title: QoI剤感受性低下菌が発生したブドウ病害に対する有効な防除薬剤, url: "https://www.pref.okayama.jp/uploaded/life/502548_3749737_misc.pdf" }
+- { id: S019, type: public, publisher: 農研機構植物防疫研究部門, year: 2024, title: 輸出相手国の残留農薬基準に対応したブドウの防除暦作成指針, url: "https://www.naro.go.jp/publicity_report/publication/files/yushutsu_boujoreki_sakusei_shishin_grape.pdf" }
+- { id: S020, type: public, publisher: 農研機構果樹研究所, year: 2005, title: Colletotrichum acutatumによるブドウ晩腐病の抵抗性簡易検定法, url: "https://www.naro.go.jp/project/results/laboratory/fruit/2005/fruit05-07.html" }
+- { id: S023, type: public, publisher: 長野県, year: 2025, title: 令和8年 病害虫雑草防除基準 ぶどう, url: "https://www.pref.nagano.lg.jp/bojo/nouyaku/bojokijun/documents/6-4.pdf", note: 2025年11月30日登録現在 }
+- { id: S026, type: public, publisher: 鳥取県, year: 2026, title: 鳥取県病害虫防除所, url: "https://www.pref.tottori.lg.jp/boujosyo/" }
+- { id: S027, type: public, publisher: 鳥取県病害虫防除所, year: 2025, title: 令和7年度 病害虫発生予報 第8号, url: "https://www.pref.tottori.lg.jp/secure/1402536/R07yoho08.pdf", note: 2025年9月10日 }
+- { id: S028, type: public, publisher: 鳥取県病害虫防除所, year: 2022, title: 令和4年度 病害虫発生予報 第4号, url: "https://www.pref.tottori.lg.jp/secure/1362583/R04yoho04.pdf", note: 2022年6月1日 }
+- { id: S029, type: public, publisher: 鳥取県, year: 2026, title: 病害虫発生予察情報 一覧, url: "https://www.pref.tottori.lg.jp/318284.htm" }
+- { id: S047, type: public, publisher: 東京都産業労働局, year: null, title: 薬剤系統区分, url: "https://www.sangyo-rodo.metro.tokyo.lg.jp/documents/d/sangyo-rodo/050_050_010_1_yakuzai-keito-kubun-pdf" }
+- { id: S048, type: public, publisher: 栃木県農業総合研究センター, year: 2025, title: イチゴ灰色かび病菌に対する薬剤感受性検定結果, url: "https://www.pref.tochigi.lg.jp/g59/boujo/documents/2025-ichigo-haiirokabi.pdf" }
+- { id: S050, type: public, publisher: JA全農いばらき, year: 2021, title: 露地ブドウ栽培でのべと病、灰色かび病、褐斑病、晩腐病などの防除を励行してください, url: "https://www.zennoh.or.jp/ib/contents/make/einou/2868.pdf" }
+- { id: S051, type: public, publisher: 北海道病害虫防除所, year: 2011, title: ぶどうの晩腐病（病原の追加）, url: "http://www.agri.hro.or.jp/boujosho/sinhassei/html/H23/23-22.htm" }
+- { id: S057, type: public, publisher: 農林水産省, year: null, title: 農薬登録情報提供システム, url: "https://pesticide.maff.go.jp/agricultural-chemicals/details/24164", note: 例として登録番号24164。随時更新 }
+- { id: S057a, type: public, publisher: 秋田県, year: null, title: ブドウ病害虫資料, url: "https://www.pref.akita.lg.jp/uploads/public/archive_0000001711_00/budou-byougaityu.pdf" }
+
+# --- 防除暦・JA資料 ---
+- { id: S021, type: calendar, publisher: JA庄内たがわ, year: 2025, title: 2025年度 醸造用ぶどう病害虫防除暦（露地栽培用）, url: "http://ja-shonai.or.jp/wp20/wp-content/uploads/2025/01/R7%E9%86%B8%E9%80%A0%E7%94%A8%E3%81%B6%E3%81%A9%E3%81%86%E9%98%B2%E9%99%A4%E6%9A%A6.pdf" }
+- { id: S022, type: calendar, publisher: JAながの, year: 2025, title: 令和7年度 ぶどう病害虫防除基準, url: "https://www.ja-nagano.iijan.or.jp/Me9wmZUs/wp-content/uploads/2025/01/0debf60acc81100a8c08f975391a7e90.pdf" }
+
+# --- 論文・学術文献 ---
+- { id: S018, type: paper, publisher: 日本植物防疫協会, year: 2011, title: 我が国におけるQoI剤耐性ブドウべと病菌の発生実態（鈴木俊二・青木是直、植物防疫65(11)）, url: "http://jppa.or.jp/archive/pdf/65_11_20.pdf" }
+- { id: S031, type: paper, publisher: APS, year: 1999, title: Control of Powdery Mildew Using the UC Davis Powdery Mildew Risk Index（Gubler et al.）, url: "https://www.apsnet.org/edcenter/apsnetfeatures/Pages/UCDavisRisk.aspx" }
+- { id: S032, type: paper, publisher: University of California (UC IPM), year: 2014, title: "Models: Botrytis Bunch Rot of Grape", url: "https://ipm.ucanr.edu/DISEASE/DATABASE/grapebotrytis.html" }
+- { id: S033, type: paper, publisher: APS, year: 1995, title: "Broome, J.C. et al. Phytopathology 85:97-102", url: "https://www.apsnet.org/publications/phytopathology/backissues/Documents/1995Abstracts/Phyto_85_97.htm" }
+- { id: S034, type: paper, publisher: PLOS ONE, year: 2015, title: "González-Domínguez, E. et al. PLOS ONE 10:e0140444", url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC4601735" }
+- { id: S034a, type: paper, publisher: ScienceDirect, year: null, title: Infection of grape flowers and berries by Botrytis cinerea as a function of time and temperature, url: "https://www.sciencedirect.com/science/article/abs/pii/S095375620980871X" }
+- { id: S035, type: paper, publisher: Ecological Modelling, year: 2008, title: "Rossi, V. et al. Ecological Modelling 212:480-491", url: "https://www.sciencedirect.com/science/article/abs/pii/S0304380007005881" }
+- { id: S036, type: paper, publisher: MDPI, year: 2022, title: Grapevine Downy Mildew Warning System Based on NB-IoT and Energy Harvesting Technology（Electronics 11:356）, url: "https://www.mdpi.com/2079-9292/11/3/356" }
+- { id: S038, type: paper, publisher: Crop Protection, year: 2023, title: Predictive models for grape downy mildew (Plasmopara viticola) as a decision support system in Mediterranean conditions, url: "https://www.sciencedirect.com/science/article/abs/pii/S0261219423002739" }
+- { id: S040, type: paper, publisher: Plant Disease, year: 2013, title: "Peduto, F. et al. Revising the high temperature threshold for the Gubler-Thomas grape powdery mildew risk index（Plant Disease 97:1438-1447）", url: "https://www.researchgate.net/publication/294394144_Revising_the_high_temperature_threshold_for_the_Gubler-Thomas_grape_powdery_mildew_risk_index" }
+- { id: S041, type: paper, publisher: Plant Disease, year: 2003, title: "Erincik, O. et al. Plant Disease 87:832", url: "https://apsjournals.apsnet.org/doi/pdf/10.1094/PDIS.2003.87.7.832" }
+- { id: S042, type: paper, publisher: PMC, year: 2021, title: Effects of Temperature and Wetness Duration on Infection by Coniella diplodiella, url: "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8399050/" }
+- { id: S043, type: paper, publisher: APS, year: 1989, title: MacHardy & Gadoury. Phytopathology 79:304, url: "https://www.apsnet.org/publications/phytopathology/backissues/Documents/1989Abstracts/Phyto79_304.htm" }
+- { id: S045, type: paper, publisher: J-GLOBAL, year: 2009, title: マンジプロパミドおよび他のCAA系殺菌剤の耐性リスク推定, url: "https://jglobal.jst.go.jp/public/20090422/200902276942820108" }
+- { id: S046, type: paper, publisher: 日本植物防疫協会, year: 2012, title: QoI剤およびSDHI剤耐性菌の現状と薬剤使用ガイドライン（植物防疫66(9)）, url: "https://jppa.or.jp/archive/pdf/66_09_11.pdf" }
+- { id: S052, type: other, publisher: 全国農村教育協会, year: null, title: ブドウ枝膨病, url: "https://boujo.net/release/byougai-release/%E3%83%96%E3%83%89%E3%82%A6%E6%9E%9D%E8%86%A8%E7%97%85.html" }
+- { id: S053, type: other, publisher: 全国農村教育協会, year: null, title: つる割病, url: "https://boujo.net/handbook/grape/%E3%81%A4%E3%82%8B%E5%89%B2%E7%97%85%EF%BC%88%E3%81%A4%E3%82%8B%E3%82%8F%E3%82%8C%E3%81%B3%E3%82%87%E3%81%86%EF%BC%89.html" }
+
+# --- メーカー・技術資料 ---
+- { id: S024, type: maker, publisher: シンジェンタジャパン, year: 2021, title: オロンディスウルトラSC ラベル, url: "https://cp-product.syngenta.co.jp/sites/default/files/2021-11/s_sk_orondisultrasc.pdf" }
+- { id: S025, type: maker, publisher: シンジェンタジャパン, year: 2023, title: オロンディスウルトラSC・セイビアーフロアブル20 事例記事, url: "https://www.syngenta.co.jp/cp/articles/2023401_1" }
+- { id: S049, type: maker, publisher: アリスタ ライフサイエンス, year: 2003, title: ボトキラー水和剤によるブドウ灰色かび病の防除, url: "https://arystalifescience.jp/guide/t_105c.php" }
+- { id: S055, type: maker, publisher: METOS by Pessl Instruments, year: null, title: Disease models - grapevine, url: "https://metos.global/en/disease-models-grapevine/", reliability: low, note: 商用サイト }
+- { id: S059, type: maker, publisher: シンジェンタジャパン, year: 2004, title: ぶどうの病害について—晩腐病、灰色かび病、べと病—, url: "https://www.syngenta.co.jp/en/cp/articles/20041201_01" }
+
+# --- その他（業界誌・民間サイト：信頼性に注意） ---
+- { id: S030, type: other, publisher: na-na（地域Webマガジン）, year: null, title: 北条ワイン醸造所, url: "https://na-na.media/hozyowine/", reliability: low }
+- { id: S037, type: other, publisher: International Wine Challenge, year: null, title: "Downy mildew: With climate change, is the 3-10 model still valid?", url: "https://www.internationalwinechallenge.com/iwc-insight/tomorrows-vineyard/downy-mildew-with-climate-change-is-the-3-10-model-still-valid.html" }
+- { id: S039, type: public, publisher: University of California (UC IPM), year: null, title: Downy Mildew / Grape, url: "https://ipm.ucanr.edu/agriculture/grape/downy-mildew/" }
+- { id: S056, type: other, publisher: Pest Prophet Blog, year: null, title: How to Use Powdery Mildew Risk Index Model on Grapes, url: "https://blog.pestprophet.com/how-to-use-powdery-mildew-risk-index-model-on-grapes/", reliability: low, note: 民間ブログ。値は S031 と整合 }
+- { id: S060, type: other, publisher: VitiScribe, year: null, title: Downy mildew infection period calculation using temperature and moisture, url: "https://vitiscribe.com/downy-mildew-infection-period-calculation-using-temperature-and-moisture/", reliability: low, note: 民間サイト。3-10 と定義が異なる }
+- { id: S061, type: other, publisher: Farm Progress, year: null, title: Update underway for powdery mildew forecast model in grapes, url: "https://www.farmprogress.com/grapes/update-underway-for-powdery-mildew-forecast-model-in-grapes" }
+- { id: S062, type: other, publisher: American Vineyard Foundation, year: 2008, title: Revising the Gubler-Thomas Model for Powdery Mildew, url: "https://avf.org/research-summary/revising-the-gubler-thomas-model-for-powdery-mildew/" }
+
+# --- 分類表（業界団体） ---
+- { id: S063, type: other, publisher: FRAC（Fungicide Resistance Action Committee / CropLife International）, year: 2026, title: "FRAC Code List 2026: Fungal control agents sorted by cross-resistance pattern and mode of action", url: null, note: "ユーザー提供の PDF（frac-code-list-2026.pdf）。最終更新 2026年5月、次回更新の決定は 2027年3月。教育目的の利用は許諾不要、商用利用は FRAC の事前許可が必要" }

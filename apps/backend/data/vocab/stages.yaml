@@ -1,0 +1,15 @@
+# 生育ステージ。value がルール内の stage 変数の値（順序値）。
+# value と id は不変。並び順＝生育の進行順。
+# typicalMonth は目安（鳥取・露地の想定）で、判定には使わない。
+
+- { value: 0,  id: dormant,     nameJa: 休眠期,   typicalMonth: "12-3" }
+- { value: 1,  id: bud_break,   nameJa: 萌芽期,   typicalMonth: "4" }
+- { value: 2,  id: leaf_out,    nameJa: 展葉期,   typicalMonth: "4-5" }
+- { value: 3,  id: pre_bloom,   nameJa: 開花直前, typicalMonth: "5-6" }
+- { value: 4,  id: bloom,       nameJa: 開花期,   typicalMonth: "6" }
+- { value: 5,  id: post_bloom,  nameJa: 落花直後, typicalMonth: "6" }
+- { value: 6,  id: young_fruit, nameJa: 幼果期,   typicalMonth: "6-7" }
+- { value: 7,  id: swelling,    nameJa: 肥大期,   typicalMonth: "7" }
+- { value: 8,  id: veraison,    nameJa: 着色期,   typicalMonth: "8" }
+- { value: 9,  id: harvest,     nameJa: 収穫期,   typicalMonth: "9-10" }
+- { value: 10, id: post_harvest, nameJa: 収穫後,  typicalMonth: "10-11" }
