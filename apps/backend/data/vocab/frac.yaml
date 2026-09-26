@@ -1,0 +1,137 @@
+# FRAC コード表（作用機構グループ）。ルールの candidateFrac、activeIngredients の fracCode が参照する。
+# 出典: FRAC Code List 2026（最終更新 2026年5月）= sources.yaml の S063。
+# 利用条件: 教育目的の利用は許諾不要。商用利用は FRAC の事前許可が必要（PDF の Disclaimer）。
+#
+# code            参照キー（文字列）。公式表記から空白を除いたもの（"P 07" → P07, "BM 02" → BM02）。
+#                 ただし M 系だけは既存データに合わせてゼロ埋めなし（"M 01" → M1）。
+# label           公式の表示（"M 01" など）。ラベルや資料との照合用。
+# category        MOA の大分類。
+#                   A 核酸代謝・クロマチン調節 / B 細胞骨格・モータータンパク質 / C 呼吸
+#                   D アミノ酸・タンパク質合成 / E シグナル伝達 / F 脂質合成・輸送・膜の完全性
+#                   G 膜のステロール生合成 / H 細胞壁生合成 / I 細胞壁のメラニン合成
+#                   J RNA 干渉 / M 多作用点 / P 宿主植物の防御誘導 / U 作用機構不明
+#                   NC 未分類 / BM 複数の作用機構を持つ生物由来
+# targetSiteCode  標的部位コード（A1, C3 など）。M/P/U/NC/BM は null。
+# groupName       FRAC の Group Name。空欄のものは化学グループ名。
+# nameJa          日本語名（任意）。既存データにあるものだけ。
+# resistanceRisk  FRAC の記載。low | low_medium | medium | medium_high | high | not_stated
+# riskAssumed     true = FRAC が「想定値（assumed）」と書いているもの。
+# note            PDF の Comments 欄の要約（日本語）。ニュアンスが重要なときは PDF の原文を見ること。
+
+# ---- A: 核酸代謝・クロマチン調節 ----
+- { code: "4",  label: "4",  category: A, targetSiteCode: A1, groupName: "PA-fungicides (PhenylAmides)", resistanceRisk: high, note: "卵菌類で耐性・交差耐性が広く知られる（機構は不明）。FRAC にフェニルアミド管理指針あり" }
+- { code: "8",  label: "8",  category: A, targetSiteCode: A2, groupName: "hydroxy-(2-amino-)pyrimidines", resistanceRisk: medium, note: "うどんこ病菌で耐性・交差耐性が知られる。耐性管理が必要" }
+- { code: "32", label: "32", category: A, targetSiteCode: A3, groupName: "heteroaromatics", resistanceRisk: not_stated, note: "耐性の報告なし" }
+- { code: "31", label: "31", category: A, targetSiteCode: A4, groupName: "carboxylic acids", resistanceRisk: not_stated, note: "殺細菌剤。耐性は既知だが、糸状菌でのリスクは不明" }
+- { code: "52", label: "52", category: A, targetSiteCode: A5, groupName: "DHODHI-fungicides", resistanceRisk: medium_high, note: "耐性管理が必要" }
+- { code: "56", label: "56", category: A, targetSiteCode: A6, groupName: "HDAC inhibitors", resistanceRisk: medium, note: "耐性の報告なし。耐性管理が必要" }
+
+# ---- B: 細胞骨格・モータータンパク質 ----
+- { code: "1",  label: "1",  category: B, targetSiteCode: B1, groupName: "MBC-fungicides (Methyl Benzimidazole Carbamates)", nameJa: ベンゾイミダゾール系（MBC）, resistanceRisk: high, note: "多くの菌種で耐性が一般的（β-チューブリン遺伝子の変異 E198A/G/K, F200Y）。グループ内は正の交差耐性、N-フェニルカーバメート（コード10）とは負の交差耐性" }
+- { code: "10", label: "10", category: B, targetSiteCode: B2, groupName: "N-phenyl carbamates", resistanceRisk: high, note: "耐性既知（E198K）。ベンゾイミダゾール系とは負の交差耐性" }
+- { code: "22", label: "22", category: B, targetSiteCode: B3, groupName: "benzamides / thiazole carboxamide", resistanceRisk: low_medium, note: "耐性管理が必要" }
+- { code: "20", label: "20", category: B, targetSiteCode: B4, groupName: phenylureas, resistanceRisk: not_stated, note: "耐性の報告なし" }
+- { code: "43", label: "43", category: B, targetSiteCode: B5, groupName: "benzamides (pyridinylmethyl-benzamides)", resistanceRisk: medium, note: "ブドウべと病菌で耐性株が検出されている。耐性管理が必要" }
+- { code: "47", label: "47", category: B, targetSiteCode: B6, groupName: cyanoacrylates, resistanceRisk: medium_high, note: "Fusarium graminearum で耐性既知。耐性管理が必要" }
+- { code: "50", label: "50", category: B, targetSiteCode: B6, groupName: aryl-phenyl-ketones, resistanceRisk: medium, note: "うどんこ病菌（Blumeria, Sphaerotheca）で感受性の低い株が検出されている。2018年に U8 から再分類" }
+- { code: "53", label: "53", category: B, targetSiteCode: B7, groupName: pyridazine, resistanceRisk: high }
+
+# ---- C: 呼吸 ----
+- { code: "39", label: "39", category: C, targetSiteCode: C1, groupName: "pyrimidinamines / pyrazole-MET1 / quinazoline", resistanceRisk: not_stated, note: "耐性の報告なし" }
+- { code: "7",  label: "7",  category: C, targetSiteCode: C2, groupName: "SDHI-fungicides (Succinate-dehydrogenase inhibitors)", nameJa: SDHI, resistanceRisk: medium_high, note: "複数の菌種で耐性既知（sdh 遺伝子の変異。257/267/272 位の H/Y または H/L、P225L など、菌種による）。耐性管理が必要" }
+- { code: "11", label: "11", category: C, targetSiteCode: C3, groupName: "QoI-fungicides (Quinone outside Inhibitors)", nameJa: QoI（ストロビルリン系）, resistanceRisk: high, note: "多くの菌種で耐性既知（cyt b の G143A, F129L ほか）。G143A 変異株に対し、コード11の全メンバーが交差耐性" }
+- { code: "11A", label: "11A", category: C, targetSiteCode: C3, groupName: "QoI-fungicides (Subgroup A)", resistanceRisk: high, note: "耐性の報告なし。G143A 変異株に対しコード11と交差耐性なし" }
+- { code: "21", label: "21", category: C, targetSiteCode: C4, groupName: "QiI-fungicides (Quinone inside Inhibitors)", nameJa: QiI, resistanceRisk: medium_high, riskAssumed: true, note: "耐性リスクは不明だが medium〜high と想定（モデル生物で標的部位変異が既知）。ピコリナミド系（fenpicoxamid など）は、卵菌用のシアゾファミド・アミスルブロムとスペクトルが重ならない" }
+- { code: "29", label: "29", category: C, targetSiteCode: C5, groupName: "uncouplers of oxidative phosphorylation", resistanceRisk: low, note: "低リスクとされるが、日本で灰色かび病菌（Botrytis）の耐性が主張されている" }
+- { code: "30", label: "30", category: C, targetSiteCode: C6, groupName: "organo tin compounds", resistanceRisk: low_medium, note: "耐性事例あり" }
+- { code: "38", label: "38", category: C, targetSiteCode: C7, groupName: thiophene-carboxamides, resistanceRisk: low, note: "耐性報告あり" }
+- { code: "45", label: "45", category: C, targetSiteCode: C8, groupName: "QoSI fungicide (Quinone inside and outside inhibitor)", resistanceRisk: medium_high, riskAssumed: true, note: "QoI とは交差耐性なし。単一作用点のため medium〜high と想定。耐性管理が必要" }
+
+# ---- D: アミノ酸・タンパク質合成 ----
+- { code: "9",  label: "9",  category: D, targetSiteCode: D1, groupName: "AP-fungicides (Anilino-Pyrimidines)", nameJa: アニリノピリミジン系, resistanceRisk: medium, note: "灰色かび病菌（Botrytis）・黒星病菌で耐性既知、Oculimacula では散発的。FRAC に AP 管理指針あり" }
+- { code: "23", label: "23", category: D, targetSiteCode: D2, groupName: "enopyranuronic acid antibiotic", resistanceRisk: low_medium, note: "耐性管理が必要" }
+- { code: "24", label: "24", category: D, targetSiteCode: D3, groupName: "hexopyranosyl antibiotic", resistanceRisk: medium, note: "糸状菌・細菌（P. glumae）で耐性既知。耐性管理が必要" }
+- { code: "25", label: "25", category: D, targetSiteCode: D4, groupName: "glucopyranosyl antibiotic", resistanceRisk: high, note: "殺細菌剤。耐性既知" }
+- { code: "41", label: "41", category: D, targetSiteCode: D5, groupName: "tetracycline antibiotic", resistanceRisk: high, note: "殺細菌剤。耐性既知" }
+- { code: "54", label: "54", category: D, targetSiteCode: D6, groupName: benzoxaboroles, resistanceRisk: low, note: "収穫後専用のため低リスク" }
+
+# ---- E: シグナル伝達 ----
+- { code: "13", label: "13", category: E, targetSiteCode: E1, groupName: aza-naphthalenes, resistanceRisk: medium, note: "キノキシフェンの耐性既知。ブドウうどんこ病菌（Erysiphe necator）でグループ内の交差耐性が確認されている。耐性管理が必要" }
+- { code: "12", label: "12", category: E, targetSiteCode: E2, groupName: "PP-fungicides (PhenylPyrroles)", nameJa: フェニルピロール系, resistanceRisk: low_medium, note: "散発的に耐性が見つかっている。機構は推測段階。耐性管理が必要" }
+- { code: "2",  label: "2",  category: E, targetSiteCode: E3, groupName: dicarboximides, nameJa: ジカルボキシイミド系, resistanceRisk: medium_high, note: "灰色かび病菌（Botrytis）などで耐性が一般的（OS-1 の変異、主に I365S）。グループ内で交差耐性が一般的。FRAC にジカルボキシイミド管理指針あり" }
+
+# ---- F: 脂質合成・輸送・膜の完全性 ----
+- { code: "6",  label: "6",  category: F, targetSiteCode: F2, groupName: "phosphoro-thiolates / dithiolanes", resistanceRisk: low_medium, note: "特定の菌で耐性既知。リスクの高い病原菌に使うなら耐性管理が必要" }
+- { code: "14", label: "14", category: F, targetSiteCode: F3, groupName: "AH-fungicides (Aromatic Hydrocarbons) / heteroaromatics", resistanceRisk: low_medium, note: "一部の菌で耐性既知。活性スペクトルが異なるため交差耐性のパターンは複雑" }
+- { code: "28", label: "28", category: F, targetSiteCode: F4, groupName: carbamates, resistanceRisk: low_medium, note: "耐性管理が必要" }
+- { code: "48", label: "48", category: F, targetSiteCode: F8, groupName: polyene, resistanceRisk: not_stated, note: "耐性の報告なし" }
+- { code: "49", label: "49", category: F, targetSiteCode: F9, groupName: "OSBPI-fungicides (oxysterol binding protein homologue inhibition)", nameJa: OSBPI, resistanceRisk: medium_high, riskAssumed: true, note: "単一作用点のため medium〜high と想定。耐性管理が必要。以前は U15" }
+- { code: "51", label: "51", category: F, targetSiteCode: F10, groupName: "protein fragment", resistanceRisk: not_stated, note: "耐性の報告なし" }
+
+# ---- G: 膜のステロール生合成 ----
+- { code: "3",  label: "3",  category: G, targetSiteCode: G1, groupName: "DMI-fungicides (DeMethylation Inhibitors) (SBI: Class I)", nameJa: DMI（ステロール生合成阻害）, resistanceRisk: medium, note: "多くの菌種で耐性既知（cyp51 の変異、プロモーター、ABC トランスポーターなど）。同じ菌に効く DMI 同士は交差耐性があると考えるのが安全。剤ごとの活性スペクトルの差は大きい。SBI の他クラスとは交差耐性なし" }
+- { code: "5",  label: "5",  category: G, targetSiteCode: G2, groupName: "Amines (morpholines) (SBI: Class II)", resistanceRisk: low_medium, note: "うどんこ病菌で感受性低下。グループ内では交差耐性、他の SBI クラスとはなし" }
+- { code: "17", label: "17", category: G, targetSiteCode: G3, groupName: "KRI-fungicides (KetoReductase Inhibitors) (SBI: Class III)", resistanceRisk: low_medium, note: "耐性管理が必要" }
+- { code: "18", label: "18", category: G, targetSiteCode: G4, groupName: "SBI class IV", resistanceRisk: not_stated, note: "耐性の報告なし。アリルアミン系は医療用のみ" }
+
+# ---- H: 細胞壁生合成 ----
+- { code: "19", label: "19", category: H, targetSiteCode: H4, groupName: polyoxins, resistanceRisk: medium, note: "耐性既知。耐性管理が必要" }
+- { code: "40", label: "40", category: H, targetSiteCode: H5, groupName: "CAA-fungicides (Carboxylic Acid Amides)", nameJa: CAA（カルボン酸アミド系）, resistanceRisk: low_medium, note: "ブドウべと病菌（Plasmopara viticola）で耐性既知（疫病菌 Phytophthora infestans では未確認）。グループ内の全メンバーが交差耐性。FRAC に CAA 管理指針あり" }
+- { code: "55", label: "55", category: H, targetSiteCode: H6, groupName: "GWT-1 inhibitors", resistanceRisk: medium, note: "耐性の報告なし。耐性管理が必要" }
+
+# ---- I: 細胞壁のメラニン合成 ----
+- { code: "16.1", label: "16.1", category: I, targetSiteCode: I1, groupName: "MBI-R (Melanin Biosynthesis Inhibitors - Reductase)", resistanceRisk: not_stated, note: "耐性の報告なし" }
+- { code: "16.2", label: "16.2", category: I, targetSiteCode: I2, groupName: "MBI-D (Melanin Biosynthesis Inhibitors - Dehydratase)", resistanceRisk: medium, note: "耐性既知。耐性管理が必要" }
+- { code: "16.3", label: "16.3", category: I, targetSiteCode: I3, groupName: "MBI-P (Melanin Biosynthesis Inhibitors - Polyketide synthase)", resistanceRisk: not_stated, note: "耐性の報告なし" }
+
+# ---- J: RNA 干渉 ----
+- { code: "57", label: "57", category: J, targetSiteCode: J1, groupName: RNAi-fungicides, resistanceRisk: medium, note: "耐性の報告なし。標的は Erysiphe necator（ブドウうどんこ病菌）の CYP51（ERG11）" }
+
+# ---- M: 多作用点 ----
+- { code: M1,  label: "M 01", category: M, targetSiteCode: null, groupName: "copper (inorganic)", nameJa: 無機銅（ボルドー液など）, resistanceRisk: low, note: "各種の銅塩。有機銅錯体も含む" }
+- { code: M2,  label: "M 02", category: M, targetSiteCode: null, groupName: "sulphur (inorganic)", nameJa: 無機硫黄, resistanceRisk: low }
+- { code: M3,  label: "M 03", category: M, targetSiteCode: null, groupName: "dithiocarbamates and relatives", nameJa: ジチオカーバメート系, resistanceRisk: low }
+- { code: M4,  label: "M 04", category: M, targetSiteCode: null, groupName: phthalimides, nameJa: フタルイミド系, resistanceRisk: low }
+- { code: M5,  label: "M 05", category: M, targetSiteCode: null, groupName: "chloronitriles (phthalonitriles)", resistanceRisk: low }
+- { code: M6,  label: "M 06", category: M, targetSiteCode: null, groupName: sulfamides, resistanceRisk: low }
+- { code: M7,  label: "M 07", category: M, targetSiteCode: null, groupName: bis-guanidines, nameJa: グアニジン系, resistanceRisk: low }
+- { code: M8,  label: "M 08", category: M, targetSiteCode: null, groupName: triazines, resistanceRisk: low }
+- { code: M9,  label: "M 09", category: M, targetSiteCode: null, groupName: "quinones (anthraquinones)", nameJa: キノン系, resistanceRisk: low }
+- { code: M10, label: "M 10", category: M, targetSiteCode: null, groupName: quinoxalines, resistanceRisk: low }
+- { code: M11, label: "M 11", category: M, targetSiteCode: null, groupName: maleimide, resistanceRisk: low }
+- { code: M12, label: "M 12", category: M, targetSiteCode: null, groupName: thiocarbamate, resistanceRisk: low, note: "2018年に U42 から再分類" }
+- { code: M13, label: "M 13", category: M, targetSiteCode: null, groupName: "inorganic (zinc oxide)", resistanceRisk: low }
+
+# ---- P: 宿主植物の防御誘導 ----
+- { code: P01, label: "P 01", category: P, targetSiteCode: null, groupName: "benzo-thiadiazole (BTH)", resistanceRisk: not_stated }
+- { code: P02, label: "P 02", category: P, targetSiteCode: null, groupName: benzisothiazole, resistanceRisk: not_stated }
+- { code: P03, label: "P 03", category: P, targetSiteCode: null, groupName: thiadiazole-carboxamide, resistanceRisk: not_stated }
+- { code: P04, label: "P 04", category: P, targetSiteCode: null, groupName: "polysaccharide elicitors", resistanceRisk: not_stated }
+- { code: P05, label: "P 05", category: P, targetSiteCode: null, groupName: "anthraquinone elicitors (plant extract)", resistanceRisk: not_stated }
+- { code: P06, label: "P 06", category: P, targetSiteCode: null, groupName: "microbial elicitors", resistanceRisk: not_stated }
+- { code: P07, label: "P 07", category: P, targetSiteCode: null, groupName: phosphonates, resistanceRisk: low, note: "少数の病原菌で耐性事例。2018年に U33 から再分類" }
+- { code: P08, label: "P 08", category: P, targetSiteCode: null, groupName: isothiazole, resistanceRisk: not_stated }
+- { code: P09, label: "P 09", category: P, targetSiteCode: null, groupName: "flagellin peptide", resistanceRisk: not_stated }
+- { code: P10, label: "P 10", category: P, targetSiteCode: null, groupName: "natural small molecule metabolite", resistanceRisk: not_stated }
+- { code: P11, label: "P 11", category: P, targetSiteCode: null, groupName: "plant extract (SAR elicitor)", resistanceRisk: not_stated }
+
+# ---- U: 作用機構不明 ----
+- { code: "27", label: "27", category: U, targetSiteCode: null, groupName: "cyanoacetamide-oxime", nameJa: シアノアセトアミドオキシム系, resistanceRisk: low_medium, note: "耐性の報告あり。耐性管理が必要" }
+- { code: "34", label: "34", category: U, targetSiteCode: null, groupName: "phthalamic acids", resistanceRisk: not_stated }
+- { code: "35", label: "35", category: U, targetSiteCode: null, groupName: benzotriazines, resistanceRisk: not_stated }
+- { code: "36", label: "36", category: U, targetSiteCode: null, groupName: benzene-sulfonamides, resistanceRisk: not_stated }
+- { code: "37", label: "37", category: U, targetSiteCode: null, groupName: pyridazinones, resistanceRisk: not_stated }
+- { code: U06, label: "U 06", category: U, targetSiteCode: null, groupName: phenyl-acetamide, resistanceRisk: not_stated, note: "Sphaerotheca で耐性。耐性管理が必要" }
+- { code: U12, label: "U 12", category: U, targetSiteCode: null, groupName: guanidines, resistanceRisk: low_medium, note: "リンゴ黒星病菌で耐性既知。耐性管理を推奨" }
+- { code: U13, label: "U 13", category: U, targetSiteCode: null, groupName: thiazolidine, resistanceRisk: not_stated, note: "Sphaerotheca と Podosphaera xanthii で耐性。耐性管理が必要" }
+- { code: U14, label: "U 14", category: U, targetSiteCode: null, groupName: pyrimidinone-hydrazones, resistanceRisk: not_stated, note: "耐性の報告なし。以前は C5" }
+- { code: U16, label: "U 16", category: U, targetSiteCode: null, groupName: 4-quinolyl-acetates, resistanceRisk: medium, riskAssumed: true, note: "QoI とは交差耐性なし。リスクは不明だが medium と想定。耐性管理が必要" }
+- { code: U17, label: "U 17", category: U, targetSiteCode: null, groupName: tetrazolyloximes, resistanceRisk: not_stated, note: "PA・QoI・CAA と交差耐性なし" }
+- { code: U18, label: "U 18", category: U, targetSiteCode: null, groupName: "glucopyranosyl antibiotics", resistanceRisk: not_stated, note: "以前は H3" }
+- { code: U19, label: "U 19", category: U, targetSiteCode: null, groupName: "nereistoxin analogues", resistanceRisk: not_stated, note: "DMI・QoI・SDHI と交差耐性なし" }
+
+# ---- 未分類・生物由来 ----
+- { code: NC,   label: NC,     category: NC, targetSiteCode: null, groupName: "not specified (mineral oils, organic oils, inorganic salts, material of biological origin)", resistanceRisk: not_stated }
+- { code: BM01, label: "BM 01", category: BM, targetSiteCode: null, groupName: "biologicals: plant extracts", resistanceRisk: not_stated }
+- { code: BM02, label: "BM 02", category: BM, targetSiteCode: null, groupName: "biologicals: microbial (strains of living microbes or extract, metabolites)", nameJa: 微生物, resistanceRisk: not_stated, note: "Bacillus amyloliquefaciens 系は 2020年に F6（コード44）から再分類" }
+- { code: BM03, label: "BM 03", category: BM, targetSiteCode: null, groupName: "purified metabolites from plant or microbial sources, or synthetic versions", resistanceRisk: not_stated }
