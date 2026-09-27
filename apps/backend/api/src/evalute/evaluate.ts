@@ -52,20 +52,22 @@ export function evaluateRule(rule: Rule, input: EvalInput): RuleResult {
 }
 
 /**
- * 全ルールを評価して病害ごとにまとめる。
- * 優先順位は conditions_met > near_threshold > undetermined > none。
- * 他ルールが none でも、判定不能が1つあれば undetermined を返す。
+ * 全ルールを評価して病害ごとにまとめる
+ * 優先順位は conditions_met > near_threshold > undetermined > none
+ * 他ルールが none でも、判定不能が1つあれば undetermined を返す
  * @param opts.includeDisabled true なら enabled: false のルールも評価する
+ * @param opts.hourlyFor ルールごとに hourly を差し替える。省略時は input.hourly をそのまま使う
  */
 export function evaluateRisks(
   rules: Rule[],
   input: EvalInput,
-  opts: { includeDisabled?: boolean } = {},
+  opts: { includeDisabled?: boolean; hourlyFor?: (rule: Rule) => HourlyPoint[] } = {},
 ): DiseaseResult[] {
   const byDisease = new Map<string, RuleResult[]>();
   for (const rule of rules) {
     if (!rule.enabled && !opts.includeDisabled) continue;
-    const r = evaluateRule(rule, input);
+    const ruleInput = opts.hourlyFor ? { ...input, hourly: opts.hourlyFor(rule) } : input;
+    const r = evaluateRule(rule, ruleInput);
     const list = byDisease.get(rule.diseaseId);
     if (list) list.push(r);
     else byDisease.set(rule.diseaseId, [r]);
