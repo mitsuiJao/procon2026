@@ -7,9 +7,9 @@ export type SensorDaily = {
 };
 
 /**
- * 指定期間のセンサー値をJST日付ごとに集計する。複数デバイスは区別せず束ねる
- * @param start 開始日時 (含む)
- * @param end 終了日時 (含まない)
+ * 指定期間のセンサー値をJST日付ごとに集計
+ * @param start 開始日時 含む
+ * @param end 終了日時 含まない
  * @returns { "YYYY-MM-DD": { tmax, tmin, humidity } }
  */
 export async function getSensorDailyByRange(
@@ -32,8 +32,44 @@ export async function getSensorDailyByRange(
   );
 }
 
+export type SensorHourly = {
+  tempC: number | null;
+  rhPercent: number | null;
+  rainfallMm: number | null;
+};
+
 /**
- * metricごとの最新のセンサー値を取得する。デバイスは区別しない
+ * 指定期間のセンサー値をUTC時間ごとに集計
+ * temp/humidity は平均、rainfall は合計、受信値は前回からの増分である
+ * @param start 開始日時 含む
+ * @param end 終了日時 含まない
+ * @returns { "ISO時刻(時単位)": { tempC, rhPercent, rainfallMm } }
+ */
+export async function getSensorHourlyByRange(
+  start: Date,
+  end: Date,
+): Promise<Record<string, SensorHourly>> {
+  const { rows } = await pool.query(
+    `SELECT date_trunc('hour', received_at) AS hour,
+            ROUND((AVG(value) FILTER (WHERE metric = 'temp'))::numeric, 2)::float8 AS "tempC",
+            ROUND((AVG(value) FILTER (WHERE metric = 'humidity'))::numeric, 2)::float8 AS "rhPercent",
+            SUM(value) FILTER (WHERE metric = 'rainfall')::float8 AS "rainfallMm"
+       FROM measure
+      WHERE metric IN ('temp', 'humidity', 'rainfall')
+        AND received_at >= $1 AND received_at < $2
+      GROUP BY 1`,
+    [start, end],
+  );
+  return Object.fromEntries(
+    rows.map((r) => [
+      r.hour.toISOString(),
+      { tempC: r.tempC, rhPercent: r.rhPercent, rainfallMm: r.rainfallMm },
+    ]),
+  );
+}
+
+/**
+ * metricごとの最新のセンサー値を取得
  * @returns { metric, value, received_at }[]
  */
 export async function getLatestMeasures(): Promise<
@@ -48,7 +84,7 @@ export async function getLatestMeasures(): Promise<
 }
 
 /**
- * 測定データのあるデバイス名の一覧を取得する
+ * 測定データのあるデバイス名の一覧を取得
  * @returns デバイス名の配列 (昇順)
  */
 export async function getSensorDevice(): Promise<string[]> {
