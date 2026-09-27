@@ -3,6 +3,7 @@ import { getLatestMeasures } from "./db/measure";
 import { getPlace } from "./db/settings";
 import { getForecastByRange } from "./db/weather";
 import { getCalendarWeather } from "./utils/calendar";
+import { getCalendarRisks } from "./utils/calendarRisk";
 
 const MAX_RANGE_DAYS = 400;
 const STALE_MS = 15 * 60 * 1000;
@@ -33,6 +34,23 @@ routes.get("/calendar", async (c) => {
   if (days >= MAX_RANGE_DAYS) return c.json({ error: `range must be under ${MAX_RANGE_DAYS} days` }, 400);
 
   return c.json(await getCalendarWeather(start, end));
+});
+
+/**
+ * カレンダー用の日次病害リスク
+ * GET /calendar/risk?start=YYYY-MM-DD&end=YYYY-MM-DD 含む
+ * @returns { "YYYY-MM-DD": { stage, stageSource, diseases } }
+ */
+routes.get("/calendar/risk", async (c) => {
+  const { start, end } = c.req.query();
+  if (!isValidDate(start) || !isValidDate(end)) {
+    return c.json({ error: "start and end must be valid YYYY-MM-DD dates" }, 400);
+  }
+  const days = (Date.parse(`${end}T00:00:00+09:00`) - Date.parse(`${start}T00:00:00+09:00`)) / DAY_MS;
+  if (days < 0) return c.json({ error: "start must be on or before end" }, 400);
+  if (days >= MAX_RANGE_DAYS) return c.json({ error: `range must be under ${MAX_RANGE_DAYS} days` }, 400);
+
+  return c.json(await getCalendarRisks(start, end));
 });
 
 /**
