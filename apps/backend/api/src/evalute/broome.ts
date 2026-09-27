@@ -1,12 +1,20 @@
 import type { HourlyPoint } from "./types";
 
 /**
+ * データが揃っていて（RH・気温とも取れていて）、単に濡れイベントが無かったときに返す値。
+ * mid/high のどんな設計値よりも十分低く、必ず none 判定になる（実際の logit の範囲外のダミー値）。
+ */
+const NO_EVENT_LOGIT = -100;
+
+/**
  * 灰色かび病 Broome 式（UC IPM 実装仕様）。
  *   logit = b0 + bW*W + bWT*W*T + bWT2*W*T^2
  * 濡れ: 時別 RH >= wetRhMin。乾燥が dryResetHours を超えたら事象を打ち切る。
  * T は濡れ期間の平均気温を tMin〜tMax に丸める。tHardMax 超は感染不適（事象を無視）。
- * 欠損（RH が null）は濡れ／乾燥のどちらでもなく、事象を継続扱いにせず乾燥として数える。
- * @returns 渡された期間内の事象ごとの logit の最大値。事象がなければ null
+ * 欠損（RH または気温が null）は濡れ／乾燥のどちらでもなく、事象を継続扱いにせず乾燥として数える。
+ * @returns 渡された期間内の事象ごとの logit の最大値。
+ *   データが1件も無い（欠測のみ）ときは null（判定不能）。
+ *   データはあるが濡れイベントが無かったときは NO_EVENT_LOGIT（= none 相当。判定不能とは区別する）。
  */
 export function broome(
   hourly: HourlyPoint[],
@@ -17,6 +25,7 @@ export function broome(
   let tempSum = 0;
   let dryRun = 0;
   let open = false;
+  let hadData = false;
 
   const close = () => {
     if (open && wetHours > 0) {
@@ -35,7 +44,9 @@ export function broome(
   };
 
   for (const h of hourly) {
-    const wet = h.rhPercent !== null && h.tempC !== null && h.rhPercent >= p.wetRhMin;
+    const hasReading = h.rhPercent !== null && h.tempC !== null;
+    if (hasReading) hadData = true;
+    const wet = hasReading && (h.rhPercent as number) >= p.wetRhMin;
     if (wet) {
       open = true;
       dryRun = 0;
@@ -47,5 +58,6 @@ export function broome(
     }
   }
   close();
-  return best;
+  if (best !== null) return best;
+  return hadData ? NO_EVENT_LOGIT : null;
 }
