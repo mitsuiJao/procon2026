@@ -24,4 +24,5 @@
 ## Implementation notes
 - Do not start cron as an import side effect. Call `startWeatherCron()` from `index.ts`. Assumes a single `api` container (scaling it would run the cron twice).
 - The number of `measure` rows depends on the sensor send interval, so the monthly view may become slow (not measured yet). If it does, cache past days per day.
-- No route calls `getCalendarWeather` yet. The diary and spray DB functions (`db/diary.ts`, `db/spray.ts`) are not connected to the frontend yet.
+- The diary and spray DB functions (`db/diary.ts`, `db/spray.ts`) are not connected to the frontend yet.
+- `apps/backend/data` is mounted into the `api` container via `docker-compose.yml` (`./data:/app/data:ro` + `DATA_DIR=/app/data`), since it's outside the `api` build context.
