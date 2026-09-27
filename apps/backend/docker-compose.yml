@@ -58,6 +58,8 @@ services:
     command: node dist/index.js
     ports:
       - "3000:3000"
+    volumes:
+      - ./data:/app/data:ro
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -71,6 +73,7 @@ services:
       - PGDATABASE=${PGDATABASE}
       - LATITUDE=${latitude}
       - LONGITUDE=${longitude}
+      - DATA_DIR=/app/data
 
 
 volumes:

@@ -14,8 +14,8 @@ const DAY_MS = 24 * HOUR_MS;
 /** Broome（灰色かび病）に渡す直近の濡れイベント判定用の遡り日数。季節全体を渡すと季節最悪値に張り付くため短くする */
 const BROOME_LOOKBACK_DAYS = 2;
 
-// data/ は api のビルドコンテキスト外（Docker では未同梱、別タスク）。
-// ローカル実行では src/dist からの相対パスで data/ に届く。DATA_DIR で上書き可能にしておく。
+// data/ は api のビルドコンテキスト外なので、Docker では docker-compose.yml のボリュームマウント（DATA_DIR=/app/data）で渡す。
+// ローカル実行では src/dist からの相対パスで data/ に届く。
 const DATA_DIR = process.env.DATA_DIR ?? path.join(__dirname, "../../../data");
 
 let rulesCache: Rule[] | null = null;
