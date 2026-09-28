@@ -19,8 +19,14 @@ type DayDetailModalProps = {
   /** false なら病害リスクの欄を出さない（1週間より先の日） */
   showRisk: boolean;
   diseases: DiseaseInfo[];
+  /** その日の生育ステージ（判定の結果から。1週間より先の日も入る） */
+  stage: Pick<DayRisk, "stage" | "stageSource"> | null;
   /** 生育ステージの名前。{ value: 名前 } */
   stageNames: Record<number, string>;
+  /** その日がステージの記録の切り替わり日か */
+  isStageTransition: boolean;
+  /** true ならステージを変えられる（今日と過去の日） */
+  stageEditable: boolean;
   /** 今日より後の日（予報を含む判定） */
   forecast: boolean;
   day: DayData;
@@ -39,6 +45,8 @@ type DayDetailModalProps = {
   onDeleteSpray: (id: number) => void;
   onMemoChange: (memo: string) => void;
   onSaveMemo: () => void;
+  onSaveStage: (stage: number) => void;
+  onClearStage: () => void;
 };
 
 const fmtTitle = (date: string) => {
@@ -66,7 +74,10 @@ export function DayDetailModal({
   risk,
   showRisk,
   diseases,
+  stage,
   stageNames,
+  isStageTransition,
+  stageEditable,
   forecast,
   day,
   pesticides,
@@ -82,8 +93,11 @@ export function DayDetailModal({
   onDeleteSpray,
   onMemoChange,
   onSaveMemo,
+  onSaveStage,
+  onClearStage,
 }: DayDetailModalProps) {
   const [picking, setPicking] = useState(false);
+  const [stagePicking, setStagePicking] = useState(false);
 
   const openForm = (next: SprayForm | null) => {
     setPicking(false);
@@ -92,11 +106,15 @@ export function DayDetailModal({
 
   const close = () => {
     setPicking(false);
+    setStagePicking(false);
     onClose();
   };
 
   const alerts = alertsOf(risk ?? undefined, diseases);
-  const stageName = risk?.stage != null ? stageNames[risk.stage] ?? `ステージ ${risk.stage}` : null;
+  const stageName = stage?.stage != null ? stageNames[stage.stage] ?? `ステージ ${stage.stage}` : null;
+  const stageOptions = Object.entries(stageNames)
+    .map(([value, name]) => ({ value: Number(value), name }))
+    .sort((a, b) => a.value - b.value);
 
   const selected = sprayForm?.pesticideId ? pesticides.find((p) => p.id === sprayForm.pesticideId) : undefined;
 
@@ -138,17 +156,55 @@ export function DayDetailModal({
               <Text style={styles.emptyNote}>この日の気象データはありません</Text>
             )}
 
+            <Text style={styles.legend2}>生育ステージ</Text>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableLabel}>ステージ</Text>
+              <Text style={styles.tableValue}>
+                {stageName ? `${stageName}（${STAGE_SOURCE[stage!.stageSource] ?? "不明"}）` : "—"}
+              </Text>
+            </View>
+            {stageEditable &&
+              (stagePicking ? (
+                <View>
+                  <Text style={styles.forecastNote}>この日から、選んだステージになったと記録します</Text>
+                  <View style={styles.chipRow}>
+                    {stageOptions.map((o) => (
+                      <TouchableOpacity
+                        key={o.value}
+                        style={o.value === stage?.stage ? styles.chipOn : styles.chip}
+                        onPress={() => {
+                          setStagePicking(false);
+                          onSaveStage(o.value);
+                        }}
+                      >
+                        <Text style={o.value === stage?.stage ? styles.chipTextOn : styles.chipText}>{o.name}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  <View style={styles.memoActions}>
+                    <TouchableOpacity style={styles.rowAction} onPress={() => setStagePicking(false)}>
+                      <Text style={styles.rowActionText}>キャンセル</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <>
+                  <TouchableOpacity style={styles.addBtn} onPress={() => setStagePicking(true)} disabled={stageOptions.length === 0}>
+                    <Text style={styles.addBtnText}>この日からステージを変える</Text>
+                  </TouchableOpacity>
+                  {isStageTransition && (
+                    <TouchableOpacity style={styles.stageClear} onPress={onClearStage}>
+                      <Text style={styles.rowActionDanger}>この日の記録を取り消す</Text>
+                    </TouchableOpacity>
+                  )}
+                </>
+              ))}
+
             {showRisk && (
               <>
                 <Text style={styles.legend2}>病害リスク</Text>
                 {risk ? (
                   <View>
-                    <View style={styles.tableRow}>
-                      <Text style={styles.tableLabel}>生育ステージ</Text>
-                      <Text style={styles.tableValue}>
-                        {stageName ? `${stageName}（${STAGE_SOURCE[risk.stageSource] ?? "不明"}）` : "—"}
-                      </Text>
-                    </View>
                     {alerts.length === 0 ? (
                       <Text style={styles.emptyNote}>条件に該当する病害はありません</Text>
                     ) : (
@@ -158,6 +214,7 @@ export function DayDetailModal({
                           style={styles.riskRow}
                           onPress={() => {
                             setPicking(false);
+                            setStagePicking(false);
                             onPressDisease(disease);
                           }}
                           accessibilityLabel={`${disease.name}の詳しい情報`}
