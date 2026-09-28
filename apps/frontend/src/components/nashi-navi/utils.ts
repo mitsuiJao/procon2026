@@ -14,6 +14,9 @@ export const pad = (n: number) => String(n).padStart(2, "0");
 export const dateKeyOf = (y: number, m: number, d: number) => `${y}-${pad(m + 1)}-${pad(d)}`;
 export const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
 
+/** 病害リスクを出すのは今日から何日先まで。それより先の予報は当てにならないので出さない */
+export const RISK_DAYS_AHEAD = 7;
+
 export const emptySprayForm: SprayForm = {
   id: null,
   pesticideId: null,

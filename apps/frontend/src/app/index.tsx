@@ -39,7 +39,7 @@ import type {
   TodayWeather,
   WeatherByDate,
 } from "@/components/nashi-navi/types";
-import { dateKeyOf, emptySprayForm, toDiseaseInfo, WEEKDAYS, wIcon } from "@/components/nashi-navi/utils";
+import { dateKeyOf, emptySprayForm, RISK_DAYS_AHEAD, toDiseaseInfo, WEEKDAYS, wIcon } from "@/components/nashi-navi/utils";
 
 const EMPTY_DAY: DayData = { memo: "", sprays: [] };
 const SAVE_FAILED = "保存できませんでした。通信状況を確認してください";
@@ -86,6 +86,10 @@ export default function App() {
 
   const now = new Date();
   const todayStr = dateKeyOf(now.getFullYear(), now.getMonth(), now.getDate());
+  const until = new Date(now.getFullYear(), now.getMonth(), now.getDate() + RISK_DAYS_AHEAD);
+  const riskUntil = dateKeyOf(until.getFullYear(), until.getMonth(), until.getDate());
+  // 1週間より先の判定は出さない
+  const visibleRisk: RiskByDate = Object.fromEntries(Object.entries(monthRisk).filter(([date]) => date <= riskUntil));
   const thisYear = now.getFullYear();
 
   const applyCurrent = (w: TodayWeather | null) => setTodayWeather(w);
@@ -269,7 +273,7 @@ export default function App() {
         m={m}
         todayStr={todayStr}
         todayWeather={todayWeather}
-        monthRisk={monthRisk}
+        monthRisk={visibleRisk}
         monthData={monthData}
         weatherByDate={weatherByDate}
         historyItems={historyItems}
@@ -299,7 +303,8 @@ export default function App() {
         visible={modalVisible}
         date={selectedDate}
         weather={(selectedDate && weatherByDate[selectedDate]) || null}
-        risk={(selectedDate && monthRisk[selectedDate]) || null}
+        risk={(selectedDate && visibleRisk[selectedDate]) || null}
+        showRisk={!selectedDate || selectedDate <= riskUntil}
         diseases={diseases}
         stageNames={stageNames}
         forecast={!!selectedDate && selectedDate > todayStr}

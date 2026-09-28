@@ -16,6 +16,8 @@ type DayDetailModalProps = {
   date: string | null;
   weather: WeatherEntry | null;
   risk: DayRisk | null;
+  /** false なら病害リスクの欄を出さない（1週間より先の日） */
+  showRisk: boolean;
   diseases: DiseaseInfo[];
   /** 生育ステージの名前。{ value: 名前 } */
   stageNames: Record<number, string>;
@@ -64,6 +66,7 @@ export function DayDetailModal({
   date,
   weather,
   risk,
+  showRisk,
   diseases,
   stageNames,
   forecast,
@@ -137,38 +140,42 @@ export function DayDetailModal({
               <Text style={styles.emptyNote}>この日の気象データはありません</Text>
             )}
 
-            <Text style={styles.legend2}>病害リスク</Text>
-            {risk ? (
-              <View>
-                <View style={styles.tableRow}>
-                  <Text style={styles.tableLabel}>生育ステージ</Text>
-                  <Text style={styles.tableValue}>
-                    {stageName ? `${stageName}（${STAGE_SOURCE[risk.stageSource] ?? "不明"}）` : "—"}
-                  </Text>
-                </View>
-                {alerts.length === 0 ? (
-                  <Text style={styles.emptyNote}>条件に該当する病害はありません</Text>
+            {showRisk && (
+              <>
+                <Text style={styles.legend2}>病害リスク</Text>
+                {risk ? (
+                  <View>
+                    <View style={styles.tableRow}>
+                      <Text style={styles.tableLabel}>生育ステージ</Text>
+                      <Text style={styles.tableValue}>
+                        {stageName ? `${stageName}（${STAGE_SOURCE[risk.stageSource] ?? "不明"}）` : "—"}
+                      </Text>
+                    </View>
+                    {alerts.length === 0 ? (
+                      <Text style={styles.emptyNote}>条件に該当する病害はありません</Text>
+                    ) : (
+                      alerts.map(({ disease, level }) => (
+                        <TouchableOpacity
+                          key={disease.id}
+                          style={styles.riskRow}
+                          onPress={() => {
+                            setPicking(false);
+                            onPressDisease(disease);
+                          }}
+                          accessibilityLabel={`${disease.name}の詳しい情報`}
+                        >
+                          <Text style={styles.riskName}>{disease.name}</Text>
+                          <Text style={level === "conditions_met" ? styles.riskValue : styles.riskValueNear}>{LEVEL_LABEL[level]}</Text>
+                          <Feather name="chevron-right" size={18} color={COLORS.inkSoft} />
+                        </TouchableOpacity>
+                      ))
+                    )}
+                    {forecast ? <Text style={styles.forecastNote}>予報をもとにした判定です</Text> : null}
+                  </View>
                 ) : (
-                  alerts.map(({ disease, level }) => (
-                    <TouchableOpacity
-                      key={disease.id}
-                      style={styles.riskRow}
-                      onPress={() => {
-                        setPicking(false);
-                        onPressDisease(disease);
-                      }}
-                      accessibilityLabel={`${disease.name}の詳しい情報`}
-                    >
-                      <Text style={styles.riskName}>{disease.name}</Text>
-                      <Text style={level === "conditions_met" ? styles.riskValue : styles.riskValueNear}>{LEVEL_LABEL[level]}</Text>
-                      <Feather name="chevron-right" size={18} color={COLORS.inkSoft} />
-                    </TouchableOpacity>
-                  ))
+                  <Text style={styles.emptyNote}>この日の判定はありません</Text>
                 )}
-                {forecast ? <Text style={styles.forecastNote}>予報をもとにした判定です</Text> : null}
-              </View>
-            ) : (
-              <Text style={styles.emptyNote}>この日の判定はありません</Text>
+              </>
             )}
 
             <Text style={styles.legend2}>散布</Text>
