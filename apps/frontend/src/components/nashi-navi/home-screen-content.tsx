@@ -5,7 +5,7 @@ import { Feather } from "@expo/vector-icons";
 
 import { COLORS, styles } from "@/components/nashi-navi/styles";
 import { risksForDay, type wIcon as WIcon } from "@/components/nashi-navi/utils";
-import type { DayEntry, DiseaseRisk, HistoryItem, TodayWeather, WeatherByDate } from "@/components/nashi-navi/types";
+import type { DayData, DiseaseRisk, SprayRecord, TodayWeather, WeatherByDate } from "@/components/nashi-navi/types";
 
 // マスが狭いので ° は付けない
 const fmtDeg = (v: number | null) => (v == null ? "—" : `${Math.round(v)}`);
@@ -16,11 +16,10 @@ type HomeScreenContentProps = {
   todayStr: string;
   todayWeather: TodayWeather | null;
   activeRisks: DiseaseRisk[];
-  monthData: Record<string, DayEntry>;
+  /** 日付（YYYY-MM-DD）ごとの記録 */
+  monthData: Record<string, DayData>;
   weatherByDate: WeatherByDate;
-  historyItems: HistoryItem[];
-  statSpray: number;
-  statMemo: number;
+  historyItems: SprayRecord[];
   weekdays: readonly string[];
   cells: (number | null)[];
   wIcon: typeof WIcon;
@@ -40,8 +39,6 @@ export function HomeScreenContent({
   monthData,
   weatherByDate,
   historyItems,
-  statSpray,
-  statMemo,
   weekdays,
   cells,
   wIcon,
@@ -112,7 +109,7 @@ export function HomeScreenContent({
             return <View key={idx} style={styles.cellEmpty} />;
           }
           const dstr = dateKeyOf(y, m, day);
-          const entry = monthData[String(day)];
+          const entry = monthData[dstr];
           const w = weatherByDate[dstr];
           const kind = w ? wIcon(w.code) : null;
           const isToday = dstr === todayStr;
@@ -135,7 +132,7 @@ export function HomeScreenContent({
                 </View>
               )}
               <View style={styles.dots}>
-                {entry?.pesticide?.name ? <View style={[styles.dot, styles.dotSpray]} /> : null}
+                {entry?.sprays.length ? <View style={[styles.dot, styles.dotSpray]} /> : null}
                 {entry?.memo ? <View style={[styles.dot, styles.dotMemo]} /> : null}
               </View>
             </TouchableOpacity>
@@ -154,11 +151,11 @@ export function HomeScreenContent({
         {historyItems.length === 0 ? (
           <Text style={styles.emptyNote}>日付をタップすると散布を記録できます</Text>
         ) : (
-          historyItems.map((it, i) => (
-            <View key={i} style={styles.historyItem}>
-              <Text style={styles.historyDate}>{it.date.replaceAll("-", "/")}</Text>
+          historyItems.map((it) => (
+            <View key={it.id} style={styles.historyItem}>
+              <Text style={styles.historyDate}>{it.sprayedOn.replaceAll("-", "/")}</Text>
               <Text style={styles.historyName}>
-                {it.name}{it.dilution ? `　${it.dilution}` : ""}
+                {it.pesticide}{it.dilution ? `　${it.dilution}` : ""}
               </Text>
             </View>
           ))

@@ -1,48 +1,75 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { fetchCalendar, fetchCurrent, fetchSensors } from "@/components/nashi-navi/api";
-import { DayDetailModal } from "@/components/nashi-navi/day-detail-modal";
+import {
+  createSpray,
+  deleteSpray,
+  fetchCalendar,
+  fetchCurrent,
+  fetchDiary,
+  fetchPesticides,
+  fetchRecentSprays,
+  fetchSensors,
+  fetchSprays,
+  fetchUsage,
+  saveDiary,
+  updateSpray,
+} from "@/components/nashi-navi/api";
+import { DayDetailModal, type Flash } from "@/components/nashi-navi/day-detail-modal";
 import { DiseaseRiskModal } from "@/components/nashi-navi/disease-risk-modal";
 import { HomeScreenContent } from "@/components/nashi-navi/home-screen-content";
 import { SensorStatusModal, type SensorsState } from "@/components/nashi-navi/sensor-status-modal";
 import { styles } from "@/components/nashi-navi/styles";
 import type {
-  DayEntry,
+  DayData,
   DiseaseRisk,
-  FormState,
-  HistoryItem,
-  MonthData,
-  PesticideMasterItem,
+  Pesticide,
+  PesticideApplication,
+  PesticideMaster,
   SensorStatus,
+  SprayForm,
+  SprayRecord,
+  SprayUsage,
   TodayWeather,
   WeatherByDate,
 } from "@/components/nashi-navi/types";
-import {
-  dateKeyOf,
-  emptyForm,
-  matchRisks,
-  monthKeyOf,
-  pad,
-  PESTICIDES,
-  WEEKDAYS,
-  wIcon,
-} from "@/components/nashi-navi/utils";
+import { dateKeyOf, emptySprayForm, matchRisks, WEEKDAYS, wIcon } from "@/components/nashi-navi/utils";
+
+const EMPTY_DAY: DayData = { memo: "", sprays: [] };
+const SAVE_FAILED = "保存できませんでした。通信状況を確認してください";
+
+/** 日誌と散布記録を日付ごとにまとめる */
+function groupByDate(diary: Record<string, string>, sprays: SprayRecord[]): Record<string, DayData> {
+  const days: Record<string, DayData> = {};
+  for (const [date, memo] of Object.entries(diary)) days[date] = { memo, sprays: [] };
+  for (const s of sprays) (days[s.sprayedOn] ??= { memo: "", sprays: [] }).sprays.push(s);
+  return days;
+}
+
+/** 今の気象が発病条件に当てはまる病害 */
+function risksNow(w: TodayWeather): DiseaseRisk[] {
+  if (w.temp == null || w.humidity == null || w.code == null) return [];
+  return matchRisks(w.temp, w.humidity, w.code, new Date().getMonth() + 1);
+}
 
 export default function App() {
   const [current, setCurrent] = useState(new Date());
-  const [monthData, setMonthData] = useState<MonthData>({});
+  const [monthData, setMonthData] = useState<Record<string, DayData>>({});
   const [weatherByDate, setWeatherByDate] = useState<WeatherByDate>({});
   const [todayWeather, setTodayWeather] = useState<TodayWeather | null>(null);
-  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
+  const [historyItems, setHistoryItems] = useState<SprayRecord[]>([]);
+  const [master, setMaster] = useState<PesticideMaster | null>(null);
+  const [usage, setUsage] = useState<SprayUsage | null>(null);
+  // 保存・削除のたびに増やして、記録を取り直す
+  const [version, setVersion] = useState(0);
 
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedDay, setSelectedDay] = useState<number | null>(null);
-  const [form, setForm] = useState<FormState>(emptyForm);
-  const [saveFlash, setSaveFlash] = useState("");
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [sprayForm, setSprayForm] = useState<SprayForm | null>(null);
+  // null なら未編集で、取得したメモをそのまま出す
+  const [memoDraft, setMemoDraft] = useState<string | null>(null);
+  const [flash, setFlash] = useState<Flash>(null);
 
-  const [activeRisks, setActiveRisks] = useState<DiseaseRisk[]>([]);
   const [diseaseModalVisible, setDiseaseModalVisible] = useState(false);
   const [selectedDisease, setSelectedDisease] = useState<DiseaseRisk | null>(null);
 
@@ -52,88 +79,59 @@ export default function App() {
 
   const y = current.getFullYear();
   const m = current.getMonth();
-  const key = monthKeyOf(y, m);
 
-  const loadMonth = useCallback(async () => {
-    try {
-      const raw = await AsyncStorage.getItem(key);
-      setMonthData(raw ? (JSON.parse(raw) as MonthData) : {});
-    } catch {
-      setMonthData({});
-    }
-  }, [key]);
+  const now = new Date();
+  const todayStr = dateKeyOf(now.getFullYear(), now.getMonth(), now.getDate());
+  const thisYear = now.getFullYear();
 
-  const loadCurrent = useCallback(async () => {
-    try {
-      const currentW = await fetchCurrent();
-      setTodayWeather(currentW);
+  const applyCurrent = (w: TodayWeather | null) => setTodayWeather(w);
+  const activeRisks = todayWeather ? risksNow(todayWeather) : [];
 
-      const { temp, humidity, code } = currentW;
-      if (temp == null || humidity == null || code == null) {
-        setActiveRisks([]);
-        return;
-      }
-      const currentMonth = new Date().getMonth() + 1;
-      setActiveRisks(matchRisks(temp, humidity, code, currentMonth));
-    } catch {
-      setTodayWeather(null);
-      setActiveRisks([]);
-    }
-  }, []);
-
-  const loadCalendar = useCallback(async () => {
-    try {
-      const lastDay = new Date(y, m + 1, 0).getDate();
-      setWeatherByDate(await fetchCalendar(dateKeyOf(y, m, 1), dateKeyOf(y, m, lastDay)));
-    } catch {
-      setWeatherByDate({});
-    }
-  }, [y, m]);
-
-  const loadHistory = useCallback(async () => {
-    try {
-      const allKeys = await AsyncStorage.getAllKeys();
-      const monthKeys = allKeys.filter((itemKey) => itemKey.startsWith("month:"));
-      const records = await AsyncStorage.getMany(monthKeys);
-      const items: HistoryItem[] = [];
-
-      Object.entries(records).forEach(([storageKey, raw]) => {
-        if (!raw) return;
-        const data = JSON.parse(raw) as MonthData;
-        const ym = storageKey.replace("month:", "");
-
-        Object.entries(data).forEach(([d, entry]) => {
-          if (entry.pesticide && entry.pesticide.name) {
-            items.push({
-              date: `${ym}-${pad(parseInt(d, 10))}`,
-              name: entry.pesticide.name,
-              dilution: entry.pesticide.dilution,
-            });
-          }
-        });
-      });
-
-      items.sort((a, b) => b.date.localeCompare(a.date));
-      setHistoryItems(items.slice(0, 8));
-    } catch {
-      setHistoryItems([]);
-    }
+  useEffect(() => {
+    let alive = true;
+    fetchCurrent()
+      .then((w) => alive && applyCurrent(w))
+      .catch(() => alive && applyCurrent(null));
+    fetchPesticides()
+      .then((p) => alive && setMaster(p))
+      .catch(() => alive && setMaster(null));
+    return () => {
+      alive = false;
+    };
   }, []);
 
   useEffect(() => {
-    loadMonth();
-    loadCalendar();
-    loadHistory();
-  }, [loadMonth, loadCalendar, loadHistory]);
+    let alive = true;
+    const start = dateKeyOf(y, m, 1);
+    const end = dateKeyOf(y, m, new Date(y, m + 1, 0).getDate());
+    Promise.all([fetchDiary(start, end), fetchSprays(start, end)])
+      .then(([diary, sprays]) => alive && setMonthData(groupByDate(diary, sprays)))
+      .catch(() => alive && setMonthData({}));
+    fetchCalendar(start, end)
+      .then((w) => alive && setWeatherByDate(w))
+      .catch(() => alive && setWeatherByDate({}));
+    return () => {
+      alive = false;
+    };
+  }, [y, m, version]);
 
   useEffect(() => {
-    loadCurrent();
-  }, [loadCurrent]);
+    let alive = true;
+    fetchRecentSprays(8)
+      .then((r) => alive && setHistoryItems(r))
+      .catch(() => alive && setHistoryItems([]));
+    fetchUsage(thisYear)
+      .then((u) => alive && setUsage(u))
+      .catch(() => alive && setUsage(null));
+    return () => {
+      alive = false;
+    };
+  }, [thisYear, version]);
 
   const openSensors = async () => {
     setSensorsState("loading");
     setSensorModalVisible(true);
-    loadCurrent();
+    fetchCurrent().then(applyCurrent).catch(() => applyCurrent(null));
     try {
       setSensors(await fetchSensors());
       setSensorsState("ok");
@@ -144,98 +142,94 @@ export default function App() {
 
   const changeMonth = (delta: number) => {
     const next = new Date(current);
+    next.setDate(1);
     next.setMonth(next.getMonth() + delta);
     setCurrent(next);
   };
 
-  const openDay = (day: number) => {
-    const entry = monthData[String(day)] || ({} as Partial<DayEntry>);
-    setForm({
-      pestName: entry.pesticide?.name || "",
-      pestDilution: entry.pesticide?.dilution || "",
-      pestAmount: entry.pesticide?.amount || "",
-      pestTarget: entry.pesticide?.target || "",
-      pestNote: entry.pesticide?.note || "",
-      memo: entry.memo || "",
-    });
-    setSelectedDay(day);
-    setSaveFlash("");
+  const openDate = (date: string, form: SprayForm | null) => {
+    setSelectedDate(date);
+    setSprayForm(form);
+    setMemoDraft(null);
+    setFlash(null);
     setModalVisible(true);
   };
 
-  const saveEntry = async () => {
-    const newMonthData: MonthData = {
-      ...monthData,
-      [String(selectedDay)]: {
-        pesticide: {
-          name: form.pestName,
-          dilution: form.pestDilution,
-          amount: form.pestAmount,
-          target: form.pestTarget,
-          note: form.pestNote,
-        },
-        memo: form.memo,
-      },
+  const day = (selectedDate && monthData[selectedDate]) || EMPTY_DAY;
+  const memo = memoDraft ?? day.memo;
+
+  const saveSpray = async () => {
+    if (!sprayForm || !selectedDate) return;
+    const name = sprayForm.pesticide.trim();
+    if (!sprayForm.pesticideId && !name) {
+      setFlash({ text: "薬剤を選ぶか、薬剤名を入力してください", error: true });
+      return;
+    }
+    const input = {
+      sprayedOn: selectedDate,
+      pesticideId: sprayForm.pesticideId,
+      pesticide: name,
+      dilution: sprayForm.dilution.trim(),
+      amount: sprayForm.amount.trim(),
+      target: sprayForm.target.trim(),
+      note: sprayForm.note.trim(),
     };
-    setMonthData(newMonthData);
-
     try {
-      await AsyncStorage.setItem(key, JSON.stringify(newMonthData));
-      setSaveFlash("保存しました");
-      loadHistory();
+      if (sprayForm.id == null) await createSpray(input);
+      else await updateSpray(sprayForm.id, input);
+      setFlash({ text: sprayForm.id == null ? "散布を記録しました" : "変更を保存しました", error: false });
+      setSprayForm(null);
+      setVersion((v) => v + 1);
     } catch {
-      setSaveFlash("保存に失敗しました");
+      setFlash({ text: SAVE_FAILED, error: true });
     }
   };
 
-  const deleteEntry = async () => {
-    const newMonthData: MonthData = { ...monthData };
-    delete newMonthData[String(selectedDay)];
-    setMonthData(newMonthData);
-
+  const removeSpray = async (id: number) => {
     try {
-      await AsyncStorage.setItem(key, JSON.stringify(newMonthData));
-      setSaveFlash("削除しました");
-      loadHistory();
+      await deleteSpray(id);
+      if (sprayForm?.id === id) setSprayForm(null);
+      setFlash({ text: "散布記録を削除しました", error: false });
+      setVersion((v) => v + 1);
     } catch {
-      setSaveFlash("削除に失敗しました");
+      setFlash({ text: "削除できませんでした。通信状況を確認してください", error: true });
     }
   };
 
-  const applyPesticide = (pestObj: PesticideMasterItem, diseaseName: string) => {
-    const now = new Date();
-    setCurrent(now);
-    setSelectedDay(now.getDate());
+  const saveMemo = async () => {
+    if (!selectedDate) return;
+    try {
+      await saveDiary(selectedDate, memo);
+      setFlash({ text: memo.trim() ? "メモを保存しました" : "メモを消しました", error: false });
+      // 取り直すまでの間に古いメモが見えないよう、先に手元へ反映する
+      setMonthData((prev) => ({ ...prev, [selectedDate]: { ...(prev[selectedDate] ?? EMPTY_DAY), memo: memo.trim() ? memo : "" } }));
+      setMemoDraft(null);
+      setVersion((v) => v + 1);
+    } catch {
+      setFlash({ text: SAVE_FAILED, error: true });
+    }
+  };
 
-    setForm({
-      ...emptyForm,
-      pestName: pestObj.name,
-      pestDilution: pestObj.dilution,
-      pestTarget: diseaseName,
-      pestNote: pestObj.note,
-    });
-
+  const applyPesticide = (pesticide: Pesticide, application: PesticideApplication, diseaseName: string) => {
+    setCurrent(new Date());
     setDiseaseModalVisible(false);
-    setModalVisible(true);
+    openDate(todayStr, {
+      ...emptySprayForm,
+      pesticideId: pesticide.id,
+      pesticide: pesticide.name,
+      dilution: application.dilution ?? "",
+      target: diseaseName,
+    });
   };
 
   const first = new Date(y, m, 1);
   const startDow = first.getDay();
   const daysInMonth = new Date(y, m + 1, 0).getDate();
-  const now = new Date();
-  const todayStr = dateKeyOf(now.getFullYear(), now.getMonth(), now.getDate());
 
   const cells: (number | null)[] = [];
   for (let i = 0; i < startDow; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
   while (cells.length % 7 !== 0) cells.push(null);
-
-  let statSpray = 0;
-  let statMemo = 0;
-  Object.values(monthData).forEach((entry: DayEntry) => {
-    if (entry.pesticide && entry.pesticide.name) statSpray++;
-    if (entry.memo) statMemo++;
-  });
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -248,14 +242,12 @@ export default function App() {
         monthData={monthData}
         weatherByDate={weatherByDate}
         historyItems={historyItems}
-        statSpray={statSpray}
-        statMemo={statMemo}
         weekdays={WEEKDAYS}
         cells={cells}
         wIcon={wIcon}
         dateKeyOf={dateKeyOf}
         changeMonth={changeMonth}
-        openDay={openDay}
+        openDay={(d) => openDate(dateKeyOf(y, m, d), null)}
         onPressRisk={(risk) => {
           setSelectedDisease(risk);
           setDiseaseModalVisible(true);
@@ -271,24 +263,28 @@ export default function App() {
       <DiseaseRiskModal
         visible={diseaseModalVisible}
         selectedDisease={selectedDisease}
-        pesticides={PESTICIDES}
+        master={master}
+        usage={usage}
         onClose={() => setDiseaseModalVisible(false)}
         onApply={applyPesticide}
       />
       <DayDetailModal
         visible={modalVisible}
-        y={y}
-        m={m}
-        selectedDay={selectedDay}
-        weatherByDate={weatherByDate}
-        form={form}
-        saveFlash={saveFlash}
+        date={selectedDate}
+        weather={(selectedDate && weatherByDate[selectedDate]) || null}
+        day={day}
+        pesticides={master?.pesticides ?? []}
+        usage={usage}
+        sprayForm={sprayForm}
+        memo={memo}
+        flash={flash}
         wIcon={wIcon}
-        dateKeyOf={dateKeyOf}
         onClose={() => setModalVisible(false)}
-        onDelete={deleteEntry}
-        onSave={saveEntry}
-        onFormChange={setForm}
+        onSprayFormChange={setSprayForm}
+        onSaveSpray={saveSpray}
+        onDeleteSpray={removeSpray}
+        onMemoChange={setMemoDraft}
+        onSaveMemo={saveMemo}
       />
     </SafeAreaView>
   );

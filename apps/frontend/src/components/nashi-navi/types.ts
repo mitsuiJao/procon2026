@@ -1,17 +1,67 @@
-export type PesticideEntry = {
-  name: string;
+export type SprayRecord = {
+  id: number;
+  sprayedOn: string;
+  /** マスターの登録番号。自由入力のときは null */
+  pesticideId: string | null;
+  /** 散布したときの商品名 */
+  pesticide: string;
   dilution: string;
   amount: string;
   target: string;
   note: string;
 };
 
-export type DayEntry = {
-  pesticide: PesticideEntry;
-  memo: string;
+export type SprayInput = Omit<SprayRecord, "id">;
+
+/** 日付ごとの記録 */
+export type DayData = { memo: string; sprays: SprayRecord[] };
+
+/** 散布の入力フォーム。id が null なら新規 */
+export type SprayForm = {
+  id: number | null;
+  pesticideId: string | null;
+  /** 「その他」を選び、薬剤名を手入力している */
+  freeText: boolean;
+  pesticide: string;
+  dilution: string;
+  amount: string;
+  target: string;
+  note: string;
 };
 
-export type MonthData = Record<string, DayEntry>;
+export type SprayUsage = {
+  /** 登録番号ごとの今年の散布回数 */
+  byPesticide: Record<string, number>;
+  byFrac: Record<string, { count: number; lastSprayedOn: string }>;
+};
+
+export type PesticideApplication = {
+  crop: string;
+  target: string | null;
+  diseaseId: string | null;
+  method: string;
+  dilution: string | null;
+  timing: string | null;
+  preHarvestDays: number | null;
+  uses: string | null;
+  maxUses: number | null;
+};
+
+export type Pesticide = {
+  /** 登録番号 */
+  id: string;
+  name: string;
+  fracCodes: string[];
+  fracNote: string | null;
+  totalUseLimits: string[];
+  applications: PesticideApplication[];
+};
+
+export type PesticideMaster = {
+  source: string;
+  retrievedAt: string;
+  pesticides: Pesticide[];
+};
 
 export type WeatherEntry = {
   tmax: number | null;
@@ -47,31 +97,6 @@ export type SensorStatus = {
   stale: boolean;
 };
 
-export type HistoryItem = {
-  date: string;
-  name: string;
-  dilution: string;
-};
-
-export type FormState = {
-  pestName: string;
-  pestDilution: string;
-  pestAmount: string;
-  pestTarget: string;
-  pestNote: string;
-  memo: string;
-};
-
-export type PesticideMasterItem = {
-  name: string;
-  frac: string;
-  dilution: string;
-  max: string;
-  note: string;
-};
-
-export type PesticidesById = Record<string, PesticideMasterItem>;
-
 export type DiseaseRisk = {
   id: string;
   name: string;
@@ -79,5 +104,4 @@ export type DiseaseRisk = {
   checkRisk: (temp: number, humidity: number, code: number) => boolean;
   triggerText: string;
   symptom: string;
-  pesticides: string[];
 };
