@@ -1,8 +1,14 @@
 import React from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
-import { styles } from "@/components/nashi-navi/styles";
-import type { DayEntry, DiseaseRisk, HistoryItem, TodayWeather, WeatherByDate } from "@/components/nashi-navi/types";
+import { Feather } from "@expo/vector-icons";
+
+import { COLORS, styles } from "@/components/nashi-navi/styles";
+import { risksForDay, type wIcon as WIcon } from "@/components/nashi-navi/utils";
+import type { DayData, DiseaseRisk, SprayRecord, TodayWeather, WeatherByDate } from "@/components/nashi-navi/types";
+
+// マスが狭いので ° は付けない
+const fmtDeg = (v: number | null) => (v == null ? "—" : `${Math.round(v)}`);
 
 type HomeScreenContentProps = {
   y: number;
@@ -10,19 +16,18 @@ type HomeScreenContentProps = {
   todayStr: string;
   todayWeather: TodayWeather | null;
   activeRisks: DiseaseRisk[];
-  monthData: Record<string, DayEntry>;
+  /** 日付（YYYY-MM-DD）ごとの記録 */
+  monthData: Record<string, DayData>;
   weatherByDate: WeatherByDate;
-  historyItems: HistoryItem[];
-  statSpray: number;
-  statMeasure: number;
-  statMemo: number;
+  historyItems: SprayRecord[];
   weekdays: readonly string[];
   cells: (number | null)[];
-  wIcon: (code: number) => string;
+  wIcon: typeof WIcon;
   dateKeyOf: (year: number, month: number, day: number) => string;
   changeMonth: (delta: number) => void;
   openDay: (day: number) => void;
   onPressRisk: (risk: DiseaseRisk) => void;
+  onPressWeather: () => void;
 };
 
 export function HomeScreenContent({
@@ -34,9 +39,6 @@ export function HomeScreenContent({
   monthData,
   weatherByDate,
   historyItems,
-  statSpray,
-  statMeasure,
-  statMemo,
   weekdays,
   cells,
   wIcon,
@@ -44,6 +46,7 @@ export function HomeScreenContent({
   changeMonth,
   openDay,
   onPressRisk,
+  onPressWeather,
 }: HomeScreenContentProps) {
   return (
     <ScrollView contentContainerStyle={styles.wrap}>
@@ -52,49 +55,45 @@ export function HomeScreenContent({
           <Text style={styles.title}>ワイングレープロテクト</Text>
           <Text style={styles.subtitle}>圃場の栽培日誌</Text>
         </View>
-        <View style={styles.weatherMini}>
+        <TouchableOpacity style={styles.weatherMini} onPress={onPressWeather} accessibilityLabel="センサーの状態を見る">
           {todayWeather ? (
             <>
-              <Text style={styles.weatherIcon}>{wIcon(todayWeather.code)}</Text>
+              {wIcon(todayWeather.code) && (
+                <Feather name={wIcon(todayWeather.code)!.icon} size={22} color={COLORS.inkSoft} />
+              )}
               <View>
-                <Text style={styles.weatherTemp}>{todayWeather.temp}℃</Text>
-                <Text style={styles.weatherSub}>湿度 {todayWeather.humidity}%</Text>
+                <Text style={styles.weatherTemp}>{todayWeather.temp ?? "—"}℃</Text>
+                <Text style={styles.weatherSub}>湿度 {todayWeather.humidity ?? "—"}%</Text>
+                {todayWeather.stale && <Text style={styles.weatherStale}>センサー未受信</Text>}
               </View>
             </>
           ) : (
-            <Text style={styles.weatherSub}>気象取得中…</Text>
+            <Text style={styles.weatherSub}>気象を取得中</Text>
           )}
-        </View>
+        </TouchableOpacity>
       </View>
 
       {activeRisks.length > 0 && (
-        <View style={styles.warningContainer}>
+        <View style={styles.warningList}>
           {activeRisks.map((risk) => (
-            <TouchableOpacity
-              key={risk.id}
-              style={styles.warningBanner}
-              onPress={() => onPressRisk(risk)}
-            >
-              <View style={styles.warningBannerInner}>
-                <Text style={styles.warningIcon}>⚠️</Text>
-                <View>
-                  <Text style={styles.warningTitle}>{risk.name} の感染リスク上昇</Text>
-                  <Text style={styles.warningSub}>現在の気象が発病条件と一致しています</Text>
-                </View>
+            <TouchableOpacity key={risk.id} style={styles.warningRow} onPress={() => onPressRisk(risk)}>
+              <View style={styles.warningBody}>
+                <Text style={styles.warningTitle}>{risk.name}の感染条件に該当</Text>
+                <Text style={styles.warningSub}>{risk.triggerText}</Text>
               </View>
-              <Text style={styles.warningArrow}>›</Text>
+              <Feather name="chevron-right" size={18} color={COLORS.inkSoft} />
             </TouchableOpacity>
           ))}
         </View>
       )}
 
       <View style={styles.monthNav}>
-        <TouchableOpacity style={styles.navBtn} onPress={() => changeMonth(-1)}>
-          <Text style={styles.navBtnText}>‹</Text>
+        <TouchableOpacity style={styles.navBtn} onPress={() => changeMonth(-1)} accessibilityLabel="前の月">
+          <Feather name="chevron-left" size={22} color={COLORS.inkSoft} />
         </TouchableOpacity>
-        <Text style={styles.monthLabel}>{y}年 {m + 1}月</Text>
-        <TouchableOpacity style={styles.navBtn} onPress={() => changeMonth(1)}>
-          <Text style={styles.navBtnText}>›</Text>
+        <Text style={styles.monthLabel}>{y}年{m + 1}月</Text>
+        <TouchableOpacity style={styles.navBtn} onPress={() => changeMonth(1)} accessibilityLabel="次の月">
+          <Feather name="chevron-right" size={22} color={COLORS.inkSoft} />
         </TouchableOpacity>
       </View>
 
@@ -110,9 +109,11 @@ export function HomeScreenContent({
             return <View key={idx} style={styles.cellEmpty} />;
           }
           const dstr = dateKeyOf(y, m, day);
-          const entry = monthData[String(day)];
+          const entry = monthData[dstr];
           const w = weatherByDate[dstr];
+          const kind = w ? wIcon(w.code) : null;
           const isToday = dstr === todayStr;
+          const hasRisk = risksForDay(w, m + 1).length > 0;
 
           return (
             <TouchableOpacity
@@ -120,18 +121,18 @@ export function HomeScreenContent({
               style={[styles.cell, isToday && styles.cellToday]}
               onPress={() => openDay(day)}
             >
-              <Text style={[styles.dayNum, isToday && styles.dayNumToday]}>{day}</Text>
+              {hasRisk && <View style={styles.cellRisk} />}
+              <Text style={isToday ? styles.dayNumToday : styles.dayNum}>{day}</Text>
               {w && (
                 <View style={styles.cellWeather}>
-                  <Text style={styles.cellWeatherIcon}>{wIcon(w.code)}</Text>
+                  {kind && <Feather name={kind.icon} size={15} color={COLORS.inkSoft} />}
                   <Text style={styles.cellWeatherTemp}>
-                    {Math.round(w.tmax)}°/{Math.round(w.tmin)}°
+                    {fmtDeg(w.tmax)}/{fmtDeg(w.tmin)}
                   </Text>
                 </View>
               )}
               <View style={styles.dots}>
-                {entry?.pesticide?.name ? <View style={[styles.dot, styles.dotSpray]} /> : null}
-                {(entry?.tempActual || entry?.humidityActual) ? <View style={[styles.dot, styles.dotMeasure]} /> : null}
+                {entry?.sprays.length ? <View style={[styles.dot, styles.dotSpray]} /> : null}
                 {entry?.memo ? <View style={[styles.dot, styles.dotMemo]} /> : null}
               </View>
             </TouchableOpacity>
@@ -140,37 +141,26 @@ export function HomeScreenContent({
       </View>
 
       <View style={styles.legend}>
-        <View style={styles.legendItem}><View style={[styles.dot, styles.dotSpray]} /><Text style={styles.legendText}>農薬散布</Text></View>
-        <View style={styles.legendItem}><View style={[styles.dot, styles.dotMeasure]} /><Text style={styles.legendText}>実測記録</Text></View>
+        <View style={styles.legendItem}><View style={styles.legendRisk} /><Text style={styles.legendText}>感染条件に該当</Text></View>
+        <View style={styles.legendItem}><View style={[styles.dot, styles.dotSpray]} /><Text style={styles.legendText}>散布</Text></View>
         <View style={styles.legendItem}><View style={[styles.dot, styles.dotMemo]} /><Text style={styles.legendText}>日誌メモ</Text></View>
       </View>
 
-      <View style={styles.sideCard}>
-        <Text style={styles.sideCardTitle}>今月のまとめ</Text>
-        <View style={styles.statRow}><Text style={styles.statLabel}>散布記録</Text><Text style={styles.statValue}>{statSpray}件</Text></View>
-        <View style={styles.statRow}><Text style={styles.statLabel}>実測記録</Text><Text style={styles.statValue}>{statMeasure}件</Text></View>
-        <View style={styles.statRow}><Text style={styles.statLabel}>日誌メモ</Text><Text style={styles.statValue}>{statMemo}件</Text></View>
-      </View>
-
-      <View style={styles.sideCard}>
-        <Text style={styles.sideCardTitle}>散布履歴（直近）</Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>最近の散布</Text>
         {historyItems.length === 0 ? (
-          <Text style={styles.emptyNote}>記録はまだありません</Text>
+          <Text style={styles.emptyNote}>日付をタップすると散布を記録できます</Text>
         ) : (
-          historyItems.map((it, i) => (
-            <View key={i} style={styles.historyItem}>
-              <Text style={styles.historyDate}>{it.date}</Text>
+          historyItems.map((it) => (
+            <View key={it.id} style={styles.historyItem}>
+              <Text style={styles.historyDate}>{it.sprayedOn.replaceAll("-", "/")}</Text>
               <Text style={styles.historyName}>
-                {it.name}{it.dilution ? `（${it.dilution}）` : ""}
+                {it.pesticide}{it.dilution ? `　${it.dilution}` : ""}
               </Text>
             </View>
           ))
         )}
       </View>
-
-      <Text style={styles.footer}>
-        気象データ: Open-Meteo（実測に近い過去データ・予報を表示。アメダス実測値とは誤差があります）
-      </Text>
     </ScrollView>
   );
 }

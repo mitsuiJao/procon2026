@@ -34,6 +34,8 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+    ports:
+      - "1883:1883"
 
   mqtt-sub:
     build:

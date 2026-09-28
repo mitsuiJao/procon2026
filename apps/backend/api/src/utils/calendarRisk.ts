@@ -1,39 +1,16 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
-import { parse } from "yaml";
 import { getSensorHourlyByRange, type SensorHourly } from "../db/measure";
 import { getPlace } from "../db/settings";
 import { getStageTransitions } from "../db/stage";
 import { getForecastByRange } from "../db/weather";
-import { evaluateRisks, loadRules } from "../evalute";
-import type { DiseaseResult, HourlyPoint, Rule } from "../evalute";
+import { evaluateRisks } from "../evalute";
+import type { DiseaseResult, HourlyPoint } from "../evalute";
+import { getRules, getStagesVocab } from "./vocab";
 import { jstDate } from "./weather-daily";
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 /** Broome（灰色かび病）に渡す直近の濡れイベント判定用の遡り日数。季節全体を渡すと季節最悪値に張り付くため短くする */
 const BROOME_LOOKBACK_DAYS = 2;
-
-// data/ は api のビルドコンテキスト外なので、Docker では docker-compose.yml のボリュームマウント（DATA_DIR=/app/data）で渡す。
-// ローカル実行では src/dist からの相対パスで data/ に届く。
-const DATA_DIR = process.env.DATA_DIR ?? path.join(__dirname, "../../../data");
-
-let rulesCache: Rule[] | null = null;
-function getRules(): Rule[] {
-  if (!rulesCache) {
-    rulesCache = loadRules(path.join(DATA_DIR, "rules/rules.yaml"), path.join(DATA_DIR, "vocab"));
-  }
-  return rulesCache;
-}
-
-type StageVocabEntry = { value: number; typicalMonth: string };
-let stagesVocabCache: StageVocabEntry[] | null = null;
-function getStagesVocab(): StageVocabEntry[] {
-  if (!stagesVocabCache) {
-    stagesVocabCache = parse(readFileSync(path.join(DATA_DIR, "vocab/stages.yaml"), "utf8")) as StageVocabEntry[];
-  }
-  return stagesVocabCache;
-}
 
 export type StageSource = "recorded" | "estimated" | "unknown";
 
