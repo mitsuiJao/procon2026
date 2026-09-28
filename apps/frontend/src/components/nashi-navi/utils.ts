@@ -1,11 +1,13 @@
-import type { DiseaseRisk, FormState, PesticidesById } from "@/components/nashi-navi/types";
+import type { DiseaseRisk, FormState, PesticidesById, WeatherEntry } from "@/components/nashi-navi/types";
+
+type WeatherKind = { icon: "sun" | "cloud" | "cloud-rain"; label: string };
 
 /** WMO 天気コードを晴れ・曇り・雨の3種類に丸める（霧は曇り、雪・雷雨は雨） */
-export const wIcon = (code: number | null) => {
-  if (code == null) return "—";
-  if (code <= 1) return "☀️";
-  if (code <= 48) return "☁️";
-  return "🌧️";
+export const wIcon = (code: number | null): WeatherKind | null => {
+  if (code == null) return null;
+  if (code <= 1) return { icon: "sun", label: "晴れ" };
+  if (code <= 48) return { icon: "cloud", label: "曇り" };
+  return { icon: "cloud-rain", label: "雨" };
 };
 
 export const pad = (n: number) => String(n).padStart(2, "0");
@@ -59,3 +61,13 @@ export const DISEASES: DiseaseRisk[] = [
     pesticides: ["P005"],
   },
 ];
+
+/** 気象が発病条件に当てはまる病害（month は 1〜12） */
+export const matchRisks = (temp: number, humidity: number, code: number, month: number) =>
+  DISEASES.filter((d) => d.season.includes(month) && d.checkRisk(temp, humidity, code));
+
+/** 日ごとの判定。気温は最高・最低の平均を使い、欠けている日は判定しない */
+export const risksForDay = (w: WeatherEntry | undefined, month: number) => {
+  if (!w || w.tmax == null || w.tmin == null || w.humidity == null || w.code == null) return [];
+  return matchRisks((w.tmax + w.tmin) / 2, w.humidity, w.code, month);
+};

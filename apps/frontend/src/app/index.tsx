@@ -21,8 +21,8 @@ import type {
 } from "@/components/nashi-navi/types";
 import {
   dateKeyOf,
-  DISEASES,
   emptyForm,
+  matchRisks,
   monthKeyOf,
   pad,
   PESTICIDES,
@@ -74,12 +74,7 @@ export default function App() {
         return;
       }
       const currentMonth = new Date().getMonth() + 1;
-      const risks = DISEASES.filter(
-        (disease) =>
-          disease.season.includes(currentMonth) &&
-          disease.checkRisk(temp, humidity, code),
-      );
-      setActiveRisks(risks);
+      setActiveRisks(matchRisks(temp, humidity, code, currentMonth));
     } catch {
       setTodayWeather(null);
       setActiveRisks([]);

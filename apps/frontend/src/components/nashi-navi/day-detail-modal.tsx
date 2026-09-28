@@ -1,7 +1,10 @@
 import React from "react";
 import { Modal, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 
-import { styles } from "@/components/nashi-navi/styles";
+import { Feather } from "@expo/vector-icons";
+
+import { COLORS, styles } from "@/components/nashi-navi/styles";
+import type { wIcon as WIcon } from "@/components/nashi-navi/utils";
 import type { FormState, WeatherByDate } from "@/components/nashi-navi/types";
 
 type DayDetailModalProps = {
@@ -12,7 +15,7 @@ type DayDetailModalProps = {
   weatherByDate: WeatherByDate;
   form: FormState;
   saveFlash: string;
-  wIcon: (code: number | null) => string;
+  wIcon: typeof WIcon;
   dateKeyOf: (year: number, month: number, day: number) => string;
   onClose: () => void;
   onDelete: () => void;
@@ -45,26 +48,24 @@ export function DayDetailModal({
             <Text style={styles.panelDate}>
               {y}年{m + 1}月{selectedDay}日
             </Text>
-            <TouchableOpacity onPress={onClose}>
-              <Text style={styles.closeBtn}>×</Text>
+            <TouchableOpacity style={styles.closeBtn} onPress={onClose} accessibilityLabel="閉じる">
+              <Feather name="x" size={22} color={COLORS.inkSoft} />
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.legend2}>気象データ（参考）</Text>
+          <Text style={styles.legend2}>気象</Text>
           {selectedWeather ? (
-            <View style={styles.amedasBox}>
-              <View style={styles.amedasRow}><Text style={styles.amedasLabel}>最高気温</Text><Text style={styles.amedasValue}>{selectedWeather.tmax != null ? `${selectedWeather.tmax}℃` : "—"}</Text></View>
-              <View style={styles.amedasRow}><Text style={styles.amedasLabel}>最低気温</Text><Text style={styles.amedasValue}>{selectedWeather.tmin != null ? `${selectedWeather.tmin}℃` : "—"}</Text></View>
-              <View style={styles.amedasRow}><Text style={styles.amedasLabel}>平均湿度</Text><Text style={styles.amedasValue}>{selectedWeather.humidity != null ? `${selectedWeather.humidity}%` : "—"}</Text></View>
-              <View style={styles.amedasRow}><Text style={styles.amedasLabel}>天候</Text><Text style={styles.amedasValue}>{wIcon(selectedWeather.code)}</Text></View>
+            <View>
+              <View style={styles.tableRow}><Text style={styles.tableLabel}>天気</Text><Text style={styles.tableValue}>{wIcon(selectedWeather.code)?.label ?? "—"}</Text></View>
+              <View style={styles.tableRow}><Text style={styles.tableLabel}>最高気温</Text><Text style={styles.tableValue}>{selectedWeather.tmax != null ? `${selectedWeather.tmax}℃` : "—"}</Text></View>
+              <View style={styles.tableRow}><Text style={styles.tableLabel}>最低気温</Text><Text style={styles.tableValue}>{selectedWeather.tmin != null ? `${selectedWeather.tmin}℃` : "—"}</Text></View>
+              <View style={styles.tableRow}><Text style={styles.tableLabel}>平均湿度</Text><Text style={styles.tableValue}>{selectedWeather.humidity != null ? `${selectedWeather.humidity}%` : "—"}</Text></View>
             </View>
           ) : (
-            <View style={styles.amedasBox}>
-              <Text style={styles.emptyNote}>この日の気象データはありません</Text>
-            </View>
+            <Text style={styles.emptyNote}>この日の気象データはありません</Text>
           )}
 
-          <Text style={styles.legend2}>農薬散布記録</Text>
+          <Text style={styles.legend2}>散布</Text>
           <View style={styles.fieldRow}>
             <View style={styles.fieldHalf}>
               <Text style={styles.label}>薬剤名</Text>
@@ -99,10 +100,10 @@ export function DayDetailModal({
 
           <View style={styles.panelActions}>
             <TouchableOpacity style={styles.btnSecondary} onPress={onDelete}>
-              <Text style={styles.btnSecondaryText}>この日の記録を削除</Text>
+              <Text style={styles.btnSecondaryText}>記録を削除</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.btn} onPress={onSave}>
-              <Text style={styles.btnText}>保存する</Text>
+              <Text style={styles.btnText}>保存</Text>
             </TouchableOpacity>
           </View>
           {saveFlash ? <Text style={styles.saveFlash}>{saveFlash}</Text> : null}
