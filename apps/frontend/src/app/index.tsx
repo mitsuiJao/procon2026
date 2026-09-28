@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { fetchCalendar, fetchCurrent } from "@/components/nashi-navi/api";
 import { DayDetailModal } from "@/components/nashi-navi/day-detail-modal";
 import { DiseaseRiskModal } from "@/components/nashi-navi/disease-risk-modal";
 import { HomeScreenContent } from "@/components/nashi-navi/home-screen-content";
@@ -26,9 +27,6 @@ import {
   WEEKDAYS,
   wIcon,
 } from "@/components/nashi-navi/utils";
-
-const LAT = 35.4265;
-const LON = 133.3306;
 
 export default function App() {
   const [current, setCurrent] = useState(new Date());
@@ -59,52 +57,37 @@ export default function App() {
     }
   }, [key]);
 
-  const fetchWeather = useCallback(async () => {
+  const loadCurrent = useCallback(async () => {
     try {
-      const url =
-        `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}` +
-        "&daily=temperature_2m_max,temperature_2m_min,relative_humidity_2m_mean,weathercode" +
-        "&current=temperature_2m,relative_humidity_2m,weathercode" +
-        "&timezone=Asia%2FTokyo&past_days=92&forecast_days=14";
-      const r = await fetch(url);
-      const data = await r.json();
-      const map: WeatherByDate = {};
+      const currentW = await fetchCurrent();
+      setTodayWeather(currentW);
 
-      if (data.daily) {
-        data.daily.time.forEach((d: string, i: number) => {
-          map[d] = {
-            tmax: data.daily.temperature_2m_max[i],
-            tmin: data.daily.temperature_2m_min[i],
-            humidity: data.daily.relative_humidity_2m_mean
-              ? data.daily.relative_humidity_2m_mean[i]
-              : null,
-            code: data.daily.weathercode[i],
-          };
-        });
+      const { temp, humidity, code } = currentW;
+      if (temp == null || humidity == null || code == null) {
+        setActiveRisks([]);
+        return;
       }
-
-      setWeatherByDate(map);
-      if (data.current) {
-        const currentW: TodayWeather = {
-          temp: data.current.temperature_2m,
-          humidity: data.current.relative_humidity_2m,
-          code: data.current.weathercode,
-        };
-        setTodayWeather(currentW);
-
-        const currentMonth = new Date().getMonth() + 1;
-        const risks = DISEASES.filter(
-          (disease) =>
-            disease.season.includes(currentMonth) &&
-            disease.checkRisk(currentW.temp, currentW.humidity, currentW.code),
-        );
-        setActiveRisks(risks);
-      }
+      const currentMonth = new Date().getMonth() + 1;
+      const risks = DISEASES.filter(
+        (disease) =>
+          disease.season.includes(currentMonth) &&
+          disease.checkRisk(temp, humidity, code),
+      );
+      setActiveRisks(risks);
     } catch {
       setTodayWeather(null);
       setActiveRisks([]);
     }
   }, []);
+
+  const loadCalendar = useCallback(async () => {
+    try {
+      const lastDay = new Date(y, m + 1, 0).getDate();
+      setWeatherByDate(await fetchCalendar(dateKeyOf(y, m, 1), dateKeyOf(y, m, lastDay)));
+    } catch {
+      setWeatherByDate({});
+    }
+  }, [y, m]);
 
   const loadHistory = useCallback(async () => {
     try {
@@ -138,9 +121,13 @@ export default function App() {
 
   useEffect(() => {
     loadMonth();
-    fetchWeather();
+    loadCalendar();
     loadHistory();
-  }, [loadMonth, fetchWeather, loadHistory]);
+  }, [loadMonth, loadCalendar, loadHistory]);
+
+  useEffect(() => {
+    loadCurrent();
+  }, [loadCurrent]);
 
   const changeMonth = (delta: number) => {
     const next = new Date(current);
@@ -151,8 +138,6 @@ export default function App() {
   const openDay = (day: number) => {
     const entry = monthData[String(day)] || ({} as Partial<DayEntry>);
     setForm({
-      tempActual: entry.tempActual || "",
-      humidityActual: entry.humidityActual || "",
       pestName: entry.pesticide?.name || "",
       pestDilution: entry.pesticide?.dilution || "",
       pestAmount: entry.pesticide?.amount || "",
@@ -169,8 +154,6 @@ export default function App() {
     const newMonthData: MonthData = {
       ...monthData,
       [String(selectedDay)]: {
-        tempActual: form.tempActual,
-        humidityActual: form.humidityActual,
         pesticide: {
           name: form.pestName,
           dilution: form.pestDilution,
@@ -226,7 +209,8 @@ export default function App() {
   const first = new Date(y, m, 1);
   const startDow = first.getDay();
   const daysInMonth = new Date(y, m + 1, 0).getDate();
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const todayStr = dateKeyOf(now.getFullYear(), now.getMonth(), now.getDate());
 
   const cells: (number | null)[] = [];
   for (let i = 0; i < startDow; i++) cells.push(null);
@@ -234,11 +218,9 @@ export default function App() {
   while (cells.length % 7 !== 0) cells.push(null);
 
   let statSpray = 0;
-  let statMeasure = 0;
   let statMemo = 0;
   Object.values(monthData).forEach((entry: DayEntry) => {
     if (entry.pesticide && entry.pesticide.name) statSpray++;
-    if (entry.tempActual || entry.humidityActual) statMeasure++;
     if (entry.memo) statMemo++;
   });
 
@@ -254,7 +236,6 @@ export default function App() {
         weatherByDate={weatherByDate}
         historyItems={historyItems}
         statSpray={statSpray}
-        statMeasure={statMeasure}
         statMemo={statMemo}
         weekdays={WEEKDAYS}
         cells={cells}

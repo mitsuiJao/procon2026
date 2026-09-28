@@ -51,7 +51,6 @@ export const styles = StyleSheet.create({
   dots: { position: "absolute", bottom: 4, left: 4, flexDirection: "row", gap: 3 },
   dot: { width: 6, height: 6, borderRadius: 3 },
   dotSpray: { backgroundColor: COLORS.danger },
-  dotMeasure: { backgroundColor: COLORS.accent },
   dotMemo: { backgroundColor: COLORS.primary },
 
   legend: { flexDirection: "row", gap: 14, marginTop: 10, marginBottom: 16, flexWrap: "wrap" },

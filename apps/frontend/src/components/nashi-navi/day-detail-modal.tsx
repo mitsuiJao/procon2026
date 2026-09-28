@@ -12,7 +12,7 @@ type DayDetailModalProps = {
   weatherByDate: WeatherByDate;
   form: FormState;
   saveFlash: string;
-  wIcon: (code: number) => string;
+  wIcon: (code: number | null) => string;
   dateKeyOf: (year: number, month: number, day: number) => string;
   onClose: () => void;
   onDelete: () => void;
@@ -53,8 +53,8 @@ export function DayDetailModal({
           <Text style={styles.legend2}>気象データ（参考）</Text>
           {selectedWeather ? (
             <View style={styles.amedasBox}>
-              <View style={styles.amedasRow}><Text style={styles.amedasLabel}>最高気温</Text><Text style={styles.amedasValue}>{selectedWeather.tmax}℃</Text></View>
-              <View style={styles.amedasRow}><Text style={styles.amedasLabel}>最低気温</Text><Text style={styles.amedasValue}>{selectedWeather.tmin}℃</Text></View>
+              <View style={styles.amedasRow}><Text style={styles.amedasLabel}>最高気温</Text><Text style={styles.amedasValue}>{selectedWeather.tmax != null ? `${selectedWeather.tmax}℃` : "—"}</Text></View>
+              <View style={styles.amedasRow}><Text style={styles.amedasLabel}>最低気温</Text><Text style={styles.amedasValue}>{selectedWeather.tmin != null ? `${selectedWeather.tmin}℃` : "—"}</Text></View>
               <View style={styles.amedasRow}><Text style={styles.amedasLabel}>平均湿度</Text><Text style={styles.amedasValue}>{selectedWeather.humidity != null ? `${selectedWeather.humidity}%` : "—"}</Text></View>
               <View style={styles.amedasRow}><Text style={styles.amedasLabel}>天候</Text><Text style={styles.amedasValue}>{wIcon(selectedWeather.code)}</Text></View>
             </View>
@@ -63,30 +63,6 @@ export function DayDetailModal({
               <Text style={styles.emptyNote}>この日の気象データはありません</Text>
             </View>
           )}
-
-          <Text style={styles.legend2}>実測記録（現地計測）</Text>
-          <View style={styles.fieldRow}>
-            <View style={styles.fieldHalf}>
-              <Text style={styles.label}>気温（℃）</Text>
-              <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                placeholder="例: 24.5"
-                value={form.tempActual}
-                onChangeText={(tempActual) => onFormChange({ ...form, tempActual })}
-              />
-            </View>
-            <View style={styles.fieldHalf}>
-              <Text style={styles.label}>湿度（％）</Text>
-              <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                placeholder="例: 65"
-                value={form.humidityActual}
-                onChangeText={(humidityActual) => onFormChange({ ...form, humidityActual })}
-              />
-            </View>
-          </View>
 
           <Text style={styles.legend2}>農薬散布記録</Text>
           <View style={styles.fieldRow}>

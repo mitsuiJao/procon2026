@@ -7,8 +7,6 @@ export type PesticideEntry = {
 };
 
 export type DayEntry = {
-  tempActual: string;
-  humidityActual: string;
   pesticide: PesticideEntry;
   memo: string;
 };
@@ -16,18 +14,21 @@ export type DayEntry = {
 export type MonthData = Record<string, DayEntry>;
 
 export type WeatherEntry = {
-  tmax: number;
-  tmin: number;
+  tmax: number | null;
+  tmin: number | null;
   humidity: number | null;
-  code: number;
+  code: number | null;
 };
 
 export type WeatherByDate = Record<string, WeatherEntry>;
 
 export type TodayWeather = {
-  temp: number;
-  humidity: number;
-  code: number;
+  temp: number | null;
+  humidity: number | null;
+  code: number | null;
+  /** センサーの最新値が古い（未受信） */
+  stale: boolean;
+  updatedAt: string | null;
 };
 
 export type HistoryItem = {
@@ -37,8 +38,6 @@ export type HistoryItem = {
 };
 
 export type FormState = {
-  tempActual: string;
-  humidityActual: string;
   pestName: string;
   pestDilution: string;
   pestAmount: string;

@@ -4,6 +4,8 @@ import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { styles } from "@/components/nashi-navi/styles";
 import type { DayEntry, DiseaseRisk, HistoryItem, TodayWeather, WeatherByDate } from "@/components/nashi-navi/types";
 
+const fmtDeg = (v: number | null) => (v == null ? "—" : `${Math.round(v)}°`);
+
 type HomeScreenContentProps = {
   y: number;
   m: number;
@@ -14,11 +16,10 @@ type HomeScreenContentProps = {
   weatherByDate: WeatherByDate;
   historyItems: HistoryItem[];
   statSpray: number;
-  statMeasure: number;
   statMemo: number;
   weekdays: readonly string[];
   cells: (number | null)[];
-  wIcon: (code: number) => string;
+  wIcon: (code: number | null) => string;
   dateKeyOf: (year: number, month: number, day: number) => string;
   changeMonth: (delta: number) => void;
   openDay: (day: number) => void;
@@ -35,7 +36,6 @@ export function HomeScreenContent({
   weatherByDate,
   historyItems,
   statSpray,
-  statMeasure,
   statMemo,
   weekdays,
   cells,
@@ -57,8 +57,9 @@ export function HomeScreenContent({
             <>
               <Text style={styles.weatherIcon}>{wIcon(todayWeather.code)}</Text>
               <View>
-                <Text style={styles.weatherTemp}>{todayWeather.temp}℃</Text>
-                <Text style={styles.weatherSub}>湿度 {todayWeather.humidity}%</Text>
+                <Text style={styles.weatherTemp}>{todayWeather.temp ?? "—"}℃</Text>
+                <Text style={styles.weatherSub}>湿度 {todayWeather.humidity ?? "—"}%</Text>
+                {todayWeather.stale && <Text style={styles.weatherSub}>センサー未受信</Text>}
               </View>
             </>
           ) : (
@@ -125,13 +126,12 @@ export function HomeScreenContent({
                 <View style={styles.cellWeather}>
                   <Text style={styles.cellWeatherIcon}>{wIcon(w.code)}</Text>
                   <Text style={styles.cellWeatherTemp}>
-                    {Math.round(w.tmax)}°/{Math.round(w.tmin)}°
+                    {fmtDeg(w.tmax)}/{fmtDeg(w.tmin)}
                   </Text>
                 </View>
               )}
               <View style={styles.dots}>
                 {entry?.pesticide?.name ? <View style={[styles.dot, styles.dotSpray]} /> : null}
-                {(entry?.tempActual || entry?.humidityActual) ? <View style={[styles.dot, styles.dotMeasure]} /> : null}
                 {entry?.memo ? <View style={[styles.dot, styles.dotMemo]} /> : null}
               </View>
             </TouchableOpacity>
@@ -141,16 +141,14 @@ export function HomeScreenContent({
 
       <View style={styles.legend}>
         <View style={styles.legendItem}><View style={[styles.dot, styles.dotSpray]} /><Text style={styles.legendText}>農薬散布</Text></View>
-        <View style={styles.legendItem}><View style={[styles.dot, styles.dotMeasure]} /><Text style={styles.legendText}>実測記録</Text></View>
         <View style={styles.legendItem}><View style={[styles.dot, styles.dotMemo]} /><Text style={styles.legendText}>日誌メモ</Text></View>
       </View>
 
-      <View style={styles.sideCard}>
+      {/* <View style={styles.sideCard}>
         <Text style={styles.sideCardTitle}>今月のまとめ</Text>
         <View style={styles.statRow}><Text style={styles.statLabel}>散布記録</Text><Text style={styles.statValue}>{statSpray}件</Text></View>
-        <View style={styles.statRow}><Text style={styles.statLabel}>実測記録</Text><Text style={styles.statValue}>{statMeasure}件</Text></View>
         <View style={styles.statRow}><Text style={styles.statLabel}>日誌メモ</Text><Text style={styles.statValue}>{statMemo}件</Text></View>
-      </View>
+      </View> */}
 
       <View style={styles.sideCard}>
         <Text style={styles.sideCardTitle}>散布履歴（直近）</Text>
@@ -168,9 +166,9 @@ export function HomeScreenContent({
         )}
       </View>
 
-      <Text style={styles.footer}>
+      {/* <Text style={styles.footer}>
         気象データ: Open-Meteo（実測に近い過去データ・予報を表示。アメダス実測値とは誤差があります）
-      </Text>
+      </Text> */}
     </ScrollView>
   );
 }
