@@ -234,7 +234,7 @@ export default function App() {
     if (!selectedDate) return;
     try {
       await saveDiary(selectedDate, memo);
-      setFlash({ text: memo.trim() ? "メモを保存しました" : "メモを消しました", error: false });
+      setFlash({ text: "メモを保存しました", error: false });
       // 取り直すまでの間に古いメモが見えないよう、先に手元へ反映する
       setMonthData((prev) => ({ ...prev, [selectedDate]: { ...(prev[selectedDate] ?? EMPTY_DAY), memo: memo.trim() ? memo : "" } }));
       setMemoDraft(null);
