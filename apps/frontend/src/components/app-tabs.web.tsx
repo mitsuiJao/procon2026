@@ -77,6 +77,7 @@ export function CustomTabList(props: TabListProps) {
 
 const styles = StyleSheet.create({
   tabListContainer: {
+    display: 'none', // 一旦非表示（ヘッダーに重なってクリックを奪うため）
     position: 'absolute',
     width: '100%',
     padding: Spacing.three,
