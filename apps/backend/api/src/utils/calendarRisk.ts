@@ -87,18 +87,20 @@ function mergeHourly(
 }
 
 /**
- * JST日付ごとの雨量合計。センサー実測のみを使う（weather_forecasts に降水量が無いため、
- * センサーデータの無い未来日は必ず null＝判定不能になる）。
- * その日のうち1時間でも雨量の受信があれば合計を返し、1件も無ければ null にする
+ * JST日付ごとの雨量合計。1時間ごとにセンサーの雨量を優先し、無ければ予報の降水量で補う。
+ * その日のうち1時間でも値があれば合計を返し、1つも無ければ null にする
  * （0mmと「データが無い」を混同しない）。
  */
 function dailyRainfall(
   hours: Date[],
   sensor: Record<string, SensorHourly>,
+  forecast: { observed_at: Date; precipitation: number | null }[],
 ): Map<string, number | null> {
+  const forecastByHour = new Map(forecast.map((r) => [r.observed_at.toISOString(), r.precipitation]));
   const byDate = new Map<string, { sum: number; hasData: boolean }>();
   for (const time of hours) {
-    const mm = sensor[time.toISOString()]?.rainfallMm;
+    const key = time.toISOString();
+    const mm = sensor[key]?.rainfallMm ?? forecastByHour.get(key) ?? null;
     const date = jstDate(time);
     const entry = byDate.get(date) ?? { sum: 0, hasData: false };
     if (mm !== null && mm !== undefined) {
@@ -146,7 +148,7 @@ export async function getCalendarRisks(start: string, end: string): Promise<Reco
   const hours: Date[] = [];
   for (let t = fetchFrom.getTime(); t < rangeEnd.getTime(); t += HOUR_MS) hours.push(new Date(t));
   const allHourly = mergeHourly(hours, sensorHourly, forecastRows);
-  const rainByDate = dailyRainfall(hours, sensorHourly);
+  const rainByDate = dailyRainfall(hours, sensorHourly, forecastRows);
   const rules = getRules();
 
   const result: Record<string, DayRisk> = {};
