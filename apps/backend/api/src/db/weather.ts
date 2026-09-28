@@ -6,7 +6,9 @@ type weatherData = {
   humidity: number,
   latitude: number,
   longitude: number,
-  weather_code: number
+  weather_code: number,
+  /** 前の1時間の降水量(mm)。予報に無ければ null */
+  precipitation: number | null
 }
 
 /**
@@ -15,14 +17,15 @@ type weatherData = {
  * @param end 終了日時 開区間
  * @param latitude 緯度
  * @param longitude 経度
- * @returns { observed_at, temperature, humidity, latitude, longitude, weather_code }[] 時刻昇順
+ * @returns { observed_at, temperature, humidity, latitude, longitude, weather_code, precipitation }[] 時刻昇順
  */
 export async function getForecastByRange(start: Date, end: Date, latitude: number, longitude: number) {
   const { rows } = await pool.query(
     `SELECT observed_at,
             temperature::float8 AS temperature,
             humidity::float8 AS humidity,
-            latitude, longitude, weather_code
+            latitude, longitude, weather_code,
+            precipitation::float8 AS precipitation
        FROM weather_forecasts
       WHERE observed_at >= $1 AND observed_at < $2
         AND latitude = $3 AND longitude = $4
@@ -39,12 +42,13 @@ export async function getForecastByRange(start: Date, end: Date, latitude: numbe
 export async function writeForecast(weatherData: weatherData) {
   await pool.query(
     `INSERT INTO weather_forecasts
-       (observed_at, temperature, humidity, latitude, longitude, weather_code)
-     VALUES ($1, $2, $3, $4, $5, $6)
+       (observed_at, temperature, humidity, latitude, longitude, weather_code, precipitation)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      ON CONFLICT (observed_at, latitude, longitude) DO UPDATE
        SET temperature  = EXCLUDED.temperature,
            humidity     = EXCLUDED.humidity,
-           weather_code = EXCLUDED.weather_code`,
+           weather_code = EXCLUDED.weather_code,
+           precipitation = EXCLUDED.precipitation`,
     [
       weatherData.observed_at,
       weatherData.temperature,
@@ -52,6 +56,7 @@ export async function writeForecast(weatherData: weatherData) {
       weatherData.latitude,
       weatherData.longitude,
       weatherData.weather_code,
+      weatherData.precipitation,
     ],
   );
 }

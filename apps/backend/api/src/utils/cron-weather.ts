@@ -21,14 +21,15 @@ type ForecastJson = {
     temperature_2m: number[];
     relative_humidity_2m: number[];
     weather_code: number[];
+    precipitation: (number | null)[];
   };
 };
 
 async function getWeatherForcast(latitude: number, longitude: number) {
-  const url: string = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,relative_humidity_2m,weather_code&models=jma_seamless&timezone=Asia%2FTokyo&forecast_days=11`
+  const url: string = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,relative_humidity_2m,weather_code,precipitation&models=jma_seamless&timezone=Asia%2FTokyo&forecast_days=11`
   try {
     const data: ForecastJson = await fetchData(url, headers);
-    const { time, temperature_2m, relative_humidity_2m, weather_code } = data.hourly;
+    const { time, temperature_2m, relative_humidity_2m, weather_code, precipitation } = data.hourly;
     for (let i = 0; i < time.length; i++) {
       if (temperature_2m[i] == null || relative_humidity_2m[i] == null || weather_code[i] == null) continue;
       await writeForecast({
@@ -38,6 +39,7 @@ async function getWeatherForcast(latitude: number, longitude: number) {
         latitude,
         longitude,
         weather_code: weather_code[i],
+        precipitation: precipitation?.[i] ?? null,
       });
     }
     console.log("save done");

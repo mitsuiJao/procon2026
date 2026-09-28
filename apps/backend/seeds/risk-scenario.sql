@@ -78,8 +78,8 @@ SELECT ts,
        CASE WHEN wet THEN 3 WHEN rain THEN 63 ELSE 1 END AS code
   FROM flags;
 
-INSERT INTO weather_forecasts (observed_at, temperature, humidity, latitude, longitude, weather_code)
-SELECT t.ts, t.temp, t.humidity, p.latitude, p.longitude, t.code
+INSERT INTO weather_forecasts (observed_at, temperature, humidity, latitude, longitude, weather_code, precipitation)
+SELECT t.ts, t.temp, t.humidity, p.latitude, p.longitude, t.code, t.rainfall
   FROM seed_timeline t, seed_place p;
 
 INSERT INTO measure (device, metric, value, received_at)
