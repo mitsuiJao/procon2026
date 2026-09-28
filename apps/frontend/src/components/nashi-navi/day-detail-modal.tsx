@@ -48,8 +48,6 @@ const fmtTitle = (date: string) => {
 
 const STAGE_SOURCE: Record<string, string> = { recorded: "記録", estimated: "月からの推定" };
 
-const sprayMeta = (s: SprayRecord) => [s.dilution, s.amount, s.target].filter(Boolean).join("　");
-
 const toForm = (s: SprayRecord): SprayForm => ({
   id: s.id,
   pesticideId: s.pesticideId,
@@ -184,7 +182,7 @@ export function DayDetailModal({
               <View key={s.id} style={styles.sprayRow}>
                 <View style={styles.sprayMain}>
                   <Text style={styles.sprayName}>{s.pesticide}</Text>
-                  {sprayMeta(s) ? <Text style={styles.sprayMeta}>{sprayMeta(s)}</Text> : null}
+                  {s.target ? <Text style={styles.sprayMeta}>{s.target}</Text> : null}
                   {s.note ? <Text style={styles.sprayMeta}>{s.note}</Text> : null}
                 </View>
                 <TouchableOpacity style={styles.rowAction} onPress={() => openForm(toForm(s))}>
@@ -222,16 +220,6 @@ export function DayDetailModal({
                   </View>
                 )}
 
-                <View style={styles.fieldRow}>
-                  <View style={styles.fieldHalf}>
-                    <Text style={styles.label}>希釈倍率</Text>
-                    <TextInput style={styles.input} placeholder="例: 600倍" value={sprayForm.dilution} onChangeText={(dilution) => onSprayFormChange({ ...sprayForm, dilution })} />
-                  </View>
-                  <View style={styles.fieldHalf}>
-                    <Text style={styles.label}>散布量</Text>
-                    <TextInput style={styles.input} placeholder="例: 300L/10a" value={sprayForm.amount} onChangeText={(amount) => onSprayFormChange({ ...sprayForm, amount })} />
-                  </View>
-                </View>
                 <Text style={styles.label}>対象病害虫</Text>
                 <TextInput style={styles.input} placeholder="例: べと病" value={sprayForm.target} onChangeText={(target) => onSprayFormChange({ ...sprayForm, target })} />
                 <Text style={styles.label}>備考</Text>

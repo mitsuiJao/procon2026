@@ -29,7 +29,6 @@ import type {
   DayData,
   DiseaseInfo,
   Pesticide,
-  PesticideApplication,
   PesticideMaster,
   RiskByDate,
   SensorStatus,
@@ -245,14 +244,13 @@ export default function App() {
     }
   };
 
-  const applyPesticide = (pesticide: Pesticide, application: PesticideApplication, diseaseName: string) => {
+  const applyPesticide = (pesticide: Pesticide, diseaseName: string) => {
     setCurrent(new Date());
     setDiseaseModalVisible(false);
     openDate(todayStr, {
       ...emptySprayForm,
       pesticideId: pesticide.id,
       pesticide: pesticide.name,
-      dilution: application.dilution ?? "",
       target: diseaseName,
     });
   };

@@ -79,8 +79,6 @@ export const styles = StyleSheet.create({
   forecastNote: { ...text(13, COLORS.inkSoft), marginTop: 6 },
   sensorHead: { flexDirection: "row", alignItems: "baseline", gap: 10, marginTop: 20, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: COLORS.ink },
   stale: text(13, COLORS.danger, true),
-  fieldRow: { flexDirection: "row", gap: 10 },
-  fieldHalf: { flex: 1 },
   label: { ...text(13, COLORS.inkSoft), marginBottom: 4, marginTop: 10 },
   input: { ...text(16), borderWidth: 1, borderColor: COLORS.line, borderRadius: 4, paddingVertical: 9, paddingHorizontal: 10, backgroundColor: COLORS.paper },
   textarea: { minHeight: 88, textAlignVertical: "top" },

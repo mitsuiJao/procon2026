@@ -144,9 +144,7 @@ export function HomeScreenContent({
           historyItems.map((it) => (
             <View key={it.id} style={styles.historyItem}>
               <Text style={styles.historyDate}>{it.sprayedOn.replaceAll("-", "/")}</Text>
-              <Text style={styles.historyName}>
-                {it.pesticide}{it.dilution ? `　${it.dilution}` : ""}
-              </Text>
+              <Text style={styles.historyName}>{it.pesticide}</Text>
             </View>
           ))
         )}
