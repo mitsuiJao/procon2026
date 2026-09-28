@@ -36,18 +36,22 @@
 |---|---|---|
 | GET | `/diseases` | 病害の一覧 |
 | GET | `/pesticides?disease=` | 農薬の一覧（散布記録のプルダウン用） |
+| PUT | `/pesticides/:id/hidden` | 散布記録のプルダウンに出す・出さないを切り替え（`204`） |
 
 - **`/diseases`**
   - 返り値: `{ id, name_ja, priority }[]`
   - `/calendar/risk` の `diseaseId` を病名に直すときに使う。
 - **`/pesticides`**
   - 返り値: `{ source, retrieved_at, pesticides: [...] }`
-  - 各農薬: `{ id, name_ja, kind, use, registered_on, active_ingredients, frac_codes, frac_note, total_use_limits, applications }`
+  - 各農薬: `{ id, name_ja, kind, use, registered_on, active_ingredients, frac_codes, frac_note, total_use_limits, hidden, applications }`
     - `id` は農薬の登録番号（文字列）。
+    - `hidden` が true なら、散布記録のプルダウンに出さない設定（既定は false）。
   - 各適用（`applications`）: `{ crop, target, disease_id, method, dilution, dilution_min, dilution_max, timing, pre_harvest_days, spray_volume, uses, max_uses }`
     - 数値の項目（`dilution_min`、`pre_harvest_days`、`max_uses` など）は、原文から取り出せたときだけ入る。それ以外は null。
   - `?disease=<diseaseId>` を付けると、その病害に登録のある農薬だけを返す。
   - 推奨ではなく、選べる農薬の一覧。元データは農薬登録情報（2026-09 時点）。
+- **`PUT /pesticides/:id/hidden`**
+  - body: `{ hidden }`（boolean）。マスターに無い id は `404`。
 
 ## 生育ステージ
 
@@ -98,6 +102,7 @@ API=http://localhost:3000/api
 curl "$API/current"
 curl "$API/calendar/risk?start=2026-09-01&end=2026-09-30"
 curl "$API/pesticides?disease=downy_mildew"
+curl -X PUT "$API/pesticides/142/hidden" -H 'Content-Type: application/json' -d '{"hidden":true}'
 curl -X PUT "$API/diary/2026-09-28" -H 'Content-Type: application/json' -d '{"memo":"べと病の病斑を確認"}'
 curl -X POST "$API/sprays" -H 'Content-Type: application/json' -d '{"sprayed_on":"2026-09-28","pesticide_id":"142","dilution":"1000倍"}'
 curl -X POST "$API/sprays" -H 'Content-Type: application/json' -d '{"sprayed_on":"2026-09-28","pesticide":"自家製の資材"}'

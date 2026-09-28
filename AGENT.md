@@ -12,6 +12,7 @@
 - Past days prefer sensor values; only the weather code is filled in from the forecast. Multiple sensor devices are not distinguished and are pooled together.
 - Only the sensor status view (`GET /sensors`) shows devices separately; calendar and risk evaluation keep pooling them.
 - The pesticide master is `data/vocab/pesticides.yaml`, generated from the MAFF registration CSV (`data/pesticides_updated-utf8.csv`, retrieved 2026-09) by `npm run build:pesticides`; never edit it by hand. `id` is the registration number. FRAC codes come from active ingredients, not the CSV's FRAC column (Excel mangled some codes into dates). Spray records store both `pesticide_id` (null for free text) and the product name at the time.
+- Which pesticides appear in the spray-record picker is stored in `hidden_pesticides` (only hidden ones are kept; the default is shown). It does not affect other pesticide lists.
 - The daily representative weather code is the most frequent one; ties go to the larger code (the worse weather).
 - While the DB is being recreated and no data is accumulating, edit existing migration files (e.g. `001`) directly instead of adding new ones (approved by the user).
 

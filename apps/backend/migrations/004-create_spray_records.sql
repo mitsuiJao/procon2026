@@ -14,3 +14,9 @@ CREATE TABLE spray_records (
 
 CREATE INDEX spray_records_pesticide_date_idx ON spray_records (pesticide, sprayed_on);
 CREATE INDEX spray_records_pesticide_id_date_idx ON spray_records (pesticide_id, sprayed_on);
+
+-- 散布記録のプルダウンに出さない農薬。pesticide_id は pesticides.yaml の id（マスターが yaml なので外部キーは張らない）
+CREATE TABLE hidden_pesticides (
+  pesticide_id TEXT PRIMARY KEY,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
