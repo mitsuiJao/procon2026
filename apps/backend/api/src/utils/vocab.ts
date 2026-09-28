@@ -24,17 +24,32 @@ function cached<T>(load: () => T): () => T {
 export type DiseaseVocab = { id: string; nameJa: string; priority: number };
 export type StageVocab = { value: number; id: string; nameJa: string; typicalMonth: string };
 export type ActiveIngredientVocab = { id: string; nameJa?: string; fracCode: string };
+export type PesticideApplication = {
+  crop: string;
+  target: string | null;
+  diseaseId: string | null;
+  method: string;
+  dilution: string | null;
+  dilutionMin: number | null;
+  dilutionMax: number | null;
+  timing: string | null;
+  preHarvestDays: number | null;
+  sprayVolume: string | null;
+  uses: string | null;
+  maxUses: number | null;
+};
 export type PesticideVocab = {
   id: string;
   nameJa: string;
+  kind: string;
+  use: string;
+  registeredOn: string;
   activeIngredients: string[];
-  dilution?: string;
-  maxUsesPerYear?: number;
-  preHarvestDays?: number;
-  registrationNo?: string;
-  source: string;
-  checkedAt: string;
+  totalUseLimits: string[];
+  fracNote?: string;
+  applications: PesticideApplication[];
 };
+type PesticidesDoc = { source: string; retrievedAt: string; pesticides: PesticideVocab[] };
 
 export const getRules = cached<Rule[]>(() =>
   loadRules(path.join(DATA_DIR, "rules/rules.yaml"), path.join(DATA_DIR, "vocab")),
@@ -46,34 +61,37 @@ export const getActiveIngredientsVocab = cached(
 );
 
 /**
- * pesticides.yaml を読み、activeIngredients.yaml と突き合わせて検証する。
- * 打ち間違いで FRAC がたどれなくなるのを防ぐため、不整合は例外にする。
+ * pesticides.yaml（scripts/buildPesticides.ts の生成物）を読んで検証する。
+ * 有効成分が activeIngredients.yaml に無いのは FRAC 不明の成分として許す（石灰硫黄合剤・微生物剤など）。
  */
-export const getPesticidesVocab = cached<PesticideVocab[]>(() => {
-  const ingredientIds = new Set(getActiveIngredientsVocab().map((a) => a.id));
+const getPesticidesDoc = cached<PesticidesDoc>(() => {
+  const full = path.join(DATA_DIR, "vocab/pesticides.yaml");
+  const doc = parse(readFileSync(full, "utf8")) as PesticidesDoc;
+  if (typeof doc?.source !== "string" || typeof doc.retrievedAt !== "string" || !Array.isArray(doc.pesticides)) {
+    throw new Error(`${full}: source, retrievedAt, pesticides が必要です`);
+  }
   const seen = new Set<string>();
-  const list = readYamlArray("vocab/pesticides.yaml") as PesticideVocab[];
-  for (const p of list) {
+  for (const p of doc.pesticides) {
     if (typeof p.id !== "string" || typeof p.nameJa !== "string") {
       throw new Error(`pesticides.yaml: id と nameJa は必須です ${JSON.stringify(p)}`);
     }
     if (seen.has(p.id)) throw new Error(`pesticides.yaml: id が重複しています ${p.id}`);
     seen.add(p.id);
-    if (!Array.isArray(p.activeIngredients) || p.activeIngredients.length === 0) {
-      throw new Error(`pesticides.yaml: ${p.id} の activeIngredients を1つ以上書いてください`);
-    }
-    for (const a of p.activeIngredients) {
-      if (!ingredientIds.has(a)) throw new Error(`pesticides.yaml: ${p.id} の有効成分 ${a} が activeIngredients.yaml にありません`);
-    }
-    if (typeof p.source !== "string" || typeof p.checkedAt !== "string") {
-      throw new Error(`pesticides.yaml: ${p.id} の source と checkedAt は必須です`);
+    if (!Array.isArray(p.activeIngredients) || !Array.isArray(p.applications)) {
+      throw new Error(`pesticides.yaml: ${p.id} の activeIngredients と applications は配列にしてください`);
     }
   }
-  return list;
+  return doc;
 });
 
-/** 農薬の FRAC コード（有効成分からたどる。重複なし） */
+export const getPesticidesVocab = () => getPesticidesDoc().pesticides;
+export const getPesticidesSource = () => {
+  const { source, retrievedAt } = getPesticidesDoc();
+  return { source, retrievedAt };
+};
+
+/** 農薬の FRAC コード（有効成分からたどる。重複なし。たどれない成分は飛ばす） */
 export function fracCodesOf(p: PesticideVocab): string[] {
   const byId = new Map(getActiveIngredientsVocab().map((a) => [a.id, a.fracCode]));
-  return [...new Set(p.activeIngredients.map((a) => byId.get(a)!))];
+  return [...new Set(p.activeIngredients.flatMap((a) => byId.get(a) ?? []))];
 }

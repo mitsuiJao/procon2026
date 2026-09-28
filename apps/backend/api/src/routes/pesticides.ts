@@ -1,38 +1,47 @@
 import { Hono } from "hono";
-import { fracCodesOf, getDiseasesVocab, getPesticidesVocab, getRules, type PesticideVocab } from "../utils/vocab";
+import { fracCodesOf, getDiseasesVocab, getPesticidesSource, getPesticidesVocab, type PesticideVocab } from "../utils/vocab";
 
 export const pesticides = new Hono();
 
 const toPesticideJson = (p: PesticideVocab) => ({
   id: p.id,
   name_ja: p.nameJa,
+  kind: p.kind,
+  use: p.use,
+  registered_on: p.registeredOn,
   active_ingredients: p.activeIngredients,
   frac_codes: fracCodesOf(p),
-  dilution: p.dilution ?? null,
-  max_uses_per_year: p.maxUsesPerYear ?? null,
-  pre_harvest_days: p.preHarvestDays ?? null,
-  registration_no: p.registrationNo ?? null,
-  source: p.source,
-  checked_at: p.checkedAt,
+  frac_note: p.fracNote ?? null,
+  total_use_limits: p.totalUseLimits,
+  applications: p.applications.map((a) => ({
+    crop: a.crop,
+    target: a.target,
+    disease_id: a.diseaseId,
+    method: a.method,
+    dilution: a.dilution,
+    dilution_min: a.dilutionMin,
+    dilution_max: a.dilutionMax,
+    timing: a.timing,
+    pre_harvest_days: a.preHarvestDays,
+    spray_volume: a.sprayVolume,
+    uses: a.uses,
+    max_uses: a.maxUses,
+  })),
 });
 
 /**
  * 農薬マスター（散布記録のプルダウン用）。推奨ではなく選択肢の一覧
  * GET /pesticides?disease=<diseaseId>
- *   disease を指定すると、rules.yaml でその病害の candidateFrac に含まれる FRAC を持つ農薬に絞る
- * @returns { id, name_ja, active_ingredients, frac_codes, dilution, max_uses_per_year, pre_harvest_days, registration_no, source, checked_at }[]
+ *   disease を指定すると、その病害に登録（適用）がある農薬に絞る
+ * @returns { source, retrieved_at, pesticides: { id(登録番号), name_ja, ..., frac_codes, applications[] }[] }
  */
 pesticides.get("/", (c) => {
   const disease = c.req.query("disease");
   let list = getPesticidesVocab();
   if (disease !== undefined) {
     if (!getDiseasesVocab().some((d) => d.id === disease)) return c.json({ error: `unknown disease: ${disease}` }, 400);
-    const candidate = new Set(
-      getRules()
-        .filter((r) => r.enabled && r.diseaseId === disease)
-        .flatMap((r) => r.candidateFrac),
-    );
-    list = list.filter((p) => fracCodesOf(p).some((code) => candidate.has(code)));
+    list = list.filter((p) => p.applications.some((a) => a.diseaseId === disease));
   }
-  return c.json(list.map(toPesticideJson));
+  const { source, retrievedAt } = getPesticidesSource();
+  return c.json({ source, retrieved_at: retrievedAt, pesticides: list.map(toPesticideJson) });
 });
