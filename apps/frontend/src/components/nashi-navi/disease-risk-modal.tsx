@@ -5,11 +5,11 @@ import { Feather } from "@expo/vector-icons";
 
 import { COLORS, styles } from "@/components/nashi-navi/styles";
 import { pesticidesForDisease, searchPesticides } from "@/components/nashi-navi/utils";
-import type { DiseaseRisk, Pesticide, PesticideApplication, PesticideMaster, SprayUsage } from "@/components/nashi-navi/types";
+import type { DiseaseInfo, Pesticide, PesticideApplication, PesticideMaster, SprayUsage } from "@/components/nashi-navi/types";
 
 type DiseaseRiskModalProps = {
   visible: boolean;
-  selectedDisease: DiseaseRisk | null;
+  selectedDisease: DiseaseInfo | null;
   master: PesticideMaster | null;
   usage: SprayUsage | null;
   onClose: () => void;

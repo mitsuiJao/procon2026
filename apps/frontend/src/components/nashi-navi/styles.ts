@@ -29,12 +29,6 @@ export const styles = StyleSheet.create({
   weatherSub: text(13, COLORS.inkSoft),
   weatherStale: text(13, COLORS.danger),
 
-  warningList: { borderTopWidth: 1, borderTopColor: COLORS.line, marginBottom: 20 },
-  warningRow: { flexDirection: "row", alignItems: "center", borderBottomWidth: 1, borderBottomColor: COLORS.line, paddingVertical: 10 },
-  warningBody: { flex: 1, paddingRight: 8 },
-  warningTitle: text(16, COLORS.danger, true),
-  warningSub: { ...text(13, COLORS.inkSoft), marginTop: 3 },
-
   monthNav: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
   navBtn: { width: 36, height: 36, alignItems: "center", justifyContent: "center" },
   monthLabel: text(17, COLORS.ink, true),
@@ -46,7 +40,9 @@ export const styles = StyleSheet.create({
   cell: { width: "14.28%", height: 76, backgroundColor: COLORS.paper, borderRightWidth: 1, borderBottomWidth: 1, borderColor: COLORS.line, padding: 4 },
   cellEmpty: { width: "14.28%", height: 76, borderRightWidth: 1, borderBottomWidth: 1, borderColor: COLORS.line, backgroundColor: COLORS.surface },
   cellToday: { borderWidth: 1, borderColor: COLORS.ink },
-  cellRisk: { position: "absolute", top: 0, left: 0, right: 0, height: 2, backgroundColor: COLORS.danger },
+  // 病害リスク。背景色 = その日の最も高いレベル
+  cellRiskMet: { backgroundColor: "rgba(162,71,46,0.22)" },
+  cellRiskNear: { backgroundColor: "rgba(162,71,46,0.09)" },
   dayNum: text(13, COLORS.inkSoft),
   dayNumToday: text(13, COLORS.ink, true),
   cellWeather: { position: "absolute", top: 4, right: 4, alignItems: "flex-end", gap: 2 },
@@ -55,9 +51,9 @@ export const styles = StyleSheet.create({
   dot: { width: 6, height: 6, borderRadius: 3 },
   dotSpray: { backgroundColor: COLORS.danger },
   dotMemo: { backgroundColor: COLORS.leaf },
-  legendRisk: { width: 12, height: 2, backgroundColor: COLORS.danger },
 
   legend: { flexDirection: "row", gap: 16, marginTop: 10, marginBottom: 28, flexWrap: "wrap" },
+  legendSwatch: { width: 14, height: 14, borderRadius: 2 },
   legendItem: { flexDirection: "row", alignItems: "center", gap: 6 },
   legendText: text(13, COLORS.inkSoft),
 
@@ -76,6 +72,11 @@ export const styles = StyleSheet.create({
   tableRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderBottomWidth: 1, borderBottomColor: COLORS.line, paddingVertical: 8 },
   tableLabel: text(15, COLORS.inkSoft),
   tableValue: text(15),
+  riskRow: { flexDirection: "row", alignItems: "center", gap: 8, borderBottomWidth: 1, borderBottomColor: COLORS.line, paddingVertical: 8 },
+  riskName: { ...text(15), flex: 1 },
+  riskValue: text(15, COLORS.danger, true),
+  riskValueNear: text(15, COLORS.danger),
+  forecastNote: { ...text(13, COLORS.inkSoft), marginTop: 6 },
   sensorHead: { flexDirection: "row", alignItems: "baseline", gap: 10, marginTop: 20, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: COLORS.ink },
   stale: text(13, COLORS.danger, true),
   fieldRow: { flexDirection: "row", gap: 10 },

@@ -4,8 +4,8 @@ import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 
 import { COLORS, styles } from "@/components/nashi-navi/styles";
-import { risksForDay, type wIcon as WIcon } from "@/components/nashi-navi/utils";
-import type { DayData, DiseaseRisk, SprayRecord, TodayWeather, WeatherByDate } from "@/components/nashi-navi/types";
+import { maxLevel, type wIcon as WIcon } from "@/components/nashi-navi/utils";
+import type { DayData, RiskByDate, SprayRecord, TodayWeather, WeatherByDate } from "@/components/nashi-navi/types";
 
 // マスが狭いので ° は付けない
 const fmtDeg = (v: number | null) => (v == null ? "—" : `${Math.round(v)}`);
@@ -15,7 +15,8 @@ type HomeScreenContentProps = {
   m: number;
   todayStr: string;
   todayWeather: TodayWeather | null;
-  activeRisks: DiseaseRisk[];
+  /** 日付ごとの病害リスク。マスの背景色に使う */
+  monthRisk: RiskByDate;
   /** 日付（YYYY-MM-DD）ごとの記録 */
   monthData: Record<string, DayData>;
   weatherByDate: WeatherByDate;
@@ -26,7 +27,6 @@ type HomeScreenContentProps = {
   dateKeyOf: (year: number, month: number, day: number) => string;
   changeMonth: (delta: number) => void;
   openDay: (day: number) => void;
-  onPressRisk: (risk: DiseaseRisk) => void;
   onPressWeather: () => void;
 };
 
@@ -35,7 +35,7 @@ export function HomeScreenContent({
   m,
   todayStr,
   todayWeather,
-  activeRisks,
+  monthRisk,
   monthData,
   weatherByDate,
   historyItems,
@@ -45,7 +45,6 @@ export function HomeScreenContent({
   dateKeyOf,
   changeMonth,
   openDay,
-  onPressRisk,
   onPressWeather,
 }: HomeScreenContentProps) {
   return (
@@ -73,20 +72,6 @@ export function HomeScreenContent({
         </TouchableOpacity>
       </View>
 
-      {activeRisks.length > 0 && (
-        <View style={styles.warningList}>
-          {activeRisks.map((risk) => (
-            <TouchableOpacity key={risk.id} style={styles.warningRow} onPress={() => onPressRisk(risk)}>
-              <View style={styles.warningBody}>
-                <Text style={styles.warningTitle}>{risk.name}の感染条件に該当</Text>
-                <Text style={styles.warningSub}>{risk.triggerText}</Text>
-              </View>
-              <Feather name="chevron-right" size={18} color={COLORS.inkSoft} />
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
-
       <View style={styles.monthNav}>
         <TouchableOpacity style={styles.navBtn} onPress={() => changeMonth(-1)} accessibilityLabel="前の月">
           <Feather name="chevron-left" size={22} color={COLORS.inkSoft} />
@@ -113,15 +98,19 @@ export function HomeScreenContent({
           const w = weatherByDate[dstr];
           const kind = w ? wIcon(w.code) : null;
           const isToday = dstr === todayStr;
-          const hasRisk = risksForDay(w, m + 1).length > 0;
+          const risk = maxLevel(monthRisk[dstr]);
 
           return (
             <TouchableOpacity
               key={idx}
-              style={[styles.cell, isToday && styles.cellToday]}
+              style={[
+                styles.cell,
+                risk === "conditions_met" && styles.cellRiskMet,
+                risk === "near_threshold" && styles.cellRiskNear,
+                isToday && styles.cellToday,
+              ]}
               onPress={() => openDay(day)}
             >
-              {hasRisk && <View style={styles.cellRisk} />}
               <Text style={isToday ? styles.dayNumToday : styles.dayNum}>{day}</Text>
               {w && (
                 <View style={styles.cellWeather}>
@@ -141,7 +130,8 @@ export function HomeScreenContent({
       </View>
 
       <View style={styles.legend}>
-        <View style={styles.legendItem}><View style={styles.legendRisk} /><Text style={styles.legendText}>感染条件に該当</Text></View>
+        <View style={styles.legendItem}><View style={[styles.legendSwatch, styles.cellRiskMet]} /><Text style={styles.legendText}>感染条件に該当</Text></View>
+        <View style={styles.legendItem}><View style={[styles.legendSwatch, styles.cellRiskNear]} /><Text style={styles.legendText}>条件に近い</Text></View>
         <View style={styles.legendItem}><View style={[styles.dot, styles.dotSpray]} /><Text style={styles.legendText}>散布</Text></View>
         <View style={styles.legendItem}><View style={[styles.dot, styles.dotMemo]} /><Text style={styles.legendText}>日誌メモ</Text></View>
       </View>

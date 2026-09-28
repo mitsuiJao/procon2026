@@ -1,5 +1,8 @@
 import type {
+  DayRisk,
   PesticideMaster,
+  RiskByDate,
+  RiskLevel,
   SensorReading,
   SensorStatus,
   SprayInput,
@@ -42,6 +45,36 @@ export async function fetchCurrent(): Promise<TodayWeather> {
 /** 日次天気。start, end は YYYY-MM-DD（JST, 両端含む） */
 export function fetchCalendar(start: string, end: string): Promise<WeatherByDate> {
   return getJson<WeatherByDate>(`/calendar?start=${start}&end=${end}`);
+}
+
+// /calendar/risk はバックエンドの型をそのまま返すので camelCase。ルールごとの内訳は使わない
+type RiskResponse = Record<string, DayRisk & { diseases: { diseaseId: string; level: RiskLevel; rules: unknown[] }[] }>;
+
+/** 日ごとの病害リスク。start, end は YYYY-MM-DD（JST, 両端含む） */
+export async function fetchRisk(start: string, end: string): Promise<RiskByDate> {
+  const data = await getJson<RiskResponse>(`/calendar/risk?start=${start}&end=${end}`);
+  return Object.fromEntries(
+    Object.entries(data).map(([date, d]) => [
+      date,
+      {
+        stage: d.stage,
+        stageSource: d.stageSource,
+        diseases: d.diseases.map((x) => ({ diseaseId: x.diseaseId, level: x.level })),
+      },
+    ]),
+  );
+}
+
+/** 病害の一覧（病名と重要度） */
+export async function fetchDiseases(): Promise<{ id: string; name: string; priority: number }[]> {
+  const data = await getJson<{ id: string; name_ja: string; priority: number }[]>("/diseases");
+  return data.map((d) => ({ id: d.id, name: d.name_ja, priority: d.priority }));
+}
+
+/** 生育ステージの名前。{ value: 名前 } */
+export async function fetchStageNames(): Promise<Record<number, string>> {
+  const data = await getJson<{ vocab: { value: number; name_ja: string }[] }>("/stages");
+  return Object.fromEntries(data.vocab.map((s) => [s.value, s.name_ja]));
 }
 
 type ReadingResponse = { value: number; received_at: string } | null;

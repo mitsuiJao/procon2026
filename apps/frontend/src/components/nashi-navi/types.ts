@@ -97,11 +97,27 @@ export type SensorStatus = {
   stale: boolean;
 };
 
-export type DiseaseRisk = {
+/** 病害の表示用の情報。判定はバックエンド（/calendar/risk）で行う */
+export type DiseaseInfo = {
+  /** diseases.yaml の id */
   id: string;
   name: string;
-  season: number[];
-  checkRisk: (temp: number, humidity: number, code: number) => boolean;
+  /** 3 = ◎、2 = ○。同じレベルの並び順に使う */
+  priority: number;
   triggerText: string;
   symptom: string;
 };
+
+/** undetermined は入力不足で判定不能 */
+export type RiskLevel = "conditions_met" | "near_threshold" | "undetermined" | "none";
+
+/** recorded = 記録から, estimated = 月からの推定, unknown = どちらも無い */
+export type StageSource = "recorded" | "estimated" | "unknown";
+
+export type DayRisk = {
+  stage: number | null;
+  stageSource: StageSource;
+  diseases: { diseaseId: string; level: RiskLevel }[];
+};
+
+export type RiskByDate = Record<string, DayRisk>;
