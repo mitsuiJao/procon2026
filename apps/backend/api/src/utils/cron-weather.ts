@@ -9,7 +9,7 @@ const headers = {
 const fetchData = async (url: string, headers: HeadersInit) => {
   const response = await fetch(url, { headers })
   if (!response.ok) {
-    throw new Error('response error');
+    throw new Error(`response error: ${response.status} ${await response.text()}`);
   }
   const data = await response.json();
   return data
@@ -57,7 +57,8 @@ async function job() {
 }
 
 export function startWeatherCron() {
-  cron.schedule("0 * * * *", job, { timezone: "Asia/Tokyo" });
+  // 毎時0分は Open-Meteo へのアクセスが集中して失敗しやすいのでずらす
+  cron.schedule("7 * * * *", job, { timezone: "Asia/Tokyo" });
   void job(); // 起動直後1回実行
   console.log("scheduler started");
 }
