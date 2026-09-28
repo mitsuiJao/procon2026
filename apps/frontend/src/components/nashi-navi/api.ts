@@ -175,7 +175,7 @@ type UsageResponse = {
   by_frac: Record<string, { count: number; last_sprayed_on: string }>;
 };
 
-/** その年の使用回数（マスターから選んだ散布だけ） */
+/** その年の使用回数 */
 export async function fetchUsage(year: number): Promise<SprayUsage> {
   const data = await getJson<UsageResponse>(`/sprays/usage?year=${year}`);
   return {
@@ -213,13 +213,15 @@ type ApplicationResponse = {
 type PesticideResponse = {
   id: string;
   name_ja: string;
+  kind: string;
   frac_codes: string[];
   frac_note: string | null;
   total_use_limits: string[];
+  hidden: boolean;
   applications: ApplicationResponse[];
 };
 
-/** 農薬マスター（登録のある農薬の一覧。推奨ではない） */
+/** 農薬マスタ */
 export async function fetchPesticides(): Promise<PesticideMaster> {
   const data = await getJson<{ source: string; retrieved_at: string; pesticides: PesticideResponse[] }>("/pesticides");
   return {
@@ -228,9 +230,11 @@ export async function fetchPesticides(): Promise<PesticideMaster> {
     pesticides: data.pesticides.map((p) => ({
       id: p.id,
       name: p.name_ja,
+      kind: p.kind,
       fracCodes: p.frac_codes,
       fracNote: p.frac_note,
       totalUseLimits: p.total_use_limits,
+      hidden: p.hidden,
       applications: p.applications.map((a) => ({
         crop: a.crop,
         target: a.target,
@@ -244,4 +248,9 @@ export async function fetchPesticides(): Promise<PesticideMaster> {
       })),
     })),
   };
+}
+
+/** 散布記録の「薬剤を選ぶ」に出す・出さないを切り替える */
+export async function setPesticideHidden(id: string, hidden: boolean): Promise<void> {
+  await send("PUT", `/pesticides/${encodeURIComponent(id)}/hidden`, { hidden });
 }

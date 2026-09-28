@@ -5,8 +5,8 @@ import { Feather } from "@expo/vector-icons";
 
 import { PesticidePicker } from "@/components/nashi-navi/pesticide-picker";
 import { COLORS, styles } from "@/components/nashi-navi/styles";
-import { alertsOf, emptySprayForm, LEVEL_LABEL, type wIcon as WIcon } from "@/components/nashi-navi/utils";
-import type { DayData, DayRisk, DiseaseInfo, Pesticide, PesticideApplication, SprayForm, SprayRecord, SprayUsage, WeatherEntry } from "@/components/nashi-navi/types";
+import { alertsOf, emptySprayForm, fmtApplication, LEVEL_LABEL, type wIcon as WIcon } from "@/components/nashi-navi/utils";
+import type { DayData, DayRisk, DiseaseInfo, Pesticide, SprayForm, SprayRecord, SprayUsage, WeatherEntry } from "@/components/nashi-navi/types";
 
 export type Flash = { text: string; error: boolean } | null;
 
@@ -43,10 +43,6 @@ const fmtTitle = (date: string) => {
   const [y, m, d] = date.split("-").map(Number);
   return `${y}年${m}月${d}日`;
 };
-
-/** 登録内容の1行（対象・倍率・時期・回数の原文） */
-const fmtApplication = (a: PesticideApplication) =>
-  [a.target, a.dilution, a.timing, a.uses && a.uses !== "-" ? `本剤 ${a.uses}` : null].filter(Boolean).join("　");
 
 const STAGE_SOURCE: Record<string, string> = { recorded: "記録", estimated: "月からの推定" };
 

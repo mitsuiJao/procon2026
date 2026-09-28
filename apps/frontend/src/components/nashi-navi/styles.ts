@@ -130,4 +130,22 @@ export const styles = StyleSheet.create({
   pestNote: { ...text(15, COLORS.inkSoft), lineHeight: 22, marginTop: 6 },
   applyLink: { alignSelf: "flex-start", marginTop: 8, paddingVertical: 4 },
   applyLinkText: { ...text(15, COLORS.leaf, true), textDecorationLine: "underline" },
+  pestNameMuted: text(16, COLORS.inkSoft, true),
+
+  // 農薬タブ
+  refHead: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: COLORS.line, backgroundColor: COLORS.bg },
+  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 },
+  chip: { borderWidth: 1, borderColor: COLORS.line, borderRadius: 14, paddingVertical: 5, paddingHorizontal: 11, backgroundColor: COLORS.paper },
+  chipOn: { borderWidth: 1, borderColor: COLORS.leaf, borderRadius: 14, paddingVertical: 5, paddingHorizontal: 11, backgroundColor: COLORS.leaf },
+  chipText: text(13, COLORS.ink),
+  chipTextOn: text(13, "#FFFFFF", true),
+  refCount: text(13, COLORS.inkSoft),
+  refBulkRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10 },
+  refBulk: { flexDirection: "row", alignItems: "center", gap: 8 },
+  refBulkLabel: text(13, COLORS.inkSoft),
+  refList: { paddingHorizontal: 16, paddingBottom: 48 },
+  refRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  refMain: { flex: 1 },
+  refSwitch: { alignItems: "center", gap: 2 },
+  refSwitchLabel: text(11, COLORS.inkSoft),
 });

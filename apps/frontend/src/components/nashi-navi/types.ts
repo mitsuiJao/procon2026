@@ -51,9 +51,13 @@ export type Pesticide = {
   /** 登録番号 */
   id: string;
   name: string;
+  /** 農薬の種類（例: 銅水和剤） */
+  kind: string;
   fracCodes: string[];
   fracNote: string | null;
   totalUseLimits: string[];
+  /** 散布記録の「薬剤を選ぶ」に出さない */
+  hidden: boolean;
   applications: PesticideApplication[];
 };
 

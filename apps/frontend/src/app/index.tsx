@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native";
+
+import { useFocusEffect } from "expo-router";
 
 import {
   createSpray,
@@ -93,9 +95,6 @@ export default function App() {
     fetchCurrent()
       .then((w) => alive && applyCurrent(w))
       .catch(() => alive && applyCurrent(null));
-    fetchPesticides()
-      .then((p) => alive && setMaster(p))
-      .catch(() => alive && setMaster(null));
     fetchDiseases()
       .then((d) => alive && setDiseases(d.map(toDiseaseInfo)))
       .catch(() => alive && setDiseases([]));
@@ -106,6 +105,19 @@ export default function App() {
       alive = false;
     };
   }, []);
+
+  // 農薬タブで「薬剤を選ぶ」に出すかを切り替えるので、戻ってくるたびに取り直す
+  useFocusEffect(
+    useCallback(() => {
+      let alive = true;
+      fetchPesticides()
+        .then((p) => alive && setMaster(p))
+        .catch(() => alive && setMaster(null));
+      return () => {
+        alive = false;
+      };
+    }, []),
+  );
 
   useEffect(() => {
     let alive = true;

@@ -1,4 +1,4 @@
-import type { DayRisk, DiseaseInfo, Pesticide, RiskLevel, SprayForm } from "@/components/nashi-navi/types";
+import type { DayRisk, DiseaseInfo, Pesticide, PesticideApplication, RiskLevel, SprayForm } from "@/components/nashi-navi/types";
 
 type WeatherKind = { icon: "sun" | "cloud" | "cloud-rain"; label: string };
 
@@ -92,8 +92,33 @@ export const pesticidesForDisease = (pesticides: Pesticide[], diseaseId: string)
     .filter((p) => p.applications.some((a) => a.diseaseId === diseaseId))
     .sort((a, b) => a.name.localeCompare(b.name, "ja"));
 
-/** 名前の部分一致で絞り込む。空なら全部 */
-export const searchPesticides = (pesticides: Pesticide[], query: string) => {
-  const q = query.trim();
-  return q ? pesticides.filter((p) => p.name.includes(q)) : pesticides;
+/** 全角・半角をそろえ、ひらがなをカタカナにし、英字を大文字にする */
+const normalize = (s: string) =>
+  s.normalize("NFKC").replace(/[\u3041-\u3096]/g, (c) => String.fromCharCode(c.charCodeAt(0) + 0x60)).toUpperCase();
+
+// 正規化は重いので、同じ農薬オブジェクトなら作り直さない
+const searchTextCache = new WeakMap<Pesticide, string>();
+
+/** 検索の対象にする文字列（名前・種類・FRAC コード・適用の病害虫名） */
+const searchTextOf = (p: Pesticide) => {
+  let text = searchTextCache.get(p);
+  if (text === undefined) {
+    text = normalize([p.name, p.kind, ...p.fracCodes, ...p.applications.map((a) => a.target ?? "")].join(" "));
+    searchTextCache.set(p, text);
+  }
+  return text;
 };
+
+/** 名前・種類・FRAC・病害虫名の部分一致で絞り込む。空白で区切った語はすべて含むもの。空なら全部 */
+export const searchPesticides = (pesticides: Pesticide[], query: string) => {
+  const words = normalize(query).split(/\s+/).filter(Boolean);
+  if (words.length === 0) return pesticides;
+  return pesticides.filter((p) => {
+    const text = searchTextOf(p);
+    return words.every((w) => text.includes(w));
+  });
+};
+
+/** 登録内容の1行（対象・倍率・時期・回数の原文） */
+export const fmtApplication = (a: PesticideApplication) =>
+  [a.target, a.dilution, a.timing, a.uses && a.uses !== "-" ? `本剤 ${a.uses}` : null].filter(Boolean).join("　");
