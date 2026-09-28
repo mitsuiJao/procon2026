@@ -10,6 +10,15 @@ import type { DayData, RiskByDate, SprayRecord, TodayWeather, WeatherByDate } fr
 // マスが狭いので ° は付けない
 const fmtDeg = (v: number | null) => (v == null ? "—" : `${Math.round(v)}`);
 
+/** センサーの受信時刻。今日なら時刻だけ、それ以外は日付も付ける（JST） */
+const fmtReceived = (iso: string | null, todayStr: string) => {
+  if (!iso) return "未受信";
+  const d = new Date(iso);
+  const date = d.toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
+  const time = d.toLocaleTimeString("ja-JP", { timeZone: "Asia/Tokyo", hour: "2-digit", minute: "2-digit" });
+  return date === todayStr ? `${time} 受信` : `${Number(date.slice(5, 7))}/${Number(date.slice(8))} ${time} 受信`;
+};
+
 type HomeScreenContentProps = {
   y: number;
   m: number;
@@ -63,7 +72,10 @@ export function HomeScreenContent({
               <View>
                 <Text style={styles.weatherTemp}>{todayWeather.temp ?? "—"}℃</Text>
                 <Text style={styles.weatherSub}>湿度 {todayWeather.humidity ?? "—"}%</Text>
-                {todayWeather.stale && <Text style={styles.weatherStale}>センサー未受信</Text>}
+                {/* 古いときは色で知らせる */}
+                <Text style={todayWeather.stale ? styles.weatherStale : styles.weatherSub}>
+                  {fmtReceived(todayWeather.updatedAt, todayStr)}
+                </Text>
               </View>
             </>
           ) : (
@@ -111,19 +123,20 @@ export function HomeScreenContent({
               ]}
               onPress={() => openDay(day)}
             >
-              <Text style={isToday ? styles.dayNumToday : styles.dayNum}>{day}</Text>
-              {w && (
-                <View style={styles.cellWeather}>
-                  {kind && <Feather name={kind.icon} size={15} color={COLORS.inkSoft} />}
-                  <Text style={styles.cellWeatherTemp}>
-                    {fmtDeg(w.tmax)}/{fmtDeg(w.tmin)}
-                  </Text>
-                </View>
-              )}
-              <View style={styles.dots}>
+              <View style={styles.dayRow}>
+                <Text style={isToday ? styles.dayNumToday : styles.dayNum}>{day}</Text>
                 {entry?.sprays.length ? <View style={[styles.dot, styles.dotSpray]} /> : null}
                 {entry?.memo ? <View style={[styles.dot, styles.dotMemo]} /> : null}
               </View>
+              {w && (
+                <View style={styles.cellWeather}>
+                  {kind && <Feather name={kind.icon} size={22} color={COLORS.inkSoft} />}
+                  <Text style={styles.cellTempMax}>
+                    {fmtDeg(w.tmax)}
+                    <Text style={styles.cellTempMin}>/{fmtDeg(w.tmin)}</Text>
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
           );
         })}
