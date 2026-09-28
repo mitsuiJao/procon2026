@@ -84,6 +84,38 @@ export async function getLatestMeasures(): Promise<
 }
 
 /**
+ * デバイス・metricごとの最新のセンサー値を取得
+ * @returns { device, metric, value, received_at }[] device, metric 昇順
+ */
+export async function getLatestMeasuresByDevice(): Promise<
+  { device: string; metric: string; value: number; received_at: Date }[]
+> {
+  const { rows } = await pool.query(
+    `SELECT DISTINCT ON (device, metric) device, metric, value, received_at
+       FROM measure
+      ORDER BY device, metric, received_at DESC`,
+  );
+  return rows;
+}
+
+/**
+ * 指定日時以降の雨量をデバイスごとに合計、受信値は前回からの増分である
+ * rainfallの受信が1件も無いデバイスは含まれない（0mmと「データが無い」を混同しない）
+ * @param since 開始日時 含む
+ * @returns { device: 合計mm }
+ */
+export async function getRainfallSumByDevice(since: Date): Promise<Record<string, number>> {
+  const { rows } = await pool.query(
+    `SELECT device, SUM(value)::float8 AS sum
+       FROM measure
+      WHERE metric = 'rainfall' AND received_at >= $1
+      GROUP BY device`,
+    [since],
+  );
+  return Object.fromEntries(rows.map((r) => [r.device, r.sum]));
+}
+
+/**
  * 測定データのあるデバイス名の一覧を取得
  * @returns デバイス名の配列 (昇順)
  */

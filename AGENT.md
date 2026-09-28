@@ -10,6 +10,7 @@
 - The calendar's "measured values" come only from the own sensors (`measure`). Forecasts live in `weather_forecasts` (forecast-only). Never store the same data in two tables.
 - Manual temperature/humidity input is not needed (the diary holds only memo and spray records).
 - Past days prefer sensor values; only the weather code is filled in from the forecast. Multiple sensor devices are not distinguished and are pooled together.
+- Only the sensor status view (`GET /sensors`) shows devices separately; calendar and risk evaluation keep pooling them.
 - The daily representative weather code is the most frequent one; ties go to the larger code (the worse weather).
 - While the DB is being recreated and no data is accumulating, edit existing migration files (e.g. `001`) directly instead of adding new ones (approved by the user).
 
