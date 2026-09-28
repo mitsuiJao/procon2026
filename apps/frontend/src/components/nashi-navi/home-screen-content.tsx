@@ -24,6 +24,7 @@ type HomeScreenContentProps = {
   changeMonth: (delta: number) => void;
   openDay: (day: number) => void;
   onPressRisk: (risk: DiseaseRisk) => void;
+  onPressWeather: () => void;
 };
 
 export function HomeScreenContent({
@@ -44,6 +45,7 @@ export function HomeScreenContent({
   changeMonth,
   openDay,
   onPressRisk,
+  onPressWeather,
 }: HomeScreenContentProps) {
   return (
     <ScrollView contentContainerStyle={styles.wrap}>
@@ -52,7 +54,7 @@ export function HomeScreenContent({
           <Text style={styles.title}>ワイングレープロテクト</Text>
           <Text style={styles.subtitle}>圃場の栽培日誌</Text>
         </View>
-        <View style={styles.weatherMini}>
+        <TouchableOpacity style={styles.weatherMini} onPress={onPressWeather}>
           {todayWeather ? (
             <>
               <Text style={styles.weatherIcon}>{wIcon(todayWeather.code)}</Text>
@@ -65,7 +67,7 @@ export function HomeScreenContent({
           ) : (
             <Text style={styles.weatherSub}>気象取得中…</Text>
           )}
-        </View>
+        </TouchableOpacity>
       </View>
 
       {activeRisks.length > 0 && (

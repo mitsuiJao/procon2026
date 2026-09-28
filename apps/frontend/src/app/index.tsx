@@ -2,10 +2,11 @@ import React, { useCallback, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { fetchCalendar, fetchCurrent } from "@/components/nashi-navi/api";
+import { fetchCalendar, fetchCurrent, fetchSensors } from "@/components/nashi-navi/api";
 import { DayDetailModal } from "@/components/nashi-navi/day-detail-modal";
 import { DiseaseRiskModal } from "@/components/nashi-navi/disease-risk-modal";
 import { HomeScreenContent } from "@/components/nashi-navi/home-screen-content";
+import { SensorStatusModal, type SensorsState } from "@/components/nashi-navi/sensor-status-modal";
 import { styles } from "@/components/nashi-navi/styles";
 import type {
   DayEntry,
@@ -14,6 +15,7 @@ import type {
   HistoryItem,
   MonthData,
   PesticideMasterItem,
+  SensorStatus,
   TodayWeather,
   WeatherByDate,
 } from "@/components/nashi-navi/types";
@@ -43,6 +45,10 @@ export default function App() {
   const [activeRisks, setActiveRisks] = useState<DiseaseRisk[]>([]);
   const [diseaseModalVisible, setDiseaseModalVisible] = useState(false);
   const [selectedDisease, setSelectedDisease] = useState<DiseaseRisk | null>(null);
+
+  const [sensorModalVisible, setSensorModalVisible] = useState(false);
+  const [sensors, setSensors] = useState<SensorStatus[]>([]);
+  const [sensorsState, setSensorsState] = useState<SensorsState>("loading");
 
   const y = current.getFullYear();
   const m = current.getMonth();
@@ -128,6 +134,18 @@ export default function App() {
   useEffect(() => {
     loadCurrent();
   }, [loadCurrent]);
+
+  const openSensors = async () => {
+    setSensorsState("loading");
+    setSensorModalVisible(true);
+    loadCurrent();
+    try {
+      setSensors(await fetchSensors());
+      setSensorsState("ok");
+    } catch {
+      setSensorsState("error");
+    }
+  };
 
   const changeMonth = (delta: number) => {
     const next = new Date(current);
@@ -247,6 +265,13 @@ export default function App() {
           setSelectedDisease(risk);
           setDiseaseModalVisible(true);
         }}
+        onPressWeather={openSensors}
+      />
+      <SensorStatusModal
+        visible={sensorModalVisible}
+        sensors={sensors}
+        state={sensorsState}
+        onClose={() => setSensorModalVisible(false)}
       />
       <DiseaseRiskModal
         visible={diseaseModalVisible}

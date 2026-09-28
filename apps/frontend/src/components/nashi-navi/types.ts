@@ -31,6 +31,22 @@ export type TodayWeather = {
   updatedAt: string | null;
 };
 
+export type SensorReading = {
+  value: number;
+  receivedAt: string;
+};
+
+export type SensorStatus = {
+  device: string;
+  temp: SensorReading | null;
+  humidity: SensorReading | null;
+  /** 直近24時間の雨量合計(mm)。受信が無ければ null */
+  rainfall24h: number | null;
+  updatedAt: string;
+  /** temp か humidity が無い、または15分より古い */
+  stale: boolean;
+};
+
 export type HistoryItem = {
   date: string;
   name: string;
