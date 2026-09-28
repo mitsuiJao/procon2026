@@ -19,7 +19,7 @@
 - Open-Meteo returns JST time strings when called with `timezone=Asia/Tokyo`. Append `+09:00` before writing to the DB.
 
 ## MQTT
-- Topic is `sensor/{device}/{metric}`; the payload is a numeric string only (not JSON). `received_at` is the receive time and is not sent by the sensor.
+- Topic is `sensor/{device}/data`; the payload is JSON like `{"temp":25.3,"humidity":82.1,"rainfall":0.5}`. Missing keys are skipped and each key becomes one `measure` row. `rainfall` is the increment since the previous send. `received_at` is the receive time and is not sent by the sensor.
 - To add a `metric`, change both `metrics` in `mqtt/src/sub.ts` and the CHECK constraint in `migrations/000`.
 
 ## Implementation notes
