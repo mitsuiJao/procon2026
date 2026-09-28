@@ -5,15 +5,15 @@ import { Feather } from "@expo/vector-icons";
 
 import { COLORS, styles } from "@/components/nashi-navi/styles";
 import { pesticidesForDisease, searchPesticides } from "@/components/nashi-navi/utils";
-import type { DiseaseRisk, Pesticide, PesticideApplication, PesticideMaster, SprayUsage } from "@/components/nashi-navi/types";
+import type { DiseaseInfo, Pesticide, PesticideMaster, SprayUsage } from "@/components/nashi-navi/types";
 
 type DiseaseRiskModalProps = {
   visible: boolean;
-  selectedDisease: DiseaseRisk | null;
+  selectedDisease: DiseaseInfo | null;
   master: PesticideMaster | null;
   usage: SprayUsage | null;
   onClose: () => void;
-  onApply: (pesticide: Pesticide, application: PesticideApplication, diseaseName: string) => void;
+  onApply: (pesticide: Pesticide, diseaseName: string) => void;
 };
 
 const fmtShortDate = (date: string) => date.slice(5).replace("-", "/");
@@ -97,9 +97,8 @@ export function DiseaseRiskModal({ visible, selectedDisease, master, usage, onCl
                   <TouchableOpacity
                     style={styles.applyLink}
                     onPress={() => {
-                      const app = p.applications.find((a) => a.diseaseId === selectedDisease.id)!;
                       setQuery("");
-                      onApply(p, app, selectedDisease.name);
+                      onApply(p, selectedDisease.name);
                     }}
                   >
                     <Text style={styles.applyLinkText}>今日の散布として記録</Text>

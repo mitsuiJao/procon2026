@@ -5,8 +5,8 @@ import { Feather } from "@expo/vector-icons";
 
 import { PesticidePicker } from "@/components/nashi-navi/pesticide-picker";
 import { COLORS, styles } from "@/components/nashi-navi/styles";
-import { emptySprayForm, type wIcon as WIcon } from "@/components/nashi-navi/utils";
-import type { DayData, Pesticide, PesticideApplication, SprayForm, SprayRecord, SprayUsage, WeatherEntry } from "@/components/nashi-navi/types";
+import { alertsOf, emptySprayForm, fmtApplication, LEVEL_LABEL, type wIcon as WIcon } from "@/components/nashi-navi/utils";
+import type { DayData, DayRisk, DiseaseInfo, Pesticide, SprayForm, SprayRecord, SprayUsage, WeatherEntry } from "@/components/nashi-navi/types";
 
 export type Flash = { text: string; error: boolean } | null;
 
@@ -15,6 +15,14 @@ type DayDetailModalProps = {
   /** YYYY-MM-DD */
   date: string | null;
   weather: WeatherEntry | null;
+  risk: DayRisk | null;
+  /** false なら病害リスクの欄を出さない（1週間より先の日） */
+  showRisk: boolean;
+  diseases: DiseaseInfo[];
+  /** 生育ステージの名前。{ value: 名前 } */
+  stageNames: Record<number, string>;
+  /** 今日より後の日（予報を含む判定） */
+  forecast: boolean;
   day: DayData;
   pesticides: Pesticide[];
   usage: SprayUsage | null;
@@ -24,6 +32,8 @@ type DayDetailModalProps = {
   flash: Flash;
   wIcon: typeof WIcon;
   onClose: () => void;
+  /** 病害の行を押したとき（日付の画面を閉じて病害の画面を開く） */
+  onPressDisease: (disease: DiseaseInfo) => void;
   onSprayFormChange: (next: SprayForm | null) => void;
   onSaveSpray: () => void;
   onDeleteSpray: (id: number) => void;
@@ -36,11 +46,7 @@ const fmtTitle = (date: string) => {
   return `${y}年${m}月${d}日`;
 };
 
-/** 登録内容の1行（対象・倍率・時期・回数の原文） */
-const fmtApplication = (a: PesticideApplication) =>
-  [a.target, a.dilution, a.timing, a.uses && a.uses !== "-" ? `本剤 ${a.uses}` : null].filter(Boolean).join("　");
-
-const sprayMeta = (s: SprayRecord) => [s.dilution, s.amount, s.target].filter(Boolean).join("　");
+const STAGE_SOURCE: Record<string, string> = { recorded: "記録", estimated: "月からの推定" };
 
 const toForm = (s: SprayRecord): SprayForm => ({
   id: s.id,
@@ -57,6 +63,11 @@ export function DayDetailModal({
   visible,
   date,
   weather,
+  risk,
+  showRisk,
+  diseases,
+  stageNames,
+  forecast,
   day,
   pesticides,
   usage,
@@ -65,6 +76,7 @@ export function DayDetailModal({
   flash,
   wIcon,
   onClose,
+  onPressDisease,
   onSprayFormChange,
   onSaveSpray,
   onDeleteSpray,
@@ -82,6 +94,9 @@ export function DayDetailModal({
     setPicking(false);
     onClose();
   };
+
+  const alerts = alertsOf(risk ?? undefined, diseases);
+  const stageName = risk?.stage != null ? stageNames[risk.stage] ?? `ステージ ${risk.stage}` : null;
 
   const selected = sprayForm?.pesticideId ? pesticides.find((p) => p.id === sprayForm.pesticideId) : undefined;
 
@@ -123,13 +138,51 @@ export function DayDetailModal({
               <Text style={styles.emptyNote}>この日の気象データはありません</Text>
             )}
 
+            {showRisk && (
+              <>
+                <Text style={styles.legend2}>病害リスク</Text>
+                {risk ? (
+                  <View>
+                    <View style={styles.tableRow}>
+                      <Text style={styles.tableLabel}>生育ステージ</Text>
+                      <Text style={styles.tableValue}>
+                        {stageName ? `${stageName}（${STAGE_SOURCE[risk.stageSource] ?? "不明"}）` : "—"}
+                      </Text>
+                    </View>
+                    {alerts.length === 0 ? (
+                      <Text style={styles.emptyNote}>条件に該当する病害はありません</Text>
+                    ) : (
+                      alerts.map(({ disease, level }) => (
+                        <TouchableOpacity
+                          key={disease.id}
+                          style={styles.riskRow}
+                          onPress={() => {
+                            setPicking(false);
+                            onPressDisease(disease);
+                          }}
+                          accessibilityLabel={`${disease.name}の詳しい情報`}
+                        >
+                          <Text style={styles.riskName}>{disease.name}</Text>
+                          <Text style={level === "conditions_met" ? styles.riskValue : styles.riskValueNear}>{LEVEL_LABEL[level]}</Text>
+                          <Feather name="chevron-right" size={18} color={COLORS.inkSoft} />
+                        </TouchableOpacity>
+                      ))
+                    )}
+                    {forecast ? <Text style={styles.forecastNote}>予報をもとにした判定です</Text> : null}
+                  </View>
+                ) : (
+                  <Text style={styles.emptyNote}>この日の判定はありません</Text>
+                )}
+              </>
+            )}
+
             <Text style={styles.legend2}>散布</Text>
             {day.sprays.length === 0 && !sprayForm && <Text style={styles.emptyNote}>この日の散布記録はありません</Text>}
             {day.sprays.map((s) => (
               <View key={s.id} style={styles.sprayRow}>
                 <View style={styles.sprayMain}>
                   <Text style={styles.sprayName}>{s.pesticide}</Text>
-                  {sprayMeta(s) ? <Text style={styles.sprayMeta}>{sprayMeta(s)}</Text> : null}
+                  {s.target ? <Text style={styles.sprayMeta}>{s.target}</Text> : null}
                   {s.note ? <Text style={styles.sprayMeta}>{s.note}</Text> : null}
                 </View>
                 <TouchableOpacity style={styles.rowAction} onPress={() => openForm(toForm(s))}>
@@ -167,16 +220,6 @@ export function DayDetailModal({
                   </View>
                 )}
 
-                <View style={styles.fieldRow}>
-                  <View style={styles.fieldHalf}>
-                    <Text style={styles.label}>希釈倍率</Text>
-                    <TextInput style={styles.input} placeholder="例: 600倍" value={sprayForm.dilution} onChangeText={(dilution) => onSprayFormChange({ ...sprayForm, dilution })} />
-                  </View>
-                  <View style={styles.fieldHalf}>
-                    <Text style={styles.label}>散布量</Text>
-                    <TextInput style={styles.input} placeholder="例: 300L/10a" value={sprayForm.amount} onChangeText={(amount) => onSprayFormChange({ ...sprayForm, amount })} />
-                  </View>
-                </View>
                 <Text style={styles.label}>対象病害虫</Text>
                 <TextInput style={styles.input} placeholder="例: べと病" value={sprayForm.target} onChangeText={(target) => onSprayFormChange({ ...sprayForm, target })} />
                 <Text style={styles.label}>備考</Text>

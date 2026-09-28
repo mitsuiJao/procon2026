@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native";
+
+import { useFocusEffect } from "expo-router";
 
 import {
   createSpray,
@@ -7,10 +9,13 @@ import {
   fetchCalendar,
   fetchCurrent,
   fetchDiary,
+  fetchDiseases,
   fetchPesticides,
   fetchRecentSprays,
+  fetchRisk,
   fetchSensors,
   fetchSprays,
+  fetchStageNames,
   fetchUsage,
   saveDiary,
   updateSpray,
@@ -22,10 +27,10 @@ import { SensorStatusModal, type SensorsState } from "@/components/nashi-navi/se
 import { styles } from "@/components/nashi-navi/styles";
 import type {
   DayData,
-  DiseaseRisk,
+  DiseaseInfo,
   Pesticide,
-  PesticideApplication,
   PesticideMaster,
+  RiskByDate,
   SensorStatus,
   SprayForm,
   SprayRecord,
@@ -33,7 +38,7 @@ import type {
   TodayWeather,
   WeatherByDate,
 } from "@/components/nashi-navi/types";
-import { dateKeyOf, emptySprayForm, matchRisks, WEEKDAYS, wIcon } from "@/components/nashi-navi/utils";
+import { dateKeyOf, emptySprayForm, RISK_DAYS_AHEAD, toDiseaseInfo, WEEKDAYS, wIcon } from "@/components/nashi-navi/utils";
 
 const EMPTY_DAY: DayData = { memo: "", sprays: [] };
 const SAVE_FAILED = "保存できませんでした。通信状況を確認してください";
@@ -46,12 +51,6 @@ function groupByDate(diary: Record<string, string>, sprays: SprayRecord[]): Reco
   return days;
 }
 
-/** 今の気象が発病条件に当てはまる病害 */
-function risksNow(w: TodayWeather): DiseaseRisk[] {
-  if (w.temp == null || w.humidity == null || w.code == null) return [];
-  return matchRisks(w.temp, w.humidity, w.code, new Date().getMonth() + 1);
-}
-
 export default function App() {
   const [current, setCurrent] = useState(new Date());
   const [monthData, setMonthData] = useState<Record<string, DayData>>({});
@@ -60,6 +59,10 @@ export default function App() {
   const [historyItems, setHistoryItems] = useState<SprayRecord[]>([]);
   const [master, setMaster] = useState<PesticideMaster | null>(null);
   const [usage, setUsage] = useState<SprayUsage | null>(null);
+  // 病害リスク（判定はバックエンド）。取れなければ空で、警告も印も出さない
+  const [monthRisk, setMonthRisk] = useState<RiskByDate>({});
+  const [diseases, setDiseases] = useState<DiseaseInfo[]>([]);
+  const [stageNames, setStageNames] = useState<Record<number, string>>({});
   // 保存・削除のたびに増やして、記録を取り直す
   const [version, setVersion] = useState(0);
 
@@ -71,7 +74,7 @@ export default function App() {
   const [flash, setFlash] = useState<Flash>(null);
 
   const [diseaseModalVisible, setDiseaseModalVisible] = useState(false);
-  const [selectedDisease, setSelectedDisease] = useState<DiseaseRisk | null>(null);
+  const [selectedDisease, setSelectedDisease] = useState<DiseaseInfo | null>(null);
 
   const [sensorModalVisible, setSensorModalVisible] = useState(false);
   const [sensors, setSensors] = useState<SensorStatus[]>([]);
@@ -82,23 +85,54 @@ export default function App() {
 
   const now = new Date();
   const todayStr = dateKeyOf(now.getFullYear(), now.getMonth(), now.getDate());
+  const until = new Date(now.getFullYear(), now.getMonth(), now.getDate() + RISK_DAYS_AHEAD);
+  const riskUntil = dateKeyOf(until.getFullYear(), until.getMonth(), until.getDate());
+  // 1週間より先の判定は出さない
+  const visibleRisk: RiskByDate = Object.fromEntries(Object.entries(monthRisk).filter(([date]) => date <= riskUntil));
   const thisYear = now.getFullYear();
 
   const applyCurrent = (w: TodayWeather | null) => setTodayWeather(w);
-  const activeRisks = todayWeather ? risksNow(todayWeather) : [];
 
   useEffect(() => {
     let alive = true;
     fetchCurrent()
       .then((w) => alive && applyCurrent(w))
       .catch(() => alive && applyCurrent(null));
-    fetchPesticides()
-      .then((p) => alive && setMaster(p))
-      .catch(() => alive && setMaster(null));
+    fetchDiseases()
+      .then((d) => alive && setDiseases(d.map(toDiseaseInfo)))
+      .catch(() => alive && setDiseases([]));
+    fetchStageNames()
+      .then((n) => alive && setStageNames(n))
+      .catch(() => alive && setStageNames({}));
     return () => {
       alive = false;
     };
   }, []);
+
+  // 農薬タブで「薬剤を選ぶ」に出すかを切り替えるので、戻ってくるたびに取り直す
+  useFocusEffect(
+    useCallback(() => {
+      let alive = true;
+      fetchPesticides()
+        .then((p) => alive && setMaster(p))
+        .catch(() => alive && setMaster(null));
+      return () => {
+        alive = false;
+      };
+    }, []),
+  );
+
+  useEffect(() => {
+    let alive = true;
+    const start = dateKeyOf(y, m, 1);
+    const end = dateKeyOf(y, m, new Date(y, m + 1, 0).getDate());
+    fetchRisk(start, end)
+      .then((r) => alive && setMonthRisk(r))
+      .catch(() => alive && setMonthRisk({}));
+    return () => {
+      alive = false;
+    };
+  }, [y, m]);
 
   useEffect(() => {
     let alive = true;
@@ -200,7 +234,7 @@ export default function App() {
     if (!selectedDate) return;
     try {
       await saveDiary(selectedDate, memo);
-      setFlash({ text: memo.trim() ? "メモを保存しました" : "メモを消しました", error: false });
+      setFlash({ text: "メモを保存しました", error: false });
       // 取り直すまでの間に古いメモが見えないよう、先に手元へ反映する
       setMonthData((prev) => ({ ...prev, [selectedDate]: { ...(prev[selectedDate] ?? EMPTY_DAY), memo: memo.trim() ? memo : "" } }));
       setMemoDraft(null);
@@ -210,14 +244,13 @@ export default function App() {
     }
   };
 
-  const applyPesticide = (pesticide: Pesticide, application: PesticideApplication, diseaseName: string) => {
+  const applyPesticide = (pesticide: Pesticide, diseaseName: string) => {
     setCurrent(new Date());
     setDiseaseModalVisible(false);
     openDate(todayStr, {
       ...emptySprayForm,
       pesticideId: pesticide.id,
       pesticide: pesticide.name,
-      dilution: application.dilution ?? "",
       target: diseaseName,
     });
   };
@@ -238,7 +271,7 @@ export default function App() {
         m={m}
         todayStr={todayStr}
         todayWeather={todayWeather}
-        activeRisks={activeRisks}
+        monthRisk={visibleRisk}
         monthData={monthData}
         weatherByDate={weatherByDate}
         historyItems={historyItems}
@@ -248,10 +281,6 @@ export default function App() {
         dateKeyOf={dateKeyOf}
         changeMonth={changeMonth}
         openDay={(d) => openDate(dateKeyOf(y, m, d), null)}
-        onPressRisk={(risk) => {
-          setSelectedDisease(risk);
-          setDiseaseModalVisible(true);
-        }}
         onPressWeather={openSensors}
       />
       <SensorStatusModal
@@ -272,6 +301,11 @@ export default function App() {
         visible={modalVisible}
         date={selectedDate}
         weather={(selectedDate && weatherByDate[selectedDate]) || null}
+        risk={(selectedDate && visibleRisk[selectedDate]) || null}
+        showRisk={!selectedDate || selectedDate <= riskUntil}
+        diseases={diseases}
+        stageNames={stageNames}
+        forecast={!!selectedDate && selectedDate > todayStr}
         day={day}
         pesticides={master?.pesticides ?? []}
         usage={usage}
@@ -280,6 +314,12 @@ export default function App() {
         flash={flash}
         wIcon={wIcon}
         onClose={() => setModalVisible(false)}
+        onPressDisease={(disease) => {
+          // モーダルは重ねず、日付の画面を閉じてから開く
+          setModalVisible(false);
+          setSelectedDisease(disease);
+          setDiseaseModalVisible(true);
+        }}
         onSprayFormChange={setSprayForm}
         onSaveSpray={saveSpray}
         onDeleteSpray={removeSpray}
