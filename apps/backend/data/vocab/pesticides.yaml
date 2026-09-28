@@ -1,0 +1,28 @@
+# 農薬（商品）マスター。散布記録のプルダウンと、使用回数・FRAC ローテーションの集計に使う。
+# 散布記録（spray_records.pesticide_id）がこの id を参照する。
+#
+# 値は農林水産省「農薬登録情報提供システム」で、ぶどうへの適用を確認したものだけを入れる。
+# 推測や他作物の値は入れない。登録は変わるので checkedAt を必ず更新する。
+#
+# id                不変。英小文字とハイフン（例 amistar-10-flowable）。
+# nameJa            商品名。画面にそのまま出る。
+# activeIngredients activeIngredients.yaml の id の配列。ここから FRAC コードをたどる（1つ以上、必須）。
+# dilution          希釈倍数（任意、文字列。例 "1000〜2000倍"）。
+# maxUsesPerYear    本剤の年間使用回数の上限（任意、数値）。
+# preHarvestDays    収穫前日数（任意、数値。例 前日まで → 1）。
+# registrationNo    農林水産省登録番号（任意）。
+# source            確認した出典（必須）。
+# checkedAt         確認日 YYYY-MM-DD（必須）。
+#
+# 例:
+# - id: example-flowable
+#   nameJa: 例フロアブル
+#   activeIngredients: [azoxystrobin]
+#   dilution: "2000倍"
+#   maxUsesPerYear: 3
+#   preHarvestDays: 21
+#   registrationNo: "第00000号"
+#   source: 農薬登録情報提供システム
+#   checkedAt: "2026-01-01"
+
+[]

@@ -29,3 +29,13 @@ export async function writeStageTransition(stage: number, effectiveFrom: string)
     [stage, effectiveFrom],
   );
 }
+
+/**
+ * 指定日の生育ステージの切り替わりを削除する
+ * @param effectiveFrom 切り替わり日 (YYYY-MM-DD)
+ * @returns 対象が存在したか
+ */
+export async function deleteStageTransition(effectiveFrom: string): Promise<boolean> {
+  const { rowCount } = await pool.query("DELETE FROM stage_transitions WHERE effective_from = $1", [effectiveFrom]);
+  return (rowCount ?? 0) > 0;
+}

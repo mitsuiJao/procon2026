@@ -34,9 +34,11 @@ export async function writeDiaryEntry(entryDate: string, memo: string) {
 }
 
 /**
- * 指定日の日記を削除する, 未使用
+ * 指定日の日記を削除する
  * @param entryDate 日付 (YYYY-MM-DD)
+ * @returns 対象が存在したか
  */
-export async function deleteDiaryEntry(entryDate: string) {
-  await pool.query("DELETE FROM diary_entries WHERE entry_date = $1", [entryDate]);
+export async function deleteDiaryEntry(entryDate: string): Promise<boolean> {
+  const { rowCount } = await pool.query("DELETE FROM diary_entries WHERE entry_date = $1", [entryDate]);
+  return (rowCount ?? 0) > 0;
 }
