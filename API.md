@@ -1,6 +1,6 @@
-# API 一覧
+# API
 
-- ベース URL: `http://localhost:3000/api`
+- ベース: `http://localhost:3000/api`
 - 日付はすべて JST の `YYYY-MM-DD`。期間指定（`start` / `end`）は両端を含み、400 日未満。
 - JSON のキーは snake_case（`/calendar/risk` の中身だけは評価エンジンの型のまま camelCase）。
 - エラー: 入力が不正なら `400 { error }`、対象が無ければ `404 { error: "not found" }`。削除の成功は `204`（本文なし）。
@@ -91,7 +91,7 @@
   - 年は JST の 1/1〜12/31。
   - マスターから選んだ散布だけを数える。自由入力の散布と、FRAC コードがわからない有効成分は数えない。
 
-## 試し方（コピペ用）
+## TEST
 
 ```sh
 API=http://localhost:3000/api
