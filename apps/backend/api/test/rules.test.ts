@@ -22,4 +22,14 @@ describe("rules.yaml", () => {
     );
   });
 
+  it("ANT-1: 萌芽期〜肥大期の1mm以上の雨で「条件に近い」", () => {
+    const ant1 = getRules().find((r) => r.id === "ANT-1")!;
+    assert.equal(ant1.enabled, true);
+    const level = (stage: number, rain24hMm: number) =>
+      evaluateRule(ant1, { scalars: { stage, rain24hMm }, hourly: [] }).level;
+    assert.equal(level(1, 1), "near_threshold");
+    assert.equal(level(7, 1), "near_threshold");
+    assert.equal(level(8, 20), "none");
+    assert.equal(level(3, 0.9), "none");
+  });
 });
