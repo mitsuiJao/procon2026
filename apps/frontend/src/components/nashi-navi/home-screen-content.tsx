@@ -7,7 +7,6 @@ import { COLORS, styles } from "@/components/nashi-navi/styles";
 import { maxLevel, type wIcon as WIcon } from "@/components/nashi-navi/utils";
 import type { DayData, RiskByDate, SprayRecord, TodayWeather, WeatherByDate } from "@/components/nashi-navi/types";
 
-// マスが狭いので ° は付けない
 const fmtDeg = (v: number | null) => (v == null ? "—" : `${Math.round(v)}`);
 
 /** センサーの受信時刻。今日なら時刻だけ、それ以外は日付も付ける（JST） */

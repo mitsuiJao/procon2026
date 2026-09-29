@@ -54,8 +54,6 @@ const fmtTitle = (date: string) => {
   return `${y}年${m}月${d}日`;
 };
 
-const STAGE_SOURCE: Record<string, string> = { recorded: "記録", estimated: "月からの推定" };
-
 const toForm = (s: SprayRecord): SprayForm => ({
   id: s.id,
   pesticideId: s.pesticideId,
@@ -111,7 +109,7 @@ export function DayDetailModal({
   };
 
   const alerts = alertsOf(risk ?? undefined, diseases);
-  const stageName = stage?.stage != null ? stageNames[stage.stage] ?? `ステージ ${stage.stage}` : null;
+  const stageName = stage?.stage != null ? stageNames[stage.stage] ?? `生育状態 ${stage.stage}` : null;
   const stageOptions = Object.entries(stageNames)
     .map(([value, name]) => ({ value: Number(value), name }))
     .sort((a, b) => a.value - b.value);
@@ -156,17 +154,17 @@ export function DayDetailModal({
               <Text style={styles.emptyNote}>この日の気象データはありません</Text>
             )}
 
-            <Text style={styles.legend2}>生育ステージ</Text>
+            <Text style={styles.legend2}>生育状態</Text>
             <View style={styles.tableRow}>
-              <Text style={styles.tableLabel}>ステージ</Text>
+              <Text style={styles.tableLabel}>状態</Text>
               <Text style={styles.tableValue}>
-                {stageName ? `${stageName}（${STAGE_SOURCE[stage!.stageSource] ?? "不明"}）` : "—"}
+                {stageName ? `${stageName}` : "—"}
               </Text>
             </View>
             {stageEditable &&
               (stagePicking ? (
                 <View>
-                  <Text style={styles.forecastNote}>この日から、選んだステージになったと記録します</Text>
+                  <Text style={styles.forecastNote}>この日から、選んだ生育状態になったと記録します</Text>
                   <View style={styles.chipRow}>
                     {stageOptions.map((o) => (
                       <TouchableOpacity
@@ -190,7 +188,7 @@ export function DayDetailModal({
               ) : (
                 <>
                   <TouchableOpacity style={styles.addBtn} onPress={() => setStagePicking(true)} disabled={stageOptions.length === 0}>
-                    <Text style={styles.addBtnText}>この日からステージを変える</Text>
+                    <Text style={styles.addBtnText}>生育状態を変更</Text>
                   </TouchableOpacity>
                   {isStageTransition && (
                     <TouchableOpacity style={styles.stageClear} onPress={onClearStage}>
