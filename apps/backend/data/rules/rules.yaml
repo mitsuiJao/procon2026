@@ -177,9 +177,10 @@
   sourceIds: [S002, S021]
 
 # 黒とう病：萌芽〜肥大期の降雨
+#   B だが「条件に近い」までの表示なので有効にしている（2026-09 に決定）。
 - id: ANT-1
   diseaseId: anthracnose
-  enabled: false
+  enabled: true
   when:
     all:
       - { var: stage, op: ">=", value: 1 }
@@ -191,6 +192,7 @@
   sourceIds: [S003, S016]
 
 # 黒とう病：ANT-1 に加えて、平均気温 15〜20℃の冷雨（冷雨で重みを上げる設計値）
+#   根拠のない閾値で「該当」と言い切ることになるので無効のまま。
 - id: ANT-2
   diseaseId: anthracnose
   enabled: false
