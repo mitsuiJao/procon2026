@@ -260,7 +260,7 @@ export default function App() {
     try {
       await setStage(selectedDate, stage);
       const [, mm, dd] = selectedDate.split("-").map(Number);
-      setFlash({ text: `${mm}月${dd}日から${stages.names[stage] ?? `ステージ ${stage}`}にしました`, error: false });
+      setFlash({ text: `${mm}月${dd}日から${stages.names[stage] ?? `生育状態 ${stage}`}にしました`, error: false });
       setVersion((v) => v + 1);
     } catch {
       setFlash({ text: SAVE_FAILED, error: true });
@@ -271,7 +271,7 @@ export default function App() {
     if (!selectedDate) return;
     try {
       await clearStage(selectedDate);
-      setFlash({ text: "この日のステージの記録を取り消しました", error: false });
+      setFlash({ text: "この日の生育状態の記録を取り消しました", error: false });
       setVersion((v) => v + 1);
     } catch {
       setFlash({ text: "取り消せませんでした。通信状況を確認してください", error: true });
