@@ -8,6 +8,7 @@ import type {
   SprayInput,
   SprayRecord,
   SprayUsage,
+  StageData,
   TodayWeather,
   WeatherByDate,
 } from "@/components/nashi-navi/types";
@@ -71,10 +72,28 @@ export async function fetchDiseases(): Promise<{ id: string; name: string; prior
   return data.map((d) => ({ id: d.id, name: d.name_ja, priority: d.priority }));
 }
 
-/** 生育ステージの名前。{ value: 名前 } */
-export async function fetchStageNames(): Promise<Record<number, string>> {
-  const data = await getJson<{ vocab: { value: number; name_ja: string }[] }>("/stages");
-  return Object.fromEntries(data.vocab.map((s) => [s.value, s.name_ja]));
+type StagesResponse = {
+  vocab: { value: number; name_ja: string }[];
+  transitions: { stage: number; effective_from: string }[];
+};
+
+/** 生育ステージの名前（{ value: 名前 }）と、記録された切り替わり（{ 切り替わり日: value }） */
+export async function fetchStages(): Promise<StageData> {
+  const data = await getJson<StagesResponse>("/stages");
+  return {
+    names: Object.fromEntries(data.vocab.map((s) => [s.value, s.name_ja])),
+    transitions: Object.fromEntries(data.transitions.map((t) => [t.effective_from, t.stage])),
+  };
+}
+
+/** その日からこのステージになったと記録する。同じ日の記録は上書きされる */
+export async function setStage(date: string, stage: number): Promise<void> {
+  await send("PUT", `/stages/${date}`, { stage });
+}
+
+/** その日のステージの記録を消す */
+export async function clearStage(date: string): Promise<void> {
+  await send("DELETE", `/stages/${date}`);
 }
 
 type ReadingResponse = { value: number; received_at: string } | null;

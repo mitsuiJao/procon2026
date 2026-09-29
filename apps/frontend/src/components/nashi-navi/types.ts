@@ -125,3 +125,10 @@ export type DayRisk = {
 };
 
 export type RiskByDate = Record<string, DayRisk>;
+
+export type StageData = {
+  /** { value: 名前 } */
+  names: Record<number, string>;
+  /** { 切り替わり日（YYYY-MM-DD）: value } */
+  transitions: Record<string, number>;
+};

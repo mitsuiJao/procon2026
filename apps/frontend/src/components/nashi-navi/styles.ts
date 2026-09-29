@@ -98,6 +98,7 @@ export const styles = StyleSheet.create({
   rowAction: { paddingVertical: 4 },
   rowActionText: text(15, COLORS.leaf),
   rowActionDanger: text(15, COLORS.danger),
+  stageClear: { alignSelf: "flex-end", marginTop: 10, paddingVertical: 4 },
   addBtn: { marginTop: 12, borderWidth: 1, borderColor: COLORS.line, borderRadius: 4, paddingVertical: 12, alignItems: "center" },
   addBtnText: text(15, COLORS.leaf, true),
   formBox: { marginTop: 12, padding: 12, backgroundColor: COLORS.surface, borderRadius: 4 },

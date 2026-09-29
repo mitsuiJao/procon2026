@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native";
 import { useFocusEffect } from "expo-router";
 
 import {
+  clearStage,
   createSpray,
   deleteSpray,
   fetchCalendar,
@@ -15,9 +16,10 @@ import {
   fetchRisk,
   fetchSensors,
   fetchSprays,
-  fetchStageNames,
+  fetchStages,
   fetchUsage,
   saveDiary,
+  setStage,
   updateSpray,
 } from "@/components/nashi-navi/api";
 import { DayDetailModal, type Flash } from "@/components/nashi-navi/day-detail-modal";
@@ -35,6 +37,7 @@ import type {
   SprayForm,
   SprayRecord,
   SprayUsage,
+  StageData,
   TodayWeather,
   WeatherByDate,
 } from "@/components/nashi-navi/types";
@@ -62,7 +65,7 @@ export default function App() {
   // 病害リスク（判定はバックエンド）。取れなければ空で、警告も印も出さない
   const [monthRisk, setMonthRisk] = useState<RiskByDate>({});
   const [diseases, setDiseases] = useState<DiseaseInfo[]>([]);
-  const [stageNames, setStageNames] = useState<Record<number, string>>({});
+  const [stages, setStages] = useState<StageData>({ names: {}, transitions: {} });
   // 保存・削除のたびに増やして、記録を取り直す
   const [version, setVersion] = useState(0);
 
@@ -101,9 +104,6 @@ export default function App() {
     fetchDiseases()
       .then((d) => alive && setDiseases(d.map(toDiseaseInfo)))
       .catch(() => alive && setDiseases([]));
-    fetchStageNames()
-      .then((n) => alive && setStageNames(n))
-      .catch(() => alive && setStageNames({}));
     return () => {
       alive = false;
     };
@@ -132,7 +132,18 @@ export default function App() {
     return () => {
       alive = false;
     };
-  }, [y, m]);
+  }, [y, m, version]);
+
+  // ステージを記録・取り消すたびに取り直す
+  useEffect(() => {
+    let alive = true;
+    fetchStages()
+      .then((st) => alive && setStages(st))
+      .catch(() => alive && setStages({ names: {}, transitions: {} }));
+    return () => {
+      alive = false;
+    };
+  }, [version]);
 
   useEffect(() => {
     let alive = true;
@@ -244,6 +255,29 @@ export default function App() {
     }
   };
 
+  const saveStage = async (stage: number) => {
+    if (!selectedDate) return;
+    try {
+      await setStage(selectedDate, stage);
+      const [, mm, dd] = selectedDate.split("-").map(Number);
+      setFlash({ text: `${mm}月${dd}日から${stages.names[stage] ?? `ステージ ${stage}`}にしました`, error: false });
+      setVersion((v) => v + 1);
+    } catch {
+      setFlash({ text: SAVE_FAILED, error: true });
+    }
+  };
+
+  const removeStage = async () => {
+    if (!selectedDate) return;
+    try {
+      await clearStage(selectedDate);
+      setFlash({ text: "この日のステージの記録を取り消しました", error: false });
+      setVersion((v) => v + 1);
+    } catch {
+      setFlash({ text: "取り消せませんでした。通信状況を確認してください", error: true });
+    }
+  };
+
   const applyPesticide = (pesticide: Pesticide, diseaseName: string) => {
     setCurrent(new Date());
     setDiseaseModalVisible(false);
@@ -304,7 +338,10 @@ export default function App() {
         risk={(selectedDate && visibleRisk[selectedDate]) || null}
         showRisk={!selectedDate || selectedDate <= riskUntil}
         diseases={diseases}
-        stageNames={stageNames}
+        stage={(selectedDate && monthRisk[selectedDate]) || null}
+        stageNames={stages.names}
+        isStageTransition={!!selectedDate && selectedDate in stages.transitions}
+        stageEditable={!!selectedDate && selectedDate <= todayStr}
         forecast={!!selectedDate && selectedDate > todayStr}
         day={day}
         pesticides={master?.pesticides ?? []}
@@ -325,6 +362,8 @@ export default function App() {
         onDeleteSpray={removeSpray}
         onMemoChange={setMemoDraft}
         onSaveMemo={saveMemo}
+        onSaveStage={saveStage}
+        onClearStage={removeStage}
       />
     </SafeAreaView>
   );
