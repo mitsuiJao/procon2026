@@ -68,7 +68,7 @@ function jstDayStart(date: string): Date {
 }
 
 /** 時別の気温・湿度を、項目ごとにセンサー優先（欠けていれば予報で補う）でマージする */
-function mergeHourly(
+export function mergeHourly(
   hours: Date[],
   sensor: Record<string, SensorHourly>,
   forecast: { observed_at: Date; temperature: number; humidity: number }[],
@@ -91,7 +91,7 @@ function mergeHourly(
  * その日のうち1時間でも値があれば合計を返し、1つも無ければ null にする
  * （0mmと「データが無い」を混同しない）。
  */
-function dailyRainfall(
+export function dailyRainfall(
   hours: Date[],
   sensor: Record<string, SensorHourly>,
   forecast: { observed_at: Date; precipitation: number | null }[],
@@ -113,7 +113,7 @@ function dailyRainfall(
 }
 
 /** 日降水量1mm以上の日が何日連続したか。当日のデータが無ければ null（判定不能） */
-function rainyDayStreak(date: string, rainByDate: Map<string, number | null>): number | null {
+export function rainyDayStreak(date: string, rainByDate: Map<string, number | null>): number | null {
   let d = date;
   let streak = 0;
   for (;;) {
