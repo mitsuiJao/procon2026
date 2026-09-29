@@ -1,0 +1,15 @@
+CREATE TABLE weather_forecasts (
+    id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    observed_at   TIMESTAMPTZ      NOT NULL,
+    temperature   NUMERIC(4,1)     NOT NULL,
+    humidity      NUMERIC(4,1)     NOT NULL CHECK (humidity BETWEEN 0 AND 100),
+    latitude      DOUBLE PRECISION NOT NULL CHECK (latitude BETWEEN -90 AND 90),
+    longitude     DOUBLE PRECISION NOT NULL CHECK (longitude BETWEEN -180 AND 180),
+    weather_code  SMALLINT         NOT NULL,
+    precipitation NUMERIC(5,1),                -- 前の1時間の降水量(mm)。欠けたら NULL
+    created_at    TIMESTAMPTZ      NOT NULL DEFAULT now(),
+    UNIQUE (observed_at, latitude, longitude)
+);
+
+CREATE INDEX idx_weather_forecasts_observed_at
+    ON weather_forecasts (observed_at);

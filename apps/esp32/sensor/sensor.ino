@@ -25,7 +25,7 @@ AE_SHT31 SHT31 = AE_SHT31(0x45);
 
 void setup() {
   // シリアル通信を9600bpsに設定
-  Serial.begin(115200);
+  Serial.begin(9600);
   // シリアルに文字を出力
   Serial.println("SHT31 Test!!");
   // SHT31をソフトリセット

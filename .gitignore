@@ -1,1 +1,10 @@
 .DS_Store
+<<<<<<< HEAD
+=======
+.env
+dist/
+*.log
+weather_forcast.json
+node_modules/
+.expo
+>>>>>>> 32cb7112493e44865e8abb81caeee3f64a9f3738

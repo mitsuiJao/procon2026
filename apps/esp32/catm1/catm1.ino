@@ -1,6 +1,6 @@
 // ESP32 - BG96 AT コマンド送受信テスト (UART直結)
 
-HardwareSerial SerialModem(1);  // UART1
+HardwareSerial SerialModem(1); // UART1
 
 void setup() {
   Serial.begin(115200);
