@@ -10,6 +10,7 @@
 - The calendar's "measured values" come only from the own sensors (`measure`). Forecasts live in `weather_forecasts` (forecast-only). Never store the same data in two tables.
 - Manual temperature/humidity input is not needed (the diary holds only memo and spray records).
 - Past days prefer sensor values; only the weather code is filled in from the forecast. Multiple sensor devices are not distinguished and are pooled together.
+- Rainfall for risk evaluation is taken per hour: sensor `rainfall` first, otherwise the forecast `precipitation` (`weather_forecasts`). Until a rain gauge is installed, both past and forecast days use the forecast.
 - Only the sensor status view (`GET /sensors`) shows devices separately; calendar and risk evaluation keep pooling them.
 - The pesticide master is `data/vocab/pesticides.yaml`, generated from the MAFF registration CSV (`data/pesticides_updated-utf8.csv`, retrieved 2026-09) by `npm run build:pesticides`; never edit it by hand. `id` is the registration number. FRAC codes come from active ingredients, not the CSV's FRAC column (Excel mangled some codes into dates). Spray records store both `pesticide_id` (null for free text) and the product name at the time. The UI no longer inputs or shows `dilution`/`amount`; the DB/API columns stay (new records save them empty).
 - Which pesticides appear in the spray-record picker is stored in `hidden_pesticides` (only hidden ones are kept; the default is shown). It does not affect other pesticide lists.

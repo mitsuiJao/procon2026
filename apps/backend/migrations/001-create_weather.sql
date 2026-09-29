@@ -6,6 +6,7 @@ CREATE TABLE weather_forecasts (
     latitude      DOUBLE PRECISION NOT NULL CHECK (latitude BETWEEN -90 AND 90),
     longitude     DOUBLE PRECISION NOT NULL CHECK (longitude BETWEEN -180 AND 180),
     weather_code  SMALLINT         NOT NULL,
+    precipitation NUMERIC(5,1),                -- 前の1時間の降水量(mm)。欠けたら NULL
     created_at    TIMESTAMPTZ      NOT NULL DEFAULT now(),
     UNIQUE (observed_at, latitude, longitude)
 );
