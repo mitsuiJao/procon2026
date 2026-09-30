@@ -35,6 +35,11 @@ jobs:
       - run: npm ci
       - run: npx expo prebuild --platform android --no-install
 
+      - name: Debug
+        run: |
+          pwd
+          find . -maxdepth 4 -name android -type d -not -path "*/node_modules/*"
+
       - name: Build APK
         run: ./gradlew assembleRelease
         working-directory: app/frontend/android
