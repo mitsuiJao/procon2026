@@ -1,0 +1,45 @@
+name: Android APK
+on:
+  push:
+    tags: ['app-v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app/frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: app/frontend/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Check version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#app-v}"
+          APP_VERSION=$(node -p "require('./app.json').expo.version")
+          [ "$TAG_VERSION" = "$APP_VERSION" ] || { echo "tag($TAG_VERSION) != app.json($APP_VERSION)"; exit 1; }
+
+      - run: npm ci
+      - run: npx expo prebuild --platform android --no-install
+
+      - name: Build APK
+        run: ./gradlew assembleRelease
+        working-directory: app/frontend/android
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: app/frontend/android/app/build/outputs/apk/release/*.apk
