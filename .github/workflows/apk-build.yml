@@ -2,6 +2,7 @@ name: Android APK
 on:
   push:
     tags: ['app-v*']
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -27,6 +28,7 @@ jobs:
           java-version: 17
 
       - name: Check version
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
           TAG_VERSION="${GITHUB_REF_NAME#app-v}"
           APP_VERSION=$(node -p "require('./app.json').expo.version")
@@ -35,15 +37,16 @@ jobs:
       - run: npm ci
       - run: npx expo prebuild --platform android --no-install
 
-      - name: Debug
-        run: |
-          pwd
-          find . -maxdepth 4 -name android -type d -not -path "*/node_modules/*"
-
       - name: Build APK
         run: ./gradlew assembleRelease
-        working-directory: app/frontend/android
+        working-directory: apps/frontend/android
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: apps/frontend/android/app/build/outputs/apk/release/*.apk
 
       - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: app/frontend/android/app/build/outputs/apk/release/*.apk
+          files: apps/frontend/android/app/build/outputs/apk/release/*.apk
