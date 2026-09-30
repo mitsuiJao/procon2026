@@ -38,8 +38,12 @@ jobs:
       - run: npx expo prebuild --platform android --no-install
 
       - name: Build APK
-        run: ./gradlew assembleRelease
+        run: |
+          [ -n "$EXPO_PUBLIC_API_URL" ] || { echo "vars.EXPO_PUBLIC_API_URL が未設定"; exit 1; }
+          ./gradlew assembleRelease
         working-directory: apps/frontend/android
+        env:
+          EXPO_PUBLIC_API_URL: ${{ vars.EXPO_PUBLIC_API_URL }}
 
       - uses: actions/upload-artifact@v4
         with:
