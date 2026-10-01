@@ -41,7 +41,8 @@ function monthInRange(month: number, range: string): boolean {
 
 /**
  * 指定日の生育ステージを求める。
- * 記録（stage_transitions）があればそれを採用する（recorded）。
+ * その日のシーズン（getSeasonStart 以降）の記録（stage_transitions）があればそれを採用する（recorded）。
+ * 前のシーズンの記録は引き継がない（去年の「収穫後」が今年の春まで続いてしまうため）。
  * 無ければ stages.yaml の typicalMonth から近似する（estimated）。
  * typicalMonth は隣接ステージ間で重なりがあるため、「その月を含むうち最も進んだステージ」を採る
  * 単純なルールで決める。精度は低いので stageSource で必ず区別すること。
@@ -50,10 +51,11 @@ export function getStageForDate(
   date: string,
   transitions: { stage: number; effectiveFrom: string }[],
 ): { stage: number | null; source: StageSource } {
+  const seasonStart = getSeasonStart(date);
   let recorded: number | null = null;
   for (const t of transitions) {
     if (t.effectiveFrom > date) break;
-    recorded = t.stage;
+    if (t.effectiveFrom >= seasonStart) recorded = t.stage;
   }
   if (recorded !== null) return { stage: recorded, source: "recorded" };
 

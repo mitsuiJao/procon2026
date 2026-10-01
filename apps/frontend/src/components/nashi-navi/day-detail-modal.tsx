@@ -5,8 +5,8 @@ import { Feather } from "@expo/vector-icons";
 
 import { PesticidePicker } from "@/components/nashi-navi/pesticide-picker";
 import { COLORS, styles } from "@/components/nashi-navi/styles";
-import { alertsOf, emptySprayForm, fmtApplication, LEVEL_LABEL, type wIcon as WIcon } from "@/components/nashi-navi/utils";
-import type { DayData, DayRisk, DiseaseInfo, Pesticide, SprayForm, SprayRecord, SprayUsage, WeatherEntry } from "@/components/nashi-navi/types";
+import { alertsOf, emptySprayForm, fmtApplication, LEVEL_LABEL, LOOKBACK_KIND_LABEL, type wIcon as WIcon } from "@/components/nashi-navi/utils";
+import type { DayData, DayRisk, DiseaseInfo, LookbackItem, Pesticide, SprayForm, SprayRecord, SprayUsage, WeatherEntry } from "@/components/nashi-navi/types";
 
 export type Flash = { text: string; error: boolean } | null;
 
@@ -32,6 +32,10 @@ type DayDetailModalProps = {
   /** 今日より後の日（予報を含む判定） */
   forecast: boolean;
   day: DayData;
+  /** 去年の同じ時期の記録。空なら欄を出さない */
+  lookback: LookbackItem[];
+  /** その期間の見出し（例: 2025年 9/24〜10/8） */
+  lookbackLabel: string;
   pesticides: Pesticide[];
   usage: SprayUsage | null;
   /** 開いている散布のフォーム。null なら閉じている */
@@ -83,6 +87,8 @@ export function DayDetailModal({
   observable,
   forecast,
   day,
+  lookback,
+  lookbackLabel,
   pesticides,
   usage,
   sprayForm,
@@ -102,6 +108,9 @@ export function DayDetailModal({
 }: DayDetailModalProps) {
   const [picking, setPicking] = useState(false);
   const [stagePicking, setStagePicking] = useState(false);
+  // 「去年の今ごろ」を開いている日付。別の日を開くと閉じた状態に戻る
+  const [lookbackOpenFor, setLookbackOpenFor] = useState<string | null>(null);
+  const lookbackOpen = date != null && lookbackOpenFor === date;
 
   const openForm = (next: SprayForm | null) => {
     setPicking(false);
@@ -111,6 +120,7 @@ export function DayDetailModal({
   const close = () => {
     setPicking(false);
     setStagePicking(false);
+    setLookbackOpenFor(null);
     onClose();
   };
 
@@ -340,6 +350,33 @@ export function DayDetailModal({
             </View>
 
             {flash ? <Text style={flash.error ? styles.errorFlash : styles.saveFlash}>{flash.text}</Text> : null}
+
+            {lookback.length > 0 && (
+              <>
+                <TouchableOpacity
+                  style={styles.accordionHead}
+                  onPress={() => setLookbackOpenFor(lookbackOpen ? null : date)}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: lookbackOpen }}
+                  accessibilityLabel={`去年の今ごろの記録 ${lookback.length}件`}
+                >
+                  <Text style={styles.accordionTitle}>去年の今ごろ（{lookback.length}件）</Text>
+                  <Feather name={lookbackOpen ? "chevron-up" : "chevron-down"} size={20} color={COLORS.inkSoft} />
+                </TouchableOpacity>
+                {lookbackOpen && (
+                  <View>
+                    <Text style={styles.forecastNote}>{lookbackLabel} の記録</Text>
+                    {lookback.map((it, i) => (
+                      <View key={i} style={styles.lookbackRow}>
+                        <Text style={styles.lookbackDate}>{`${Number(it.date.slice(5, 7))}/${Number(it.date.slice(8))}`}</Text>
+                        <Text style={styles.lookbackKind}>{LOOKBACK_KIND_LABEL[it.kind]}</Text>
+                        <Text style={styles.lookbackText}>{it.text}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </>
+            )}
           </ScrollView>
         )}
       </SafeAreaView>

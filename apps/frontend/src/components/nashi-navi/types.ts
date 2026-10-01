@@ -16,6 +16,14 @@ export type SprayInput = Omit<SprayRecord, "id">;
 /** 日付ごとの記録。observed はその日に発生を記録した病害の id */
 export type DayData = { memo: string; sprays: SprayRecord[]; observed: string[] };
 
+/** 「去年の今ごろ」に出す1行 */
+export type LookbackItem = {
+  /** YYYY-MM-DD */
+  date: string;
+  kind: "spray" | "observation" | "stage" | "memo";
+  text: string;
+};
+
 /** 散布の入力フォーム。id が null なら新規 */
 export type SprayForm = {
   id: number | null;

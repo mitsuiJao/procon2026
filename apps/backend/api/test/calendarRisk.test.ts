@@ -37,6 +37,14 @@ describe("getStageForDate", () => {
     assert.deepEqual(getStageForDate("2026-09-10", []), { stage: 9, source: "estimated" });
   });
 
+  it("前のシーズン（4/1 より前）の記録は引き継がず、月からの推定に戻る", () => {
+    const lastSeason = [{ stage: 10, effectiveFrom: "2025-10-20" }, ...transitions];
+    assert.deepEqual(getStageForDate("2026-04-10", lastSeason), { stage: 2, source: "estimated" });
+    assert.deepEqual(getStageForDate("2026-04-20", lastSeason), { stage: 2, source: "recorded" });
+    // 同じシーズンのうち（翌年の 3/31 まで）は記録が続く
+    assert.deepEqual(getStageForDate("2026-03-31", lastSeason), { stage: 10, source: "recorded" });
+  });
+
   it("年をまたぐ範囲（12〜3月の休眠期）", () => {
     assert.deepEqual(getStageForDate("2026-12-15", []), { stage: 0, source: "estimated" });
     assert.deepEqual(getStageForDate("2027-02-01", []), { stage: 0, source: "estimated" });

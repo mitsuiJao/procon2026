@@ -72,6 +72,13 @@ export const styles = StyleSheet.create({
   panelDate: text(22, COLORS.ink, true),
   closeBtn: { width: 36, height: 36, alignItems: "center", justifyContent: "center" },
   legend2: { ...text(15, COLORS.ink, true), marginTop: 20, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: COLORS.ink },
+  // 「去年の今ごろ」。見出しの行を押すと開閉する
+  accordionHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 20, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: COLORS.ink },
+  accordionTitle: text(15, COLORS.ink, true),
+  lookbackRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, borderBottomWidth: 1, borderBottomColor: COLORS.line, paddingVertical: 8 },
+  lookbackDate: { ...text(14, COLORS.inkSoft), width: 44 },
+  lookbackKind: { ...text(14, COLORS.inkSoft), width: 34 },
+  lookbackText: { ...text(15), flex: 1 },
   tableRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderBottomWidth: 1, borderBottomColor: COLORS.line, paddingVertical: 8 },
   tableLabel: text(15, COLORS.inkSoft),
   tableValue: text(15),

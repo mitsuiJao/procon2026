@@ -1,4 +1,14 @@
-import type { DayRisk, DiseaseInfo, Pesticide, PesticideApplication, RiskLevel, Sensitivity, SprayForm } from "@/components/nashi-navi/types";
+import type {
+  DayRisk,
+  DiseaseInfo,
+  LookbackItem,
+  Pesticide,
+  PesticideApplication,
+  RiskLevel,
+  Sensitivity,
+  SprayForm,
+  SprayRecord,
+} from "@/components/nashi-navi/types";
 
 type WeatherKind = { icon: "sun" | "cloud" | "cloud-rain"; label: string };
 
@@ -16,6 +26,68 @@ export const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
 
 /** 病害リスクを出すのは今日から何日先まで。それより先の予報は当てにならないので出さない */
 export const RISK_DAYS_AHEAD = 7;
+
+/** 「去年の今ごろ」に出すのは、1年前の同じ日の前後何日か */
+export const LOOKBACK_DAYS = 7;
+const MEMO_MAX = 30;
+
+/** 1年前の同じ日の前後 LOOKBACK_DAYS 日（両端含む）。2/29 は 2/28 にする */
+export const lookbackRange = (date: string) => {
+  const [y, m, d] = date.split("-").map(Number);
+  const day = Math.min(d, new Date(y - 1, m, 0).getDate());
+  const at = (offset: number) => {
+    const t = new Date(y - 1, m - 1, day + offset);
+    return dateKeyOf(t.getFullYear(), t.getMonth(), t.getDate());
+  };
+  return { start: at(-LOOKBACK_DAYS), end: at(LOOKBACK_DAYS) };
+};
+
+/** 期間の見出し（例: 2025年 9/24〜10/8） */
+export const fmtLookbackRange = ({ start, end }: { start: string; end: string }) => {
+  const md = (s: string) => `${Number(s.slice(5, 7))}/${Number(s.slice(8))}`;
+  return `${start.slice(0, 4)}年 ${md(start)}〜${md(end)}`;
+};
+
+const LOOKBACK_ORDER: Record<LookbackItem["kind"], number> = { stage: 0, observation: 1, spray: 2, memo: 3 };
+
+/**
+ * 期間の記録を「去年の今ごろ」の行にまとめる（日付順。同じ日はステージ → 発生 → 散布 → メモ）
+ * ステージ・発生・散布は名前だけを出す。メモは先頭の1行だけを出し、長ければ切る
+ */
+export const buildLookback = (args: {
+  start: string;
+  end: string;
+  sprays: SprayRecord[];
+  observations: { date: string; diseaseId: string }[];
+  /** { 日付: メモ } */
+  diary: Record<string, string>;
+  /** { 切り替わり日: ステージの value }（全期間） */
+  transitions: Record<string, number>;
+  diseases: DiseaseInfo[];
+  stageNames: Record<number, string>;
+}): LookbackItem[] => {
+  const { start, end, sprays, observations, diary, transitions, diseases, stageNames } = args;
+  const items: LookbackItem[] = [];
+  for (const [date, stage] of Object.entries(transitions)) {
+    if (date >= start && date <= end) items.push({ date, kind: "stage", text: stageNames[stage] ?? `生育状態 ${stage}` });
+  }
+  for (const o of observations) {
+    items.push({ date: o.date, kind: "observation", text: diseases.find((d) => d.id === o.diseaseId)?.name ?? o.diseaseId });
+  }
+  for (const s of sprays) items.push({ date: s.sprayedOn, kind: "spray", text: s.pesticide });
+  for (const [date, memo] of Object.entries(diary)) {
+    const line = memo.trim().split("\n")[0];
+    if (line) items.push({ date, kind: "memo", text: line.length > MEMO_MAX ? `${line.slice(0, MEMO_MAX)}…` : line });
+  }
+  return items.sort((a, b) => a.date.localeCompare(b.date) || LOOKBACK_ORDER[a.kind] - LOOKBACK_ORDER[b.kind]);
+};
+
+export const LOOKBACK_KIND_LABEL: Record<LookbackItem["kind"], string> = {
+  stage: "生育",
+  observation: "発生",
+  spray: "散布",
+  memo: "メモ",
+};
 
 export const emptySprayForm: SprayForm = {
   id: null,
