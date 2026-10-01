@@ -1,39 +1,47 @@
 # 病害マスター。ルール・農薬が diseaseId で参照する。
 # id は不変。名前は表示用で、変えてもルールは壊れない。
 # priority: レポートの重要度。3 = ◎、2 = ○（画面の表示順や絞り込みに使う）
+# latentDays: 感染から発見までの日数 [最短, 最長]。発生記録を「何日前の判定」と照らすかに使う。
+#   べと病だけ文献値（潜伏期間 4〜7 日）。ほかは数値の裏付けが無い設計値。
 
 - id: downy_mildew
   nameJa: べと病
   nameEn: Downy mildew
   pathogen: Plasmopara viticola
   priority: 3
+  latentDays: [4, 7]
 
 - id: ripe_rot
   nameJa: 晩腐病
   nameEn: Ripe rot (bitter rot)
   pathogen: Colletotrichum gloeosporioides / C. acutatum
   priority: 3
+  latentDays: [3, 60]  # 幼果期の感染は着色期まで出ないので広く取る
 
 - id: botrytis
   nameJa: 灰色かび病
   nameEn: Botrytis bunch rot (gray mold)
   pathogen: Botrytis cinerea
   priority: 3
+  latentDays: [3, 10]
 
 - id: anthracnose
   nameJa: 黒とう病
   nameEn: Anthracnose
   pathogen: Elsinoë ampelina
   priority: 3
+  latentDays: [5, 10]
 
 - id: powdery_mildew
   nameJa: うどんこ病
   nameEn: Powdery mildew
   pathogen: Erysiphe necator
   priority: 2
+  latentDays: [5, 14]
 
 - id: rust
   nameJa: さび病
   nameEn: Grape rust
   pathogen: Phakopsora 属
   priority: 2
+  latentDays: [7, 14]

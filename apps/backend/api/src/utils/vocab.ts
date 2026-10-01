@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { parse } from "yaml";
-import { loadRules } from "../evalute";
-import type { Rule } from "../evalute";
+import { loadRules, resolveRules } from "../evalute";
+import type { Rule, RuleDef } from "../evalute";
 
 // data/ は api のビルドコンテキスト外なので、Docker では docker-compose.yml のボリュームマウント（DATA_DIR=/app/data）で渡す。
 // ローカル実行では src/dist からの相対パスで data/ に届く。
@@ -21,7 +21,8 @@ function cached<T>(load: () => T): () => T {
   return () => (value ??= load());
 }
 
-export type DiseaseVocab = { id: string; nameJa: string; priority: number };
+/** latentDays は感染から発見までの日数 [最短, 最長] */
+export type DiseaseVocab = { id: string; nameJa: string; priority: number; latentDays: [number, number] };
 export type StageVocab = { value: number; id: string; nameJa: string; typicalMonth: string };
 export type ActiveIngredientVocab = { id: string; nameJa?: string; fracCode: string };
 export type PesticideApplication = {
@@ -51,10 +52,22 @@ export type PesticideVocab = {
 };
 type PesticidesDoc = { source: string; retrievedAt: string; pesticides: PesticideVocab[] };
 
-export const getRules = cached<Rule[]>(() =>
+/** rules.yaml に書いたままのルール。評価するときは resolveRules で感度の段階を決める */
+export const getRuleDefs = cached<RuleDef[]>(() =>
   loadRules(path.join(DATA_DIR, "rules/rules.yaml"), path.join(DATA_DIR, "vocab")),
 );
-export const getDiseasesVocab = cached(() => readYamlArray("vocab/diseases.yaml") as DiseaseVocab[]);
+/** 全病害を段階 0（標準）で確定させたルール */
+export const getRules = cached<Rule[]>(() => resolveRules(getRuleDefs()));
+export const getDiseasesVocab = cached(() => {
+  const diseases = readYamlArray("vocab/diseases.yaml") as DiseaseVocab[];
+  for (const d of diseases) {
+    const [min, max]: unknown[] = Array.isArray(d.latentDays) ? d.latentDays : [];
+    if (typeof min !== "number" || typeof max !== "number" || !Number.isInteger(min) || !Number.isInteger(max) || min < 0 || min > max) {
+      throw new Error(`diseases.yaml: ${d.id} の latentDays は [最短, 最長] の日数にしてください`);
+    }
+  }
+  return diseases;
+});
 export const getStagesVocab = cached(() => readYamlArray("vocab/stages.yaml") as StageVocab[]);
 export const getActiveIngredientsVocab = cached(
   () => readYamlArray("vocab/activeIngredients.yaml") as ActiveIngredientVocab[],

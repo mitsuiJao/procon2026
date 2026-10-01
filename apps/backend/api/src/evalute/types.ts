@@ -6,12 +6,20 @@ export type Cond =
   | { not: Cond }
   | { var: string; op: Op; value: number };
 
+/** rules.yaml に書いたままの条件。value は数値か、params を指す "$名前" */
+export type CondDef =
+  | { all: CondDef[] }
+  | { any: CondDef[] }
+  | { not: CondDef }
+  | { var: string; op: Op; value: number | string };
+
 /** 閾値ルールの結果レベル */
 export type RuleLevel = "near_threshold" | "conditions_met";
 
 /** ルール単位の結果。none = 該当なし、undetermined = 入力不足で判定不能 */
 export type ResultLevel = RuleLevel | "none" | "undetermined";
 
+/** 値が確定したルール（"$名前" の参照と段階の上書きを解決済み）。評価はこの形だけを受け取る */
 export type Rule = {
   id: string;
   diseaseId: string;
@@ -22,6 +30,17 @@ export type Rule = {
   candidateFrac: string[];
   confidence: "A" | "B";
   sourceIds: string[];
+};
+
+/**
+ * rules.yaml に書いたままのルール。感度の段階を決めて resolveRules に通すと Rule になる。
+ * params は when から "$名前" で参照する値。levels は段階 1, 2, … での上書き（段階 0 は本体のまま）で、
+ * キーは enabled か、params / evaluator.params のキー。
+ */
+export type RuleDef = Omit<Rule, "when"> & {
+  when?: CondDef;
+  params?: Record<string, number>;
+  levels?: Record<string, number | boolean>[];
 };
 
 /** 時別の観測値。time は UTC の Date。欠損は null */
