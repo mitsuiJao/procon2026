@@ -75,6 +75,20 @@
 - PUT の body: `{ memo }`
 - メモが空（空白だけ）のときは、その日の日誌を消して `204` を返す。
 
+## 病害の発生記録
+
+| メソッド | パス | 説明 |
+|---|---|---|
+| GET | `/observations?start=&end=` | 期間の発生記録（`{ observed_on, disease_id, note }[]`、日付・`disease_id` の昇順） |
+| PUT | `/observations/:date/:diseaseId` | その日にその病害を見つけたと記録（同じ日・同じ病害は上書き） |
+| DELETE | `/observations/:date/:diseaseId` | 発生記録を消す |
+
+- 記録があれば「その日にその病害を見つけた」。「発生なし」は記録しない。
+- `diseaseId` は `/diseases` の `id`。一覧に無ければ `400`。
+- 未来の日には記録できない（`400`）。
+- PUT の body: `{ note? }`（body ごと省略できる。省くと `note` は空になる）
+- 今はリスクの判定には使っていない（記録と表示だけ）。
+
 ## 散布記録
 
 | メソッド | パス | 説明 |
@@ -108,4 +122,6 @@ curl -X POST "$API/sprays" -H 'Content-Type: application/json' -d '{"sprayed_on"
 curl -X POST "$API/sprays" -H 'Content-Type: application/json' -d '{"sprayed_on":"2026-09-28","pesticide":"自家製の資材"}'
 curl "$API/sprays/usage?year=2026"
 curl -X PUT "$API/stages/2026-05-20" -H 'Content-Type: application/json' -d '{"stage":4}'
+curl -X PUT "$API/observations/2026-09-28/downy_mildew" -H 'Content-Type: application/json' -d '{"note":"葉裏に白いかび"}'
+curl "$API/observations?start=2026-09-01&end=2026-09-30"
 ```

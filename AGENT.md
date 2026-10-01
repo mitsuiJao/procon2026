@@ -15,6 +15,7 @@
 - The pesticide master is `data/vocab/pesticides.yaml`, generated from the MAFF registration CSV (`data/pesticides_updated-utf8.csv`, retrieved 2026-09) by `npm run build:pesticides`; never edit it by hand. `id` is the registration number. FRAC codes come from active ingredients, not the CSV's FRAC column (Excel mangled some codes into dates). Spray records store both `pesticide_id` (null for free text) and the product name at the time. The UI no longer inputs or shows `dilution`/`amount`; the DB/API columns stay (new records save them empty).
 - Which pesticides appear in the spray-record picker is stored in `hidden_pesticides` (only hidden ones are kept; the default is shown). It does not affect other pesticide lists.
 - The daily representative weather code is the most frequent one; ties go to the larger code (the worse weather).
+- Disease occurrences are stored in `disease_observations` (one row = that disease was found on that day; `disease_id` is a `diseases.yaml` id). Only occurrences are recorded — "no disease" is never entered. They are not used in risk evaluation yet (record and display only).
 - While the DB is being recreated and no data is accumulating, edit existing migration files (e.g. `001`) directly instead of adding new ones (approved by the user).
 
 ## Time handling
