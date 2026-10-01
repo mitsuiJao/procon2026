@@ -4,12 +4,14 @@ import { Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from "reac
 import { Feather } from "@expo/vector-icons";
 
 import { COLORS, styles } from "@/components/nashi-navi/styles";
-import { pesticidesForDisease, searchPesticides } from "@/components/nashi-navi/utils";
-import type { DiseaseInfo, Pesticide, PesticideMaster, SprayUsage } from "@/components/nashi-navi/types";
+import { pesticidesForDisease, searchPesticides, sensitivityLabel, sensitivityReason } from "@/components/nashi-navi/utils";
+import type { DiseaseInfo, Pesticide, PesticideMaster, Sensitivity, SprayUsage } from "@/components/nashi-navi/types";
 
 type DiseaseRiskModalProps = {
   visible: boolean;
   selectedDisease: DiseaseInfo | null;
+  /** その病害の感度の段階。取れなければ null で、欄を出さない */
+  sensitivity: Sensitivity | null;
   master: PesticideMaster | null;
   usage: SprayUsage | null;
   onClose: () => void;
@@ -18,7 +20,7 @@ type DiseaseRiskModalProps = {
 
 const fmtShortDate = (date: string) => date.slice(5).replace("-", "/");
 
-export function DiseaseRiskModal({ visible, selectedDisease, master, usage, onClose, onApply }: DiseaseRiskModalProps) {
+export function DiseaseRiskModal({ visible, selectedDisease, sensitivity, master, usage, onClose, onApply }: DiseaseRiskModalProps) {
   const [query, setQuery] = useState("");
   const registered = useMemo(
     () => (master && selectedDisease ? pesticidesForDisease(master.pesticides, selectedDisease.id) : []),
@@ -45,6 +47,17 @@ export function DiseaseRiskModal({ visible, selectedDisease, master, usage, onCl
           <ScrollView contentContainerStyle={styles.diseaseScroll} keyboardShouldPersistTaps="handled">
             <Text style={styles.legend2}>発生しやすい条件</Text>
             <Text style={styles.dText}>{selectedDisease?.triggerText}</Text>
+
+            {sensitivity && sensitivity.maxLevel > 0 && (
+              <>
+                <Text style={styles.legend2}>この圃場での知らせ方</Text>
+                <Text style={styles.dText}>{sensitivityLabel(sensitivity.level)}</Text>
+                {sensitivity.level > 0 && (
+                  <Text style={styles.sourceNote}>発生の記録をもとに、上の条件より早めに知らせています。</Text>
+                )}
+                {sensitivityReason(sensitivity) && <Text style={styles.sourceNote}>{sensitivityReason(sensitivity)}</Text>}
+              </>
+            )}
 
             <Text style={styles.legend2}>主な症状</Text>
             <Text style={styles.dText}>{selectedDisease?.symptom}</Text>

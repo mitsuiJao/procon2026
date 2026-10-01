@@ -3,6 +3,7 @@ import type {
   PesticideMaster,
   RiskByDate,
   RiskLevel,
+  Sensitivity,
   SensorReading,
   SensorStatus,
   SprayInput,
@@ -162,6 +163,26 @@ export async function saveObservation(date: string, diseaseId: string): Promise<
 /** 病害の発生記録を消す */
 export async function deleteObservation(date: string, diseaseId: string): Promise<void> {
   await send("DELETE", `/observations/${date}/${encodeURIComponent(diseaseId)}`);
+}
+
+type SensitivityResponse = {
+  disease_id: string;
+  level: number;
+  max_level: number;
+  observed: number;
+  caught: number;
+  alert_days: number;
+};
+
+/** 病害ごとの感度の段階。{ 病害の id: 段階 } */
+export async function fetchSensitivity(): Promise<Record<string, Sensitivity>> {
+  const data = await getJson<SensitivityResponse[]>("/sensitivity");
+  return Object.fromEntries(
+    data.map((s) => [
+      s.disease_id,
+      { level: s.level, maxLevel: s.max_level, observed: s.observed, caught: s.caught, alertDays: s.alert_days },
+    ]),
+  );
 }
 
 type SprayResponse = {

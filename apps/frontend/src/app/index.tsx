@@ -16,6 +16,7 @@ import {
   fetchPesticides,
   fetchRecentSprays,
   fetchRisk,
+  fetchSensitivity,
   fetchSensors,
   fetchSprays,
   fetchStages,
@@ -36,6 +37,7 @@ import type {
   Pesticide,
   PesticideMaster,
   RiskByDate,
+  Sensitivity,
   SensorStatus,
   SprayForm,
   SprayRecord,
@@ -75,6 +77,8 @@ export default function App() {
   const [monthRisk, setMonthRisk] = useState<RiskByDate>({});
   const [diseases, setDiseases] = useState<DiseaseInfo[]>([]);
   const [stages, setStages] = useState<StageData>({ names: {}, transitions: {} });
+  // 病害ごとの感度の段階。取れなければ空で、病害の画面に出さない
+  const [sensitivity, setSensitivity] = useState<Record<string, Sensitivity>>({});
   // 保存・削除のたびに増やして、記録を取り直す
   const [version, setVersion] = useState(0);
 
@@ -149,6 +153,17 @@ export default function App() {
     fetchStages()
       .then((st) => alive && setStages(st))
       .catch(() => alive && setStages({ names: {}, transitions: {} }));
+    return () => {
+      alive = false;
+    };
+  }, [version]);
+
+  // 発生を記録・取り消すと段階が選び直されるので、そのたびに取り直す
+  useEffect(() => {
+    let alive = true;
+    fetchSensitivity()
+      .then((s) => alive && setSensitivity(s))
+      .catch(() => alive && setSensitivity({}));
     return () => {
       alive = false;
     };
@@ -348,6 +363,7 @@ export default function App() {
       <DiseaseRiskModal
         visible={diseaseModalVisible}
         selectedDisease={selectedDisease}
+        sensitivity={(selectedDisease && sensitivity[selectedDisease.id]) || null}
         master={master}
         usage={usage}
         onClose={() => setDiseaseModalVisible(false)}

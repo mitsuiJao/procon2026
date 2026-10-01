@@ -1,4 +1,4 @@
-import type { DayRisk, DiseaseInfo, Pesticide, PesticideApplication, RiskLevel, SprayForm } from "@/components/nashi-navi/types";
+import type { DayRisk, DiseaseInfo, Pesticide, PesticideApplication, RiskLevel, Sensitivity, SprayForm } from "@/components/nashi-navi/types";
 
 type WeatherKind = { icon: "sun" | "cloud" | "cloud-rain"; label: string };
 
@@ -70,6 +70,16 @@ export const LEVEL_LABEL: Record<AlertLevel, string> = {
   conditions_met: "感染条件に該当",
   near_threshold: "条件に近い",
 };
+
+const SENSITIVITY_LABEL = ["標準", "敏感", "より敏感"];
+
+/** 感度の段階の名前。用意した名前より先の段階は、最後の名前にする */
+export const sensitivityLabel = (level: number) =>
+  SENSITIVITY_LABEL[Math.min(Math.max(level, 0), SENSITIVITY_LABEL.length - 1)];
+
+/** 段階を選んだ理由の1行。発生記録が無ければ null */
+export const sensitivityReason = (s: Sensitivity) =>
+  s.observed === 0 ? null : `今季の発生 ${s.observed}件中 ${s.caught}件を事前に警告。警告は今季 ${s.alertDays}日`;
 
 const LEVEL_RANK: Record<RiskLevel, number> = { conditions_met: 2, near_threshold: 1, undetermined: 0, none: 0 };
 
