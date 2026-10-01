@@ -6,11 +6,13 @@ import { useFocusEffect } from "expo-router";
 import {
   clearStage,
   createSpray,
+  deleteObservation,
   deleteSpray,
   fetchCalendar,
   fetchCurrent,
   fetchDiary,
   fetchDiseases,
+  fetchObservations,
   fetchPesticides,
   fetchRecentSprays,
   fetchRisk,
@@ -19,6 +21,7 @@ import {
   fetchStages,
   fetchUsage,
   saveDiary,
+  saveObservation,
   setStage,
   updateSpray,
 } from "@/components/nashi-navi/api";
@@ -43,14 +46,20 @@ import type {
 } from "@/components/nashi-navi/types";
 import { dateKeyOf, emptySprayForm, RISK_DAYS_AHEAD, toDiseaseInfo, WEEKDAYS, wIcon } from "@/components/nashi-navi/utils";
 
-const EMPTY_DAY: DayData = { memo: "", sprays: [] };
+const EMPTY_DAY: DayData = { memo: "", sprays: [], observed: [] };
 const SAVE_FAILED = "保存できませんでした。通信状況を確認してください";
 
-/** 日誌と散布記録を日付ごとにまとめる */
-function groupByDate(diary: Record<string, string>, sprays: SprayRecord[]): Record<string, DayData> {
+/** 日誌・散布記録・病害の発生記録を日付ごとにまとめる */
+function groupByDate(
+  diary: Record<string, string>,
+  sprays: SprayRecord[],
+  observations: { date: string; diseaseId: string }[],
+): Record<string, DayData> {
   const days: Record<string, DayData> = {};
-  for (const [date, memo] of Object.entries(diary)) days[date] = { memo, sprays: [] };
-  for (const s of sprays) (days[s.sprayedOn] ??= { memo: "", sprays: [] }).sprays.push(s);
+  const dayOf = (date: string) => (days[date] ??= { memo: "", sprays: [], observed: [] });
+  for (const [date, memo] of Object.entries(diary)) dayOf(date).memo = memo;
+  for (const s of sprays) dayOf(s.sprayedOn).sprays.push(s);
+  for (const o of observations) dayOf(o.date).observed.push(o.diseaseId);
   return days;
 }
 
@@ -149,8 +158,8 @@ export default function App() {
     let alive = true;
     const start = dateKeyOf(y, m, 1);
     const end = dateKeyOf(y, m, new Date(y, m + 1, 0).getDate());
-    Promise.all([fetchDiary(start, end), fetchSprays(start, end)])
-      .then(([diary, sprays]) => alive && setMonthData(groupByDate(diary, sprays)))
+    Promise.all([fetchDiary(start, end), fetchSprays(start, end), fetchObservations(start, end)])
+      .then(([diary, sprays, observations]) => alive && setMonthData(groupByDate(diary, sprays, observations)))
       .catch(() => alive && setMonthData({}));
     fetchCalendar(start, end)
       .then((w) => alive && setWeatherByDate(w))
@@ -278,6 +287,19 @@ export default function App() {
     }
   };
 
+  const toggleObservation = async (disease: DiseaseInfo) => {
+    if (!selectedDate) return;
+    const recorded = day.observed.includes(disease.id);
+    try {
+      if (recorded) await deleteObservation(selectedDate, disease.id);
+      else await saveObservation(selectedDate, disease.id);
+      setFlash({ text: recorded ? `${disease.name}の発生記録を取り消しました` : `${disease.name}の発生を記録しました`, error: false });
+      setVersion((v) => v + 1);
+    } catch {
+      setFlash({ text: SAVE_FAILED, error: true });
+    }
+  };
+
   const applyPesticide = (pesticide: Pesticide, diseaseName: string) => {
     setCurrent(new Date());
     setDiseaseModalVisible(false);
@@ -342,6 +364,7 @@ export default function App() {
         stageNames={stages.names}
         isStageTransition={!!selectedDate && selectedDate in stages.transitions}
         stageEditable={!!selectedDate && selectedDate <= todayStr}
+        observable={!!selectedDate && selectedDate <= todayStr}
         forecast={!!selectedDate && selectedDate > todayStr}
         day={day}
         pesticides={master?.pesticides ?? []}
@@ -364,6 +387,7 @@ export default function App() {
         onSaveMemo={saveMemo}
         onSaveStage={saveStage}
         onClearStage={removeStage}
+        onToggleObservation={toggleObservation}
       />
     </SafeAreaView>
   );

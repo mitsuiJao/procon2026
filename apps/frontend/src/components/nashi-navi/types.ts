@@ -13,8 +13,8 @@ export type SprayRecord = {
 
 export type SprayInput = Omit<SprayRecord, "id">;
 
-/** 日付ごとの記録 */
-export type DayData = { memo: string; sprays: SprayRecord[] };
+/** 日付ごとの記録。observed はその日に発生を記録した病害の id */
+export type DayData = { memo: string; sprays: SprayRecord[]; observed: string[] };
 
 /** 散布の入力フォーム。id が null なら新規 */
 export type SprayForm = {
