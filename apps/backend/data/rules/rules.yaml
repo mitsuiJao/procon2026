@@ -11,6 +11,13 @@
 #   両方あるとき、when は前提条件（ゲート）。when が真のときだけ evaluator を評価する。
 #   入力が足りない変数を使うルールは「判定不能」になる（false ではない）。
 #
+# params / levels（感度の段階）
+#   params     when から "$名前" で参照する値。段階で変えたい閾値だけ params に出す（stage の条件では使えない）。
+#   levels     病害ごとの感度の段階 1, 2, … での上書きを順に並べる。段階 0（標準）は本体の値のまま。
+#              上書きできるのは enabled と、params / evaluator.params のキー。
+#              段階が levels の件数を超えたら、最後の段階までを使う。levels の無いルールは段階で変わらない。
+#   段階は発生記録から病害ごとに選ぶ（api/src/utils/sensitivity.ts）。段階の値はどれも根拠のない設計値。
+#
 # level
 #   when のみのルールに必須。near_threshold（閾値に近い）/ conditions_met（感染条件に該当）。
 #   evaluator を持つルールでは書かない。結果は params の mid / high で決まる。
@@ -31,12 +38,16 @@
 - id: DM-1
   diseaseId: downy_mildew
   enabled: true
+  params: { rainMin: 10 }
   when:
     all:
       - { var: stage, op: ">=", value: 2 }
       - { var: tempMeanC, op: ">=", value: 10 }
-      - { var: rain24hMm, op: ">=", value: 10 }
+      - { var: rain24hMm, op: ">=", value: $rainMin }
   level: conditions_met
+  levels:
+    - { rainMin: 8 }
+    - { rainMin: 6 }
   candidateFrac: [M3, M4, "21"]
   confidence: A
   sourceIds: [S037, S036]
@@ -63,6 +74,9 @@
       dryResetHours: 4
       mid: 0.5
       high: 1.0
+  levels:
+    - { mid: 0.3 }
+    - { mid: 0.1 }
   candidateFrac: [M4, BM02, "9", "12", "3", "7"]
   confidence: A
   sourceIds: [S032, S033]
@@ -93,6 +107,9 @@
       indexMax: 100
       mid: 40
       high: 60
+  levels:
+    - { mid: 30 }
+    - { mid: 20 }
   candidateFrac: [M2, "3", "7", "11"]
   confidence: A
   sourceIds: [S031, S056]
@@ -100,6 +117,7 @@
 # ===============================================================
 # B：設計値・要検証（既定で無効）
 #   雨量 1mm や連続 2 日などの閾値は文献に根拠がない。自園地のデータで調整する前提。
+#   晩腐病とさび病は有効なルールが無いので、段階 1 で B のルールを有効にする。
 # ===============================================================
 
 # 灰色かび病：開花期前後と着色期以降は、Broome 式の注意閾値を 0.3 に下げる
@@ -159,6 +177,8 @@
           - { var: rain24hMm, op: ">=", value: 10 }
           - { var: rainyDayStreak, op: ">=", value: 2 }
   level: conditions_met
+  levels:
+    - { enabled: true }
   candidateFrac: [M9, M3, M4, "3"]
   confidence: B
   sourceIds: [S059, S002]
@@ -172,6 +192,8 @@
       - { var: stage, op: ">=", value: 8 }
       - { var: rain24hMm, op: ">=", value: 1 }
   level: near_threshold
+  levels:
+    - { enabled: true }
   candidateFrac: [M4, "3"]
   confidence: B
   sourceIds: [S002, S021]
@@ -220,6 +242,8 @@
       - { var: tempMeanC, op: "<=", value: 25 }
       - { var: rhPercent, op: ">=", value: 95 }
   level: near_threshold
+  levels:
+    - { enabled: true }
   candidateFrac: [M3, M4, "7"]
   confidence: B
   sourceIds: [S005]

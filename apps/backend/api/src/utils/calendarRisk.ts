@@ -1,10 +1,11 @@
 import { getSensorHourlyByRange, type SensorHourly } from "../db/measure";
+import { getLatestSensitivity } from "../db/sensitivity";
 import { getPlace } from "../db/settings";
 import { getStageTransitions } from "../db/stage";
 import { getForecastByRange } from "../db/weather";
-import { evaluateRisks } from "../evalute";
-import type { DiseaseResult, HourlyPoint } from "../evalute";
-import { getRules, getStagesVocab } from "./vocab";
+import { evaluateRisks, resolveRules } from "../evalute";
+import type { DiseaseResult, EvalInput, HourlyPoint, Rule } from "../evalute";
+import { getRuleDefs, getStagesVocab } from "./vocab";
 import { jstDate } from "./weather-daily";
 
 const HOUR_MS = 60 * 60 * 1000;
@@ -13,6 +14,16 @@ const DAY_MS = 24 * HOUR_MS;
 const BROOME_LOOKBACK_DAYS = 2;
 
 export type StageSource = "recorded" | "estimated" | "unknown";
+
+/** 1日分の判定の入力。ルール（感度の段階）を変えて何度でも評価できる */
+export type DayInput = {
+  date: string;
+  stage: number | null;
+  stageSource: StageSource;
+  scalars: EvalInput["scalars"];
+  /** そのルールに渡す時別の系列（Broome は直近だけ、ほかは季節の初めから） */
+  hourlyFor: (rule: Rule) => HourlyPoint[];
+};
 
 export type DayRisk = {
   stage: number | null;
@@ -127,13 +138,11 @@ export function rainyDayStreak(date: string, rainByDate: Map<string, number | nu
 }
 
 /**
- * 指定期間の病害リスクを日ごとに評価
- * データの取得は期間全体で1回だけ行い、日ごとにevaluateRisksを呼ぶ。
+ * 指定期間の判定の入力を日ごとに作る。データの取得は期間全体で1回だけ行う。
  * @param start 開始日 (YYYY-MM-DD, 含む, JST)
  * @param end   終了日 (YYYY-MM-DD, 含む, JST)
- * @returns { "YYYY-MM-DD": { stage, stageSource, diseases } }
  */
-export async function getCalendarRisks(start: string, end: string): Promise<Record<string, DayRisk>> {
+export async function buildDayInputs(start: string, end: string): Promise<DayInput[]> {
   const fetchFrom = jstDayStart(getSeasonStart(start));
   const rangeStart = jstDayStart(start);
   const rangeEnd = new Date(jstDayStart(end).getTime() + DAY_MS);
@@ -149,35 +158,62 @@ export async function getCalendarRisks(start: string, end: string): Promise<Reco
   for (let t = fetchFrom.getTime(); t < rangeEnd.getTime(); t += HOUR_MS) hours.push(new Date(t));
   const allHourly = mergeHourly(hours, sensorHourly, forecastRows);
   const rainByDate = dailyRainfall(hours, sensorHourly, forecastRows);
-  const rules = getRules();
+  // allHourly は fetchFrom から1時間刻みなので、時刻は添字に直せる
+  const indexOf = (t: number) => Math.max(0, Math.round((t - fetchFrom.getTime()) / HOUR_MS));
 
-  const result: Record<string, DayRisk> = {};
+  const days: DayInput[] = [];
   for (let t = rangeStart.getTime(); t < rangeEnd.getTime(); t += DAY_MS) {
     const date = jstDate(new Date(t));
-    const dayEnd = new Date(t + DAY_MS);
-    const seasonToDate = allHourly.filter((h) => h.time < dayEnd);
-    const recentForBroome = allHourly.filter(
-      (h) => h.time >= new Date(t - BROOME_LOOKBACK_DAYS * DAY_MS) && h.time < dayEnd,
-    );
-    const dayHours = allHourly.filter((h) => h.time >= new Date(t) && h.time < dayEnd);
+    const dayEndIndex = indexOf(t + DAY_MS);
+    const dayHours = allHourly.slice(indexOf(t), dayEndIndex);
     const temps = dayHours.map((h) => h.tempC).filter((v): v is number => v !== null);
     const rhs = dayHours.map((h) => h.rhPercent).filter((v): v is number => v !== null);
 
     const { stage, source } = getStageForDate(date, transitions);
-    const scalars = {
+    days.push({
+      date,
       stage,
-      tempMeanC: temps.length ? temps.reduce((a, b) => a + b, 0) / temps.length : null,
-      rhPercent: rhs.length ? Math.max(...rhs) : null,
-      rain24hMm: rainByDate.get(date) ?? null,
-      rainyDayStreak: rainyDayStreak(date, rainByDate),
-    };
+      stageSource: source,
+      scalars: {
+        stage,
+        tempMeanC: temps.length ? temps.reduce((a, b) => a + b, 0) / temps.length : null,
+        rhPercent: rhs.length ? Math.max(...rhs) : null,
+        rain24hMm: rainByDate.get(date) ?? null,
+        rainyDayStreak: rainyDayStreak(date, rainByDate),
+      },
+      // 系列は日数ぶん持つと大きいので、評価のときに切り出す
+      hourlyFor: (rule) =>
+        allHourly.slice(
+          rule.evaluator?.name === "broome" ? indexOf(t - BROOME_LOOKBACK_DAYS * DAY_MS) : 0,
+          dayEndIndex,
+        ),
+    });
+  }
+  return days;
+}
 
-    const diseases = evaluateRisks(
-      rules,
-      { scalars, hourly: seasonToDate },
-      { hourlyFor: (rule) => (rule.evaluator?.name === "broome" ? recentForBroome : seasonToDate) },
-    );
-    result[date] = { stage, stageSource: source, diseases };
+/** 1日分をルールで評価して、病害ごとにまとめる */
+export function evaluateDay(rules: Rule[], day: DayInput): DiseaseResult[] {
+  return evaluateRisks(rules, { scalars: day.scalars, hourly: [] }, { hourlyFor: day.hourlyFor });
+}
+
+/**
+ * 指定期間の病害リスクを日ごとに評価
+ * ルールは、病害ごとの感度の段階（今シーズンの発生記録から選んだもの）で確定させて使う。
+ * @param start 開始日 (YYYY-MM-DD, 含む, JST)
+ * @param end   終了日 (YYYY-MM-DD, 含む, JST)
+ * @returns { "YYYY-MM-DD": { stage, stageSource, diseases } }
+ */
+export async function getCalendarRisks(start: string, end: string): Promise<Record<string, DayRisk>> {
+  const [days, sensitivity] = await Promise.all([
+    buildDayInputs(start, end),
+    getLatestSensitivity(getSeasonStart(jstDate(new Date()))),
+  ]);
+  const rules = resolveRules(getRuleDefs(), Object.fromEntries(sensitivity.map((r) => [r.diseaseId, r.level])));
+
+  const result: Record<string, DayRisk> = {};
+  for (const day of days) {
+    result[day.date] = { stage: day.stage, stageSource: day.stageSource, diseases: evaluateDay(rules, day) };
   }
   return result;
 }

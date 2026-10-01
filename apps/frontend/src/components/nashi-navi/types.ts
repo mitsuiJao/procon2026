@@ -112,6 +112,20 @@ export type DiseaseInfo = {
   symptom: string;
 };
 
+/** 病害ごとの感度の段階。発生記録からバックエンドが選ぶ（/sensitivity） */
+export type Sensitivity = {
+  /** 0 が標準。大きいほど早めに知らせる */
+  level: number;
+  /** その病害で選べる最大の段階。0 なら段階を持たない */
+  maxLevel: number;
+  /** 今シーズンの発生記録の件数 */
+  observed: number;
+  /** そのうち、発見の前に警告が出ていた件数 */
+  caught: number;
+  /** 今の段階で警告が出た日数 */
+  alertDays: number;
+};
+
 /** undetermined は入力不足で判定不能 */
 export type RiskLevel = "conditions_met" | "near_threshold" | "undetermined" | "none";
 

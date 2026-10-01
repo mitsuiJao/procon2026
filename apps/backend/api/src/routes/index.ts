@@ -5,6 +5,7 @@ import { diary } from "./diary";
 import { diseases } from "./diseases";
 import { observations } from "./observations";
 import { pesticides } from "./pesticides";
+import { sensitivity } from "./sensitivity";
 import { sensors } from "./sensors";
 import { sprays } from "./sprays";
 import { stages } from "./stages";
@@ -17,5 +18,6 @@ export const routes = new Hono()
   .route("/stages", stages)
   .route("/diary", diary)
   .route("/observations", observations)
+  .route("/sensitivity", sensitivity)
   .route("/sprays", sprays)
   .route("/pesticides", pesticides);

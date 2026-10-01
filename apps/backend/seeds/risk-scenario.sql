@@ -8,6 +8,7 @@
 -- 気象の組み立て（o = D からの日数、h = JST の時、昼 = 8〜19時）
 --   冷涼  o <= -4        昼 19℃/60%  夜 14℃/75%
 --   雨    o = -5 の 6〜15時  RH 90%, 1.5mm/h（計15mm）
+--   小雨  o = -7 の 6〜13時  RH 90%, 1mm/h（計8mm）。標準の段階ではべと病の条件（10mm）に届かない
 --   温暖  o >= -3        昼 26℃/55%  夜 19℃/80%
 --   濡れA o=2 20時〜o=3 8時（13h）  19℃/97%
 --   濡れB o=4 20時〜o=5 11時（16h） 19℃/97%
@@ -23,8 +24,15 @@
 --   D+3       undetermined      near_threshold (0.60)    conditions_met (80)
 --   D+4       undetermined      near_threshold (0.60)    conditions_met (100)
 --   D+5,D+6   undetermined      conditions_met (1.35)    conditions_met (100)
+--   上の表は感度の段階が標準（発生記録なし）のとき。
 --   べと病の未来日は、雨量がセンサーにしか無いので必ず undetermined（仕様）。
 --   0時台に実行すると今日の実測雨量がまだ無く、D のべと病は undetermined になる。
+--
+-- 発生記録のフィードバックの確認（感度の段階）
+--   D-2 にべと病の発生を記録する（PUT /observations/<D-2>/downy_mildew）と、照らす期間は D-9〜D-6。
+--   標準（雨10mm以上）ではこの期間に警告が無く、段階1（8mm以上）なら D-7 の小雨で警告が出るので、段階1が選ばれる。
+--   → GET /sensitivity のべと病が level 1 になり、/calendar/risk の D-7 が conditions_met に変わる。
+--   記録を消すと標準に戻る。このシードを入れ直しただけでは段階は変わらないので、POST /sensitivity/recompute を呼ぶ。
 
 BEGIN;
 
@@ -63,6 +71,7 @@ WITH d AS (
   SELECT ts, o, h,
          (o = 2 AND h >= 20) OR (o = 3 AND h <= 8) OR (o = 4 AND h >= 20) OR (o = 5 AND h <= 11) AS wet,
          o = -5 AND h BETWEEN 6 AND 15 AS rain,
+         o = -7 AND h BETWEEN 6 AND 13 AS drizzle,
          h BETWEEN 8 AND 19 AS day
     FROM hours
 )
@@ -71,11 +80,11 @@ SELECT ts,
             WHEN o <= -4 THEN CASE WHEN day THEN 19 ELSE 14 END
             ELSE CASE WHEN day THEN 26 ELSE 19 END END AS temp,
        CASE WHEN wet THEN 97
-            WHEN rain THEN 90
+            WHEN rain OR drizzle THEN 90
             WHEN o <= -4 THEN CASE WHEN day THEN 60 ELSE 75 END
             ELSE CASE WHEN day THEN 55 ELSE 80 END END AS humidity,
-       CASE WHEN rain THEN 1.5 ELSE 0 END AS rainfall,
-       CASE WHEN wet THEN 3 WHEN rain THEN 63 ELSE 1 END AS code
+       CASE WHEN rain THEN 1.5 WHEN drizzle THEN 1 ELSE 0 END AS rainfall,
+       CASE WHEN wet THEN 3 WHEN rain THEN 63 WHEN drizzle THEN 61 ELSE 1 END AS code
   FROM flags;
 
 INSERT INTO weather_forecasts (observed_at, temperature, humidity, latitude, longitude, weather_code, precipitation)
