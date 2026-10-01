@@ -271,33 +271,6 @@ export function DayDetailModal({
               </>
             )}
 
-            {lookback.length > 0 && (
-              <>
-                <TouchableOpacity
-                  style={styles.accordionHead}
-                  onPress={() => setLookbackOpenFor(lookbackOpen ? null : date)}
-                  accessibilityRole="button"
-                  accessibilityState={{ expanded: lookbackOpen }}
-                  accessibilityLabel={`去年の今ごろの記録 ${lookback.length}件`}
-                >
-                  <Text style={styles.accordionTitle}>去年の今ごろ（{lookback.length}件）</Text>
-                  <Feather name={lookbackOpen ? "chevron-up" : "chevron-down"} size={20} color={COLORS.inkSoft} />
-                </TouchableOpacity>
-                {lookbackOpen && (
-                  <View>
-                    <Text style={styles.forecastNote}>{lookbackLabel} の記録</Text>
-                    {lookback.map((it, i) => (
-                      <View key={i} style={styles.lookbackRow}>
-                        <Text style={styles.lookbackDate}>{`${Number(it.date.slice(5, 7))}/${Number(it.date.slice(8))}`}</Text>
-                        <Text style={styles.lookbackKind}>{LOOKBACK_KIND_LABEL[it.kind]}</Text>
-                        <Text style={styles.lookbackText}>{it.text}</Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
-              </>
-            )}
-
             <Text style={styles.legend2}>散布</Text>
             {day.sprays.length === 0 && !sprayForm && <Text style={styles.emptyNote}>この日の散布記録はありません</Text>}
             {day.sprays.map((s) => (
@@ -377,6 +350,33 @@ export function DayDetailModal({
             </View>
 
             {flash ? <Text style={flash.error ? styles.errorFlash : styles.saveFlash}>{flash.text}</Text> : null}
+
+            {lookback.length > 0 && (
+              <>
+                <TouchableOpacity
+                  style={styles.accordionHead}
+                  onPress={() => setLookbackOpenFor(lookbackOpen ? null : date)}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: lookbackOpen }}
+                  accessibilityLabel={`去年の今ごろの記録 ${lookback.length}件`}
+                >
+                  <Text style={styles.accordionTitle}>去年の今ごろ（{lookback.length}件）</Text>
+                  <Feather name={lookbackOpen ? "chevron-up" : "chevron-down"} size={20} color={COLORS.inkSoft} />
+                </TouchableOpacity>
+                {lookbackOpen && (
+                  <View>
+                    <Text style={styles.forecastNote}>{lookbackLabel} の記録</Text>
+                    {lookback.map((it, i) => (
+                      <View key={i} style={styles.lookbackRow}>
+                        <Text style={styles.lookbackDate}>{`${Number(it.date.slice(5, 7))}/${Number(it.date.slice(8))}`}</Text>
+                        <Text style={styles.lookbackKind}>{LOOKBACK_KIND_LABEL[it.kind]}</Text>
+                        <Text style={styles.lookbackText}>{it.text}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </>
+            )}
           </ScrollView>
         )}
       </SafeAreaView>

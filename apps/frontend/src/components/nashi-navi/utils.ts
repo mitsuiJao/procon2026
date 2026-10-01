@@ -52,7 +52,7 @@ const LOOKBACK_ORDER: Record<LookbackItem["kind"], number> = { stage: 0, observa
 
 /**
  * 期間の記録を「去年の今ごろ」の行にまとめる（日付順。同じ日はステージ → 発生 → 散布 → メモ）
- * メモは先頭の1行だけを出し、長ければ切る
+ * ステージ・発生・散布は名前だけを出す。メモは先頭の1行だけを出し、長ければ切る
  */
 export const buildLookback = (args: {
   start: string;
@@ -69,7 +69,7 @@ export const buildLookback = (args: {
   const { start, end, sprays, observations, diary, transitions, diseases, stageNames } = args;
   const items: LookbackItem[] = [];
   for (const [date, stage] of Object.entries(transitions)) {
-    if (date >= start && date <= end) items.push({ date, kind: "stage", text: `${stageNames[stage] ?? `生育状態 ${stage}`}になった` });
+    if (date >= start && date <= end) items.push({ date, kind: "stage", text: stageNames[stage] ?? `生育状態 ${stage}` });
   }
   for (const o of observations) {
     items.push({ date: o.date, kind: "observation", text: diseases.find((d) => d.id === o.diseaseId)?.name ?? o.diseaseId });
