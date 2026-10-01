@@ -27,6 +27,8 @@ type DayDetailModalProps = {
   isStageTransition: boolean;
   /** true ならステージを変えられる（今日と過去の日） */
   stageEditable: boolean;
+  /** true なら病害の発生を記録できる（今日と過去の日） */
+  observable: boolean;
   /** 今日より後の日（予報を含む判定） */
   forecast: boolean;
   day: DayData;
@@ -47,6 +49,8 @@ type DayDetailModalProps = {
   onSaveMemo: () => void;
   onSaveStage: (stage: number) => void;
   onClearStage: () => void;
+  /** 病害の発生を記録する。記録済みなら取り消す */
+  onToggleObservation: (disease: DiseaseInfo) => void;
 };
 
 const fmtTitle = (date: string) => {
@@ -76,6 +80,7 @@ export function DayDetailModal({
   stageNames,
   isStageTransition,
   stageEditable,
+  observable,
   forecast,
   day,
   pesticides,
@@ -93,6 +98,7 @@ export function DayDetailModal({
   onSaveMemo,
   onSaveStage,
   onClearStage,
+  onToggleObservation,
 }: DayDetailModalProps) {
   const [picking, setPicking] = useState(false);
   const [stagePicking, setStagePicking] = useState(false);
@@ -113,6 +119,8 @@ export function DayDetailModal({
   const stageOptions = Object.entries(stageNames)
     .map(([value, name]) => ({ value: Number(value), name }))
     .sort((a, b) => a.value - b.value);
+
+  const observationOptions = [...diseases].sort((a, b) => b.priority - a.priority);
 
   const selected = sprayForm?.pesticideId ? pesticides.find((p) => p.id === sprayForm.pesticideId) : undefined;
 
@@ -228,6 +236,28 @@ export function DayDetailModal({
                 ) : (
                   <Text style={styles.emptyNote}>この日の判定はありません</Text>
                 )}
+              </>
+            )}
+
+            {observable && observationOptions.length > 0 && (
+              <>
+                <Text style={styles.legend2}>病害の発生</Text>
+                <Text style={styles.forecastNote}>見つけた病害を押して記録します。もう一度押すと取り消します</Text>
+                <View style={styles.chipRow}>
+                  {observationOptions.map((d) => {
+                    const on = day.observed.includes(d.id);
+                    return (
+                      <TouchableOpacity
+                        key={d.id}
+                        style={on ? styles.chipOn : styles.chip}
+                        onPress={() => onToggleObservation(d)}
+                        accessibilityLabel={on ? `${d.name}の発生記録を取り消す` : `${d.name}の発生を記録する`}
+                      >
+                        <Text style={on ? styles.chipTextOn : styles.chipText}>{d.name}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
               </>
             )}
 

@@ -146,6 +146,24 @@ export async function saveDiary(date: string, memo: string): Promise<void> {
   await send("PUT", `/diary/${date}`, { memo });
 }
 
+type ObservationResponse = { observed_on: string; disease_id: string; note: string };
+
+/** 期間の病害の発生記録 */
+export async function fetchObservations(start: string, end: string): Promise<{ date: string; diseaseId: string }[]> {
+  const data = await getJson<ObservationResponse[]>(`/observations?start=${start}&end=${end}`);
+  return data.map((o) => ({ date: o.observed_on, diseaseId: o.disease_id }));
+}
+
+/** その日にその病害を見つけたと記録する */
+export async function saveObservation(date: string, diseaseId: string): Promise<void> {
+  await send("PUT", `/observations/${date}/${encodeURIComponent(diseaseId)}`);
+}
+
+/** 病害の発生記録を消す */
+export async function deleteObservation(date: string, diseaseId: string): Promise<void> {
+  await send("DELETE", `/observations/${date}/${encodeURIComponent(diseaseId)}`);
+}
+
 type SprayResponse = {
   id: number;
   sprayed_on: string;

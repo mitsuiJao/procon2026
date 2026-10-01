@@ -50,6 +50,8 @@ export const styles = StyleSheet.create({
   cellTempMin: text(13, COLORS.inkSoft),
   dayRow: { flexDirection: "row", alignItems: "center", gap: 3 },
   dot: { width: 6, height: 6, borderRadius: 3 },
+  // 発生の印は、リスクの背景色（danger 系）の上でも見分けられる色にする
+  dotObserved: { backgroundColor: COLORS.ink },
   dotSpray: { backgroundColor: COLORS.danger },
   dotMemo: { backgroundColor: COLORS.leaf },
 
