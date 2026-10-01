@@ -34,6 +34,7 @@ import { styles } from "@/components/nashi-navi/styles";
 import type {
   DayData,
   DiseaseInfo,
+  LookbackItem,
   Pesticide,
   PesticideMaster,
   RiskByDate,
@@ -46,7 +47,17 @@ import type {
   TodayWeather,
   WeatherByDate,
 } from "@/components/nashi-navi/types";
-import { dateKeyOf, emptySprayForm, RISK_DAYS_AHEAD, toDiseaseInfo, WEEKDAYS, wIcon } from "@/components/nashi-navi/utils";
+import {
+  buildLookback,
+  dateKeyOf,
+  emptySprayForm,
+  fmtLookbackRange,
+  lookbackRange,
+  RISK_DAYS_AHEAD,
+  toDiseaseInfo,
+  WEEKDAYS,
+  wIcon,
+} from "@/components/nashi-navi/utils";
 
 const EMPTY_DAY: DayData = { memo: "", sprays: [], observed: [] };
 const SAVE_FAILED = "保存できませんでした。通信状況を確認してください";
@@ -88,6 +99,8 @@ export default function App() {
   // null なら未編集で、取得したメモをそのまま出す
   const [memoDraft, setMemoDraft] = useState<string | null>(null);
   const [flash, setFlash] = useState<Flash>(null);
+  // 去年の同じ時期の記録と、それを取った日付。取れなければ空で、欄を出さない
+  const [lookbackData, setLookbackData] = useState<{ date: string; items: LookbackItem[] } | null>(null);
 
   const [diseaseModalVisible, setDiseaseModalVisible] = useState(false);
   const [selectedDisease, setSelectedDisease] = useState<DiseaseInfo | null>(null);
@@ -197,6 +210,23 @@ export default function App() {
     };
   }, [thisYear, version]);
 
+  // 日付を開くたびに、去年の同じ時期（前後7日）の記録を取る
+  useEffect(() => {
+    if (!selectedDate) return;
+    let alive = true;
+    const { start, end } = lookbackRange(selectedDate);
+    Promise.all([fetchSprays(start, end), fetchObservations(start, end), fetchDiary(start, end)])
+      .then(([sprays, observations, diary]) => {
+        if (!alive) return;
+        const items = buildLookback({ start, end, sprays, observations, diary, transitions: stages.transitions, diseases, stageNames: stages.names });
+        setLookbackData({ date: selectedDate, items });
+      })
+      .catch(() => alive && setLookbackData(null));
+    return () => {
+      alive = false;
+    };
+  }, [selectedDate, stages, diseases]);
+
   const openSensors = async () => {
     setSensorsState("loading");
     setSensorModalVisible(true);
@@ -225,6 +255,8 @@ export default function App() {
   };
 
   const day = (selectedDate && monthData[selectedDate]) || EMPTY_DAY;
+  // 別の日を開いた直後は、前の日の分を出さない
+  const lookback = lookbackData && lookbackData.date === selectedDate ? lookbackData.items : [];
   const memo = memoDraft ?? day.memo;
 
   const saveSpray = async () => {
@@ -383,6 +415,8 @@ export default function App() {
         observable={!!selectedDate && selectedDate <= todayStr}
         forecast={!!selectedDate && selectedDate > todayStr}
         day={day}
+        lookback={lookback}
+        lookbackLabel={selectedDate ? fmtLookbackRange(lookbackRange(selectedDate)) : ""}
         pesticides={master?.pesticides ?? []}
         usage={usage}
         sprayForm={sprayForm}
