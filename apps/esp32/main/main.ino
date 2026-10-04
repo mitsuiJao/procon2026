@@ -23,15 +23,15 @@
 #include "DFRobot_RainfallSensor.h"
 
 // ===== 設定 =====
-#define I2C_SDA        21
-#define I2C_SCL        22
+#define I2C_SDA        22
+#define I2C_SCL        21
 #define SHT31_ADDR     0x45
 #define RAIN_ADDR      0x1D
 
-#define BG96_RX        25
-#define BG96_TX        26
+#define BG96_RX        15
+#define BG96_TX        4
 #define BG96_PWRKEY    16
-#define PWRKEY_ACTIVE  HIGH      // 押したときのレベル。起動しなければ LOW に変える
+#define PWRKEY_ACTIVE  LOW      // 押したときのレベル。起動しなければ LOW に変える
 
 #define APN            "soracom.io"
 #define APN_USER       "sora"
