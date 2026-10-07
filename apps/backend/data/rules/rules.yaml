@@ -24,6 +24,15 @@
 #     値 >= mid  → near_threshold
 #     値 >= high → conditions_met
 #
+# repeatDays
+#   警告が何日も続くルールで、同じ警告を出し直す間隔（日数）。省略すると毎日出す。levels では上書きできない。
+#   警告（near_threshold / conditions_met）が続く間、出すのは「続き始めた日」と
+#   「前に出した日から repeatDays 日経った日」だけ。レベルが上がっても出し直さない。
+#   ほかの日は level をそのまま残し、ongoingSince（続き始めた日）を付ける。画面には出さない。
+#   警告が出すぎないための設計値。うどんこ病は 7（散布間隔の目安）、ほかは 3（1回の雨・濡れにつき1回）。
+#   none / undetermined の日で途切れる。発生を事前に警告できたかも出した日だけで数えるので、
+#   repeatDays は diseases.yaml の latentDays の幅（最長 − 最短 + 1）以下にする。
+#
 # enabled
 #   出す／出さないの切り替え（既定値）。false のルールは B（設計値・要検証）。
 # confidence
@@ -35,6 +44,7 @@
 
 # べと病（一次感染）：豪州版 10-10-24 の簡易形
 #   新梢長10cmの条件は、展葉期以降（stage >= 2）で代用している。原型と完全には一致しない。
+#   一次感染の目安なので、収穫後（stage 10）は出さない（収穫期まで）。
 - id: DM-1
   diseaseId: downy_mildew
   enabled: true
@@ -42,9 +52,11 @@
   when:
     all:
       - { var: stage, op: ">=", value: 2 }
+      - { var: stage, op: "<=", value: 9 }
       - { var: tempMeanC, op: ">=", value: 10 }
       - { var: rain24hMm, op: ">=", value: $rainMin }
   level: conditions_met
+  repeatDays: 3
   levels:
     - { rainMin: 8 }
     - { rainMin: 6 }
@@ -74,6 +86,7 @@
       dryResetHours: 4
       mid: 0.5
       high: 1.0
+  repeatDays: 3
   levels:
     - { mid: 0.3 }
     - { mid: 0.1 }
@@ -88,9 +101,14 @@
 #     それ以外の日 → -loss
 #     日最高気温が hotDayMaxC 以上の日 → -loss
 #   高温側の閾値は改訂研究（S040）があるため、今後 hotDayMaxC を見直す余地あり。
+#   指数は「状態」で、夏は何週間も high 以上が続くので、警告は7日おきに出し直す（repeatDays）。
+#   7日は設計値。散布間隔の目安（指数が高い時期は 7〜10 日）に合わせた。latentDays [5, 14] の幅 10 日以下。
+#   果粒は着色（糖度の上昇）以降は感染しにくく、防除も着色期までが一般的なので、着色期まで（stage <= 8）に絞る。
+#   指数は収穫期以降は計算しない（ゲートで止まる）。
 - id: PM-1
   diseaseId: powdery_mildew
   enabled: true
+  when: { var: stage, op: "<=", value: 8 }
   evaluator:
     name: gublerThomas
     params:
@@ -107,6 +125,7 @@
       indexMax: 100
       mid: 40
       high: 60
+  repeatDays: 7
   levels:
     - { mid: 30 }
     - { mid: 20 }
@@ -145,6 +164,7 @@
       dryResetHours: 4
       mid: 0.3
       high: 1.0
+  repeatDays: 3
   candidateFrac: [M4, BM02, "9", "12", "3", "7"]
   confidence: B
   sourceIds: [S032, S006]
@@ -160,6 +180,7 @@
       - { var: tempMeanC, op: "<=", value: 30 }
       - { var: rain24hMm, op: ">=", value: 1 }
   level: near_threshold
+  repeatDays: 3
   candidateFrac: [M3, M4, "21"]
   confidence: B
   sourceIds: [S001, S010]
@@ -177,6 +198,7 @@
           - { var: rain24hMm, op: ">=", value: 10 }
           - { var: rainyDayStreak, op: ">=", value: 2 }
   level: conditions_met
+  repeatDays: 3
   levels:
     - { enabled: true }
   candidateFrac: [M9, M3, M4, "3"]
@@ -192,6 +214,7 @@
       - { var: stage, op: ">=", value: 8 }
       - { var: rain24hMm, op: ">=", value: 1 }
   level: near_threshold
+  repeatDays: 3
   levels:
     - { enabled: true }
   candidateFrac: [M4, "3"]
@@ -200,20 +223,27 @@
 
 # 黒とう病：萌芽〜肥大期の降雨
 #   B だが「条件に近い」までの表示なので有効にしている（2026-09 に決定）。
+#   雨 1mm では萌芽〜肥大期の雨の日ほぼ全部で出て多すぎるので、5mm にした（2026-10、設計値）。
+#   発生を見逃したら、感度の段階で 3mm → 1mm に戻る。
 - id: ANT-1
   diseaseId: anthracnose
   enabled: true
+  params: { rainMin: 5 }
   when:
     all:
       - { var: stage, op: ">=", value: 1 }
       - { var: stage, op: "<=", value: 7 }
-      - { var: rain24hMm, op: ">=", value: 1 }
+      - { var: rain24hMm, op: ">=", value: $rainMin }
   level: near_threshold
+  repeatDays: 3
+  levels:
+    - { rainMin: 3 }
+    - { rainMin: 1 }
   candidateFrac: [M9, M3, M4, M1]
   confidence: B
   sourceIds: [S003, S016]
 
-# 黒とう病：ANT-1 に加えて、平均気温 15〜20℃の冷雨（冷雨で重みを上げる設計値）
+# 黒とう病：ANT-1（5mm）に加えて、平均気温 15〜20℃の冷雨（冷雨で重みを上げる設計値）
 #   根拠のない閾値で「該当」と言い切ることになるので無効のまま。
 - id: ANT-2
   diseaseId: anthracnose
@@ -222,10 +252,11 @@
     all:
       - { var: stage, op: ">=", value: 1 }
       - { var: stage, op: "<=", value: 7 }
-      - { var: rain24hMm, op: ">=", value: 1 }
+      - { var: rain24hMm, op: ">=", value: 5 }
       - { var: tempMeanC, op: ">=", value: 15 }
       - { var: tempMeanC, op: "<=", value: 20 }
   level: conditions_met
+  repeatDays: 3
   candidateFrac: [M9, M3, M4, M1]
   confidence: B
   sourceIds: [S003, S016]
@@ -242,6 +273,7 @@
       - { var: tempMeanC, op: "<=", value: 25 }
       - { var: rhPercent, op: ">=", value: 95 }
   level: near_threshold
+  repeatDays: 3
   levels:
     - { enabled: true }
   candidateFrac: [M3, M4, "7"]
