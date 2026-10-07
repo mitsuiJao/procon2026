@@ -2,7 +2,7 @@ import { getObservationsByRange } from "../db/observation";
 import { getLatestSensitivity, writeSensitivity, type SensitivityRow } from "../db/sensitivity";
 import { maxLevelOf, resolveRules } from "../evalute";
 import type { Rule } from "../evalute";
-import { buildDayInputs, evaluateDay, getSeasonStart, type DayInput } from "./calendarRisk";
+import { buildDayInputs, evaluateDays, getSeasonStart, type DayInput } from "./calendarRisk";
 import { getDiseasesVocab, getRuleDefs } from "./vocab";
 import { jstDate } from "./weather-daily";
 
@@ -19,14 +19,17 @@ function addDays(date: string, n: number): string {
   return new Date(Date.parse(`${date}T00:00:00Z`) + n * DAY_MS).toISOString().slice(0, 10);
 }
 
-/** その病害に警告（条件に近い・該当）が出た日。判定不能の日は含めない */
+/**
+ * その病害に警告（条件に近い・該当）が出た日。判定不能の日と、警告が続いていて出し直さなかった日は含めない
+ * @param days 1日ずつ連続した日
+ */
 export function firedDates(rules: Rule[], diseaseId: string, days: DayInput[]): Set<string> {
   const own = rules.filter((r) => r.diseaseId === diseaseId);
   const fired = new Set<string>();
-  for (const day of days) {
-    const level = evaluateDay(own, day)[0]?.level;
-    if (level === "near_threshold" || level === "conditions_met") fired.add(day.date);
-  }
+  evaluateDays(own, days).forEach((diseases, i) => {
+    const d = diseases[0];
+    if (d && !d.ongoingSince && (d.level === "near_threshold" || d.level === "conditions_met")) fired.add(days[i].date);
+  });
   return fired;
 }
 

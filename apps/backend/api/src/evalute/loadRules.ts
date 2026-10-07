@@ -102,6 +102,9 @@ export function loadRules(rulesFile: string, vocabDir: string): RuleDef[] {
         throw new Error(`${r.id}: evaluator.params に mid / high が必要です`);
       }
     }
+    if (r.repeatDays !== undefined && !(Number.isInteger(r.repeatDays) && r.repeatDays > 0)) {
+      throw new Error(`${r.id}: repeatDays は正の整数にしてください`);
+    }
     if (!Array.isArray(r.candidateFrac) || r.candidateFrac.some((f: unknown) => typeof f !== "string")) {
       throw new Error(`${r.id}: candidateFrac は文字列の配列にしてください（"21" は引用符付き）`);
     }

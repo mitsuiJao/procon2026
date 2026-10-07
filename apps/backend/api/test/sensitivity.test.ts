@@ -30,6 +30,11 @@ describe("firedDates", () => {
     assert.deepEqual([...firedDates([rule({ level: "near_threshold" })], "d1", days)], ["2026-06-01"]);
   });
 
+  it("repeatDays のあるルールは、警告を出し直した日だけを数える", () => {
+    const rainy = ["01", "02", "03", "04"].map((d) => day(`2026-06-${d}`, 12));
+    assert.deepEqual([...firedDates([rule({ repeatDays: 2 })], "d1", rainy)], ["2026-06-01", "2026-06-03"]);
+  });
+
   it("ほかの病害のルールと、無効のルールは数えない", () => {
     assert.equal(firedDates([rule({ diseaseId: "d2" })], "d1", days).size, 0);
     assert.equal(firedDates([rule({ enabled: false })], "d1", days).size, 0);

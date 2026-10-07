@@ -29,6 +29,10 @@
   - 返り値: `{ "YYYY-MM-DD": { stage, stageSource, diseases: [{ diseaseId, level, rules }] } }`
   - `stageSource`: `recorded`（記録から）、`estimated`（月からの近似）、`unknown`（どちらも無い）。
   - `level`: `conditions_met`、`near_threshold`、`none`、`undetermined`（入力不足で判定できない）。
+  - `ongoingSince`: 警告が続いていて、その日は出し直さないときだけ付く（続き始めた日）。`level` は計算どおりのまま。画面には出さない。
+    - rules.yaml の `repeatDays`（今は全ルール。うどんこ病 7 日、ほか 3 日）で決まる。出すのは続き始めた日と、前に出してから `repeatDays` 日経った日だけ。
+    - 病害ごとの値と、`rules` の各ルールの値の両方に付く。
+    - 続き始めた日はシーズンの初めまでさかのぼり得るので、`start` のシーズン開始（4/1）から計算し、返すのは指定期間だけ。
   - ルールは、病害ごとの感度の段階（`/sensitivity`）で確定させたものを使う。
 
 ## マスター

@@ -130,4 +130,12 @@ ${extra}`;
     assert.throws(() => load(rule("  params: { rainMin: 10 }\n  levels: [{ enabled: 1 }]")), /true \/ false/);
     assert.throws(() => load(rule("  params: { rainMin: 10 }\n  levels: []")), /1件以上/);
   });
+
+  it("repeatDays は正の整数。levels では上書きできない", () => {
+    assert.equal(load(rule("  params: { rainMin: 10 }\n  repeatDays: 7")).length, 1);
+    for (const v of ["0", "1.5", "seven"]) {
+      assert.throws(() => load(rule(`  params: { rainMin: 10 }\n  repeatDays: ${v}`)), /repeatDays は正の整数/);
+    }
+    assert.throws(() => load(rule("  params: { rainMin: 10 }\n  levels: [{ repeatDays: 3 }]")), /levels のキー repeatDays/);
+  });
 });
