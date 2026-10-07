@@ -3,10 +3,10 @@ import { Modal, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, Vie
 
 import { Feather } from "@expo/vector-icons";
 
-import { PesticidePicker } from "@/components/nashi-navi/pesticide-picker";
-import { COLORS, styles } from "@/components/nashi-navi/styles";
-import { alertsOf, emptySprayForm, fmtApplication, LEVEL_LABEL, LOOKBACK_KIND_LABEL, type wIcon as WIcon } from "@/components/nashi-navi/utils";
-import type { DayData, DayRisk, DiseaseInfo, LookbackItem, Pesticide, SprayForm, SprayRecord, SprayUsage, WeatherEntry } from "@/components/nashi-navi/types";
+import { PesticidePicker } from "@/components/grape-protect/pesticide-picker";
+import { COLORS, styles } from "@/components/grape-protect/styles";
+import { alertsOf, emptySprayForm, fmtApplication, LEVEL_LABEL, LOOKBACK_KIND_LABEL, type wIcon as WIcon } from "@/components/grape-protect/utils";
+import type { DayData, DayRisk, DiseaseInfo, LookbackItem, Pesticide, SprayForm, SprayRecord, SprayUsage, WeatherEntry } from "@/components/grape-protect/types";
 
 export type Flash = { text: string; error: boolean } | null;
 

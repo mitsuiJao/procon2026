@@ -67,7 +67,7 @@
 │       │   │   ├── animated-icon.web.tsx
 │       │   │   ├── app-tabs.tsx
 │       │   │   ├── app-tabs.web.tsx
-│       │   │   └── nashi-navi/
+│       │   │   └── grape-protect/
 │       │   │       ├── api.ts
 │       │   │       ├── day-detail-modal.tsx
 │       │   │       ├── disease-risk-modal.tsx

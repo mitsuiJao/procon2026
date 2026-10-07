@@ -25,12 +25,12 @@ import {
   saveObservation,
   setStage,
   updateSpray,
-} from "@/components/nashi-navi/api";
-import { DayDetailModal, type Flash } from "@/components/nashi-navi/day-detail-modal";
-import { DiseaseRiskModal } from "@/components/nashi-navi/disease-risk-modal";
-import { HomeScreenContent } from "@/components/nashi-navi/home-screen-content";
-import { SensorStatusModal, type SensorsState } from "@/components/nashi-navi/sensor-status-modal";
-import { styles } from "@/components/nashi-navi/styles";
+} from "@/components/grape-protect/api";
+import { DayDetailModal, type Flash } from "@/components/grape-protect/day-detail-modal";
+import { DiseaseRiskModal } from "@/components/grape-protect/disease-risk-modal";
+import { HomeScreenContent } from "@/components/grape-protect/home-screen-content";
+import { SensorStatusModal, type SensorsState } from "@/components/grape-protect/sensor-status-modal";
+import { styles } from "@/components/grape-protect/styles";
 import type {
   DayData,
   DiseaseInfo,
@@ -46,7 +46,7 @@ import type {
   StageData,
   TodayWeather,
   WeatherByDate,
-} from "@/components/nashi-navi/types";
+} from "@/components/grape-protect/types";
 import {
   buildLookback,
   dateKeyOf,
@@ -57,7 +57,7 @@ import {
   toDiseaseInfo,
   WEEKDAYS,
   wIcon,
-} from "@/components/nashi-navi/utils";
+} from "@/components/grape-protect/utils";
 
 const EMPTY_DAY: DayData = { memo: "", sprays: [], observed: [] };
 const SAVE_FAILED = "保存できませんでした。通信状況を確認してください";

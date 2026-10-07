@@ -3,10 +3,10 @@ import { FlatList, SafeAreaView, Switch, Text, TextInput, TouchableOpacity, View
 
 import { useFocusEffect } from "expo-router";
 
-import { fetchDiseases, fetchPesticides, fetchUsage, setPesticideHidden } from "@/components/nashi-navi/api";
-import { COLORS, styles } from "@/components/nashi-navi/styles";
-import type { Pesticide, PesticideMaster, SprayUsage } from "@/components/nashi-navi/types";
-import { fmtApplication, pesticidesForDisease, searchPesticides } from "@/components/nashi-navi/utils";
+import { fetchDiseases, fetchPesticides, fetchUsage, setPesticideHidden } from "@/components/grape-protect/api";
+import { COLORS, styles } from "@/components/grape-protect/styles";
+import type { Pesticide, PesticideMaster, SprayUsage } from "@/components/grape-protect/types";
+import { fmtApplication, pesticidesForDisease, searchPesticides } from "@/components/grape-protect/utils";
 
 type Visibility = "all" | "shown" | "hidden";
 

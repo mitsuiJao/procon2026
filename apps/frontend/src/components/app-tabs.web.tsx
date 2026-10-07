@@ -1,7 +1,7 @@
 import { Tabs, TabList, TabTrigger, TabSlot, TabTriggerSlotProps, TabListProps } from 'expo-router/ui';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { COLORS } from '@/components/nashi-navi/styles';
+import { COLORS } from '@/components/grape-protect/styles';
 
 export default function AppTabs() {
   return (

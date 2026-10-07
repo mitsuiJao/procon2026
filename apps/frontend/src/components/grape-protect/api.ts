@@ -12,7 +12,7 @@ import type {
   StageData,
   TodayWeather,
   WeatherByDate,
-} from "@/components/nashi-navi/types";
+} from "@/components/grape-protect/types";
 
 // 実機で確認するときは .env.local に EXPO_PUBLIC_API_URL=http://<PCのIP>:3000/api を書く
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000/api";

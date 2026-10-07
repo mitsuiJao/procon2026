@@ -8,7 +8,7 @@ import type {
   Sensitivity,
   SprayForm,
   SprayRecord,
-} from "@/components/nashi-navi/types";
+} from "@/components/grape-protect/types";
 
 type WeatherKind = { icon: "sun" | "cloud" | "cloud-rain"; label: string };
 
