@@ -122,14 +122,14 @@ export const seasonDay = (date: string) => dayNumber(date) - dayNumber(seasonSta
 /** 前のシーズンとの差（日数）の言い方。正なら遅い */
 export const fmtDayDiff = (diff: number) => (diff === 0 ? "同じ時期" : diff > 0 ? `${diff}日遅い` : `${-diff}日早い`);
 
-/** 病害ごとの「感染条件に該当」「条件に近い」の日数と、どれかの病害で該当した日数 */
+/** 病害ごとの「感染条件に該当」「条件に近い」の日数と、どれかの病害で該当した日数。警告が続いていて出し直さなかった日は数えない */
 export const countAlertDays = (risk: RiskByDate) => {
   const byDisease: Record<string, { met: number; near: number }> = {};
   let metDays = 0;
   for (const day of Object.values(risk)) {
     let met = false;
     for (const d of day.diseases) {
-      if (d.level !== "conditions_met" && d.level !== "near_threshold") continue;
+      if (!isShownAlert(d)) continue;
       const a = (byDisease[d.diseaseId] ??= { met: 0, near: 0 });
       if (d.level === "conditions_met") {
         a.met += 1;
@@ -164,7 +164,7 @@ export const emptySprayForm: SprayForm = {
 // 病害の表示用の文。キーは diseases.yaml の id。判定はバックエンド（rules.yaml）で行い、条件の文はそれに合わせる
 export const DISEASE_TEXT: Record<string, { triggerText: string; symptom: string }> = {
   downy_mildew: {
-    triggerText: "展葉期以降、平均気温10℃以上で1日の雨量が10mm以上",
+    triggerText: "展葉期〜収穫期、平均気温10℃以上で1日の雨量が10mm以上",
     symptom: "葉に黄白色の病斑が出現し、裏面に白いカビが生えます。",
   },
   ripe_rot: {
@@ -176,11 +176,11 @@ export const DISEASE_TEXT: Record<string, { triggerText: string; symptom: string
     symptom: "開花期や成熟期に花カスや果実に灰色のカビが生えます。",
   },
   anthracnose: {
-    triggerText: "萌芽〜肥大期の降雨。気温15〜20℃の冷たい雨で起こりやすい",
+    triggerText: "萌芽〜肥大期の1日5mm以上の雨。気温15〜20℃の冷たい雨で起こりやすい",
     symptom: "若い葉・新梢・果実に黒褐色の小さな斑点ができ、中央がくぼみます。",
   },
   powdery_mildew: {
-    triggerText: "21〜30℃の時間が長い日が続く（Gubler-Thomas 指数で判定）",
+    triggerText: "萌芽〜着色期、21〜30℃の時間が長い日が続く（Gubler-Thomas 指数で判定）",
     symptom: "葉や果実の表面に白い粉状のカビが生えます。",
   },
   rust: {
@@ -216,12 +216,17 @@ export const sensitivityReason = (s: Sensitivity) =>
 
 const LEVEL_RANK: Record<RiskLevel, number> = { conditions_met: 2, near_threshold: 1, undetermined: 0, none: 0 };
 
-const isAlert = (level: RiskLevel): level is AlertLevel => LEVEL_RANK[level] > 0;
+type DiseaseRisk = DayRisk["diseases"][number];
+
+/** 画面に出す警告か。警告が続いていて、この日は出し直さない（ongoingSince がある）ものは出さない */
+function isShownAlert(d: DiseaseRisk): d is DiseaseRisk & { level: AlertLevel } {
+  return LEVEL_RANK[d.level] > 0 && !d.ongoingSince;
+}
 
 /** その日に出す病害。該当 → 近い の順、同じなら重要度の順。一覧に無い id は id を名前にする */
 export const alertsOf = (day: DayRisk | undefined, diseases: DiseaseInfo[]) =>
   (day?.diseases ?? [])
-    .filter((d): d is { diseaseId: string; level: AlertLevel } => isAlert(d.level))
+    .filter(isShownAlert)
     .map((d) => ({
       level: d.level,
       disease: diseases.find((x) => x.id === d.diseaseId) ?? toDiseaseInfo({ id: d.diseaseId, name: d.diseaseId, priority: 0 }),
