@@ -4,7 +4,6 @@ import { SafeAreaView } from "react-native";
 import { useFocusEffect } from "expo-router";
 
 import {
-  fetchCalendar,
   fetchDiary,
   fetchDiseases,
   fetchObservations,
@@ -43,24 +42,23 @@ export default function RecordsScreen() {
       // year は今季以前なので、期間は必ずある
       const range = seasonRange(year, today)!;
       setFailed(false);
-      // 判定と天気は表の濃さにしか使わないので、取れなくても記録は出す
+      // 判定は病害の欄の日数とステージ名にしか使わないので、取れなくても記録は出す
       Promise.all([
         fetchSprays(range.start, range.end),
         fetchObservations(range.start, range.end),
         fetchDiary(range.start, range.end),
         fetchRisk(range.start, range.end).catch(() => null),
-        fetchCalendar(range.start, range.end).catch(() => null),
       ])
-        .then(([sprays, observations, diary, risk, weather]) => {
-          if (alive) setSeason({ year, ...range, sprays, observations, diary, risk, weather });
+        .then(([sprays, observations, diary, risk]) => {
+          if (alive) setSeason({ year, ...range, sprays, observations, diary, risk });
         })
         .catch(() => alive && setFailed(true));
 
       // 前のシーズンは、今季を見ているときは前年の今日と同じ日まで（途中のシーズンと比べるため）
       const prevStart = seasonStartOf(year - 1);
       const prevEnd = `${year - 1}${range.end.slice(4)}`;
-      Promise.all([fetchSprays(prevStart, prevEnd), fetchObservations(prevStart, prevEnd)])
-        .then(([sprays, observations]) => alive && setPrev({ year: year - 1, sprays, observations }))
+      fetchObservations(prevStart, prevEnd)
+        .then((observations) => alive && setPrev({ year: year - 1, observations }))
         .catch(() => alive && setPrev(null));
       return () => {
         alive = false;

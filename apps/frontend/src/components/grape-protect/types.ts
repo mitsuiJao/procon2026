@@ -154,22 +154,3 @@ export type StageData = {
   /** { 切り替わり日（YYYY-MM-DD）: value } */
   transitions: Record<string, number>;
 };
-
-/** 記録タブの発生表の1週（シーズン開始 4/1 から7日ごと） */
-export type SeasonWeek = {
-  /** 週の初日と最終日（YYYY-MM-DD, 両端含む） */
-  start: string;
-  end: string;
-  /** 週がまるごと表示の期間（今日まで）より先 */
-  future: boolean;
-  /** 週の最後の日のステージ。判定が取れなければ null */
-  stage: number | null;
-  /** 雨（天気コードが雨）の日数 */
-  rainyDays: number;
-  /** 病害ごとの「感染条件に該当」「条件に近い」の日数 */
-  alerts: Record<string, { met: number; near: number }>;
-  /** 発生を記録した病害の id（重複なし） */
-  observed: string[];
-  /** 散布の件数 */
-  sprays: number;
-};

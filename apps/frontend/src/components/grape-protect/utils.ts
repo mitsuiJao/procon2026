@@ -6,11 +6,9 @@ import type {
   PesticideApplication,
   RiskByDate,
   RiskLevel,
-  SeasonWeek,
   Sensitivity,
   SprayForm,
   SprayRecord,
-  WeatherByDate,
 } from "@/components/grape-protect/types";
 
 type WeatherKind = { icon: "sun" | "cloud" | "cloud-rain"; label: string };
@@ -98,9 +96,6 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const dayNumber = (date: string) =>
   Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10))) / DAY_MS;
 
-/** YYYY-MM-DD に n 日足す */
-export const addDays = (date: string, n: number) => new Date((dayNumber(date) + n) * DAY_MS).toISOString().slice(0, 10);
-
 /** 月/日（例: 6/19） */
 export const fmtMd = (date: string) => `${Number(date.slice(5, 7))}/${Number(date.slice(8, 10))}`;
 
@@ -126,70 +121,6 @@ export const seasonDay = (date: string) => dayNumber(date) - dayNumber(seasonSta
 
 /** 前のシーズンとの差（日数）の言い方。正なら遅い */
 export const fmtDayDiff = (diff: number) => (diff === 0 ? "同じ時期" : diff > 0 ? `${diff}日遅い` : `${-diff}日早い`);
-
-/** シーズンの週の数（4/1〜11/30 の 244 日を7日ごと） */
-export const SEASON_WEEKS = Math.ceil((dayNumber(seasonLastOf(2001)) - dayNumber(seasonStartOf(2001)) + 1) / 7);
-
-/**
- * シーズンの記録と判定を週ごとにまとめる（記録タブの発生表）
- * 週は 4/1 から7日ごとで、最後の週は 11/30 で切る。end より先の週は future にする
- */
-export const buildSeasonWeeks = (args: {
-  year: number;
-  /** 表示する最後の日（今日か 11/30） */
-  end: string;
-  risk: RiskByDate;
-  weather: WeatherByDate;
-  observations: { date: string; diseaseId: string }[];
-  sprays: SprayRecord[];
-}): SeasonWeek[] => {
-  const { year, end, risk, weather, observations, sprays } = args;
-  const seasonStart = seasonStartOf(year);
-  const last = seasonLastOf(year);
-  const weeks: SeasonWeek[] = Array.from({ length: SEASON_WEEKS }, (_, i) => {
-    const start = addDays(seasonStart, i * 7);
-    const weekEnd = addDays(start, 6);
-    return {
-      start,
-      end: weekEnd < last ? weekEnd : last,
-      future: start > end,
-      stage: null,
-      rainyDays: 0,
-      alerts: {},
-      observed: [],
-      sprays: 0,
-    };
-  });
-  const weekOf = (date: string) =>
-    date >= seasonStart && date <= last ? weeks[Math.floor((dayNumber(date) - dayNumber(seasonStart)) / 7)] : undefined;
-
-  // 週のステージは最後の日のものにするので、日付順に上書きする
-  for (const date of Object.keys(risk).sort()) {
-    const w = weekOf(date);
-    if (!w) continue;
-    const day = risk[date];
-    if (day.stage != null) w.stage = day.stage;
-    for (const d of day.diseases) {
-      if (d.level !== "conditions_met" && d.level !== "near_threshold") continue;
-      const a = (w.alerts[d.diseaseId] ??= { met: 0, near: 0 });
-      if (d.level === "conditions_met") a.met += 1;
-      else a.near += 1;
-    }
-  }
-  for (const [date, entry] of Object.entries(weather)) {
-    const w = weekOf(date);
-    if (w && wIcon(entry.code)?.icon === "cloud-rain") w.rainyDays += 1;
-  }
-  for (const o of observations) {
-    const w = weekOf(o.date);
-    if (w && !w.observed.includes(o.diseaseId)) w.observed.push(o.diseaseId);
-  }
-  for (const s of sprays) {
-    const w = weekOf(s.sprayedOn);
-    if (w) w.sprays += 1;
-  }
-  return weeks;
-};
 
 /** 病害ごとの「感染条件に該当」「条件に近い」の日数と、どれかの病害で該当した日数 */
 export const countAlertDays = (risk: RiskByDate) => {
