@@ -157,4 +157,16 @@ export const styles = StyleSheet.create({
   refMain: { flex: 1 },
   refSwitch: { alignItems: "center", gap: 2 },
   refSwitchLabel: text(11, COLORS.inkSoft),
+
+  // 記録タブ
+  summaryItem: { borderBottomWidth: 1, borderBottomColor: COLORS.line, paddingVertical: 10 },
+  summaryName: text(16, COLORS.ink, true),
+  summaryLine: { ...text(14, COLORS.inkSoft), marginTop: 4, lineHeight: 20 },
+  compareHead: { flexDirection: "row", paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: COLORS.line },
+  compareRow: { flexDirection: "row", alignItems: "center", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: COLORS.line },
+  compareName: { ...text(15), flex: 1 },
+  compareCell: { ...text(15), width: 64, textAlign: "right", fontVariant: ["tabular-nums"] },
+  compareHeadCell: { ...text(13, COLORS.inkSoft), width: 64, textAlign: "right" },
+  compareDiff: { ...text(13, COLORS.inkSoft), width: 72, textAlign: "right" },
+  monthHead: { ...text(14, COLORS.ink, true), marginTop: 14, marginBottom: 2 },
 });

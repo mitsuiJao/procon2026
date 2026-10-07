@@ -20,6 +20,11 @@ export default function AppTabs() {
         />
       </NativeTabs.Trigger>
 
+      <NativeTabs.Trigger name="records">
+        <NativeTabs.Trigger.Label>記録</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="clock.arrow.circlepath" md="history" />
+      </NativeTabs.Trigger>
+
       <NativeTabs.Trigger name="pesticides">
         <NativeTabs.Trigger.Label>農薬</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon

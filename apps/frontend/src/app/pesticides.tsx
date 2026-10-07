@@ -3,24 +3,15 @@ import { FlatList, SafeAreaView, Switch, Text, TextInput, TouchableOpacity, View
 
 import { useFocusEffect } from "expo-router";
 
-import { fetchDiseases, fetchPesticides, fetchUsage, setPesticideHidden } from "@/components/nashi-navi/api";
-import { COLORS, styles } from "@/components/nashi-navi/styles";
-import type { Pesticide, PesticideMaster, SprayUsage } from "@/components/nashi-navi/types";
-import { fmtApplication, pesticidesForDisease, searchPesticides } from "@/components/nashi-navi/utils";
+import { fetchDiseases, fetchPesticides, fetchUsage, setPesticideHidden } from "@/components/grape-protect/api";
+import { Chip } from "@/components/grape-protect/chip";
+import { COLORS, styles } from "@/components/grape-protect/styles";
+import type { Pesticide, PesticideMaster, SprayUsage } from "@/components/grape-protect/types";
+import { fmtApplication, pesticidesForDisease, searchPesticides } from "@/components/grape-protect/utils";
 
 type Visibility = "all" | "shown" | "hidden";
 
 const VISIBILITY_LABEL: Record<Visibility, string> = { all: "すべて", shown: "表示中", hidden: "非表示" };
-
-type ChipProps = { label: string; on: boolean; onPress: () => void };
-
-function Chip({ label, on, onPress }: ChipProps) {
-  return (
-    <TouchableOpacity style={on ? styles.chipOn : styles.chip} onPress={onPress}>
-      <Text style={on ? styles.chipTextOn : styles.chipText}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
 
 type PesticideRowProps = {
   item: Pesticide;

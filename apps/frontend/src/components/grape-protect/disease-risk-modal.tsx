@@ -3,9 +3,9 @@ import { Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from "reac
 
 import { Feather } from "@expo/vector-icons";
 
-import { COLORS, styles } from "@/components/nashi-navi/styles";
-import { pesticidesForDisease, searchPesticides, sensitivityLabel, sensitivityReason } from "@/components/nashi-navi/utils";
-import type { DiseaseInfo, Pesticide, PesticideMaster, Sensitivity, SprayUsage } from "@/components/nashi-navi/types";
+import { COLORS, styles } from "@/components/grape-protect/styles";
+import { pesticidesForDisease, searchPesticides, sensitivityLabel, sensitivityReason } from "@/components/grape-protect/utils";
+import type { DiseaseInfo, Pesticide, PesticideMaster, Sensitivity, SprayUsage } from "@/components/grape-protect/types";
 
 type DiseaseRiskModalProps = {
   visible: boolean;

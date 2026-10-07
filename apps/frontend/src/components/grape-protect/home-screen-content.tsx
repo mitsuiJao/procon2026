@@ -3,9 +3,9 @@ import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 import { Feather } from "@expo/vector-icons";
 
-import { COLORS, styles } from "@/components/nashi-navi/styles";
-import { maxLevel, type wIcon as WIcon } from "@/components/nashi-navi/utils";
-import type { DayData, RiskByDate, SprayRecord, TodayWeather, WeatherByDate } from "@/components/nashi-navi/types";
+import { COLORS, styles } from "@/components/grape-protect/styles";
+import { maxLevel, type wIcon as WIcon } from "@/components/grape-protect/utils";
+import type { DayData, RiskByDate, SprayRecord, TodayWeather, WeatherByDate } from "@/components/grape-protect/types";
 
 const fmtDeg = (v: number | null) => (v == null ? "—" : `${Math.round(v)}`);
 

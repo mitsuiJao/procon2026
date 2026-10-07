@@ -1,16 +1,19 @@
 import { Tabs, TabList, TabTrigger, TabSlot, TabTriggerSlotProps, TabListProps } from 'expo-router/ui';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { COLORS } from '@/components/nashi-navi/styles';
+import { COLORS } from '@/components/grape-protect/styles';
 
 export default function AppTabs() {
   return (
     <Tabs>
-      <TabSlot style={{ height: '100%' }} />
+      <TabSlot style={{ flex: 1 }} />
       <TabList asChild>
         <CustomTabList>
           <TabTrigger name="home" href="/" asChild>
             <TabButton>ホーム</TabButton>
+          </TabTrigger>
+          <TabTrigger name="records" href="/records" asChild>
+            <TabButton>記録</TabButton>
           </TabTrigger>
           <TabTrigger name="pesticides" href="/pesticides" asChild>
             <TabButton>農薬</TabButton>
@@ -40,11 +43,13 @@ export function CustomTabList(props: TabListProps) {
 }
 
 const styles = StyleSheet.create({
+  // 画面の下に置く。absolute で重ねるとヘッダーのクリックを奪うので、流れの中に並べる
   tabListContainer: {
-    display: 'none', // 一旦非表示（ヘッダーに重なってクリックを奪うため）
-    position: 'absolute',
     width: '100%',
-    padding: 12,
+    padding: 8,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.line,
+    backgroundColor: COLORS.bg,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
