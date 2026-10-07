@@ -27,6 +27,8 @@ export type Rule = {
   when?: Cond;
   evaluator?: { name: string; params: Record<string, number> };
   level?: RuleLevel;
+  /** 警告が続く間、出し直す間隔（日数）。無ければ毎日出す */
+  repeatDays?: number;
   candidateFrac: string[];
   confidence: "A" | "B";
   sourceIds: string[];
@@ -64,10 +66,14 @@ export type RuleResult = {
   /** 式モデルの値（Broome の logit、GT 指数）。閾値ルールでは undefined */
   value?: number;
   candidateFrac: string[];
+  /** 警告が続いていて、この日は出し直さないときだけ付く。続き始めた日 (YYYY-MM-DD) */
+  ongoingSince?: string;
 };
 
 export type DiseaseResult = {
   diseaseId: string;
   level: ResultLevel;
+  /** 警告レベルのルールが全部「続いている」ときだけ付く。そのうち一番早く続き始めた日 */
+  ongoingSince?: string;
   rules: RuleResult[];
 };

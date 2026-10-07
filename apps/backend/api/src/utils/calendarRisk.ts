@@ -3,7 +3,7 @@ import { getLatestSensitivity } from "../db/sensitivity";
 import { getPlace } from "../db/settings";
 import { getStageTransitions } from "../db/stage";
 import { getForecastByRange } from "../db/weather";
-import { evaluateRisks, resolveRules } from "../evalute";
+import { applyRepeat, evaluateRules, groupByDisease, resolveRules } from "../evalute";
 import type { DiseaseResult, EvalInput, HourlyPoint, Rule } from "../evalute";
 import { getRuleDefs, getStagesVocab } from "./vocab";
 import { jstDate } from "./weather-daily";
@@ -194,28 +194,37 @@ export async function buildDayInputs(start: string, end: string): Promise<DayInp
   return days;
 }
 
-/** 1日分をルールで評価して、病害ごとにまとめる */
-export function evaluateDay(rules: Rule[], day: DayInput): DiseaseResult[] {
-  return evaluateRisks(rules, { scalars: day.scalars, hourly: [] }, { hourlyFor: day.hourlyFor });
+/**
+ * 日ごとにルールで評価して、警告の出し直しを間引き（repeatDays）、病害ごとにまとめる
+ * @param days 1日ずつ連続した日。間引きは渡した最初の日から数える
+ * @returns days と同じ並びの、日ごとの結果
+ */
+export function evaluateDays(rules: Rule[], days: DayInput[]): DiseaseResult[][] {
+  const perDay = days.map((day) => evaluateRules(rules, { scalars: day.scalars, hourly: [] }, { hourlyFor: day.hourlyFor }));
+  applyRepeat(rules, days.map((d) => d.date), perDay);
+  return perDay.map(groupByDisease);
 }
 
 /**
  * 指定期間の病害リスクを日ごとに評価
  * ルールは、病害ごとの感度の段階（今シーズンの発生記録から選んだもの）で確定させて使う。
+ * 警告が続き始めた日はシーズンの初めまでさかのぼり得るので、評価は start のシーズン開始から行い、返すのは指定期間だけ。
  * @param start 開始日 (YYYY-MM-DD, 含む, JST)
  * @param end   終了日 (YYYY-MM-DD, 含む, JST)
  * @returns { "YYYY-MM-DD": { stage, stageSource, diseases } }
  */
 export async function getCalendarRisks(start: string, end: string): Promise<Record<string, DayRisk>> {
   const [days, sensitivity] = await Promise.all([
-    buildDayInputs(start, end),
+    buildDayInputs(getSeasonStart(start), end),
     getLatestSensitivity(getSeasonStart(jstDate(new Date()))),
   ]);
   const rules = resolveRules(getRuleDefs(), Object.fromEntries(sensitivity.map((r) => [r.diseaseId, r.level])));
+  const diseasesByDay = evaluateDays(rules, days);
 
   const result: Record<string, DayRisk> = {};
-  for (const day of days) {
-    result[day.date] = { stage: day.stage, stageSource: day.stageSource, diseases: evaluateDay(rules, day) };
-  }
+  days.forEach((day, i) => {
+    if (day.date < start) return;
+    result[day.date] = { stage: day.stage, stageSource: day.stageSource, diseases: diseasesByDay[i] };
+  });
   return result;
 }

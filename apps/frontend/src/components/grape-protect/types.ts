@@ -143,7 +143,8 @@ export type StageSource = "recorded" | "estimated" | "unknown";
 export type DayRisk = {
   stage: number | null;
   stageSource: StageSource;
-  diseases: { diseaseId: string; level: RiskLevel }[];
+  /** ongoingSince は、警告が続いていて、この日は出し直さないときだけ付く（続き始めた日）。画面には出さない */
+  diseases: { diseaseId: string; level: RiskLevel; ongoingSince?: string }[];
 };
 
 export type RiskByDate = Record<string, DayRisk>;

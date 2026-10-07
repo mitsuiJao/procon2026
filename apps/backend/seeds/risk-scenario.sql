@@ -27,7 +27,8 @@
 --   小雨  o = -14 の 9〜12時  1mm/h（計4mm）
 --   小雨  o = -7  の 6〜13時  1mm/h（計8mm）。標準の段階ではべと病の条件（10mm）に届かない
 --   雨    o = -5  の 6〜15時  1.5mm/h（計15mm）
---   濡れA o=2 20時〜o=3 8時（13h）     濡れB o=4 20時〜o=5 11時（16h）
+--   濡れA o=-4 20時〜o=-3 8時（13h）   濡れB o=-2 20時〜o=-1 11時（16h）
+--   判定になる日は過去に置く（今日以降の予報は、天気の cron が本物の予報で上書きするため。過去の時間はセンサーの値が優先される）
 --  去年
 --   温暖  o <= -10       冷涼  o >= -9
 --   雨    o = -22 の 5〜14時  2mm/h（計20mm）
@@ -44,16 +45,17 @@
 --   日誌     D-18, D-16, D-12, D-3                      D'-20, D'-6, D'-4, D'+3, D'+9
 --
 -- 期待される結果（感度の段階が標準のとき。POST /sensitivity/recompute の後も全病害が標準のまま）
---   日        べと病(DM-1)      灰色かび病(BOT-1)        うどんこ病(PM-1, GT指数)
---   D-20      conditions_met    none                     none (0)
---   D-5       conditions_met    none                     none (0)
---   D-30〜D-1 のほかの日  none   none                     none (0, D-1 で開始)
---   D         none              none                     none (20)
---   D+1       none              none                     near_threshold (40)
---   D+2       none              none (濡れA 4h分のみ)     conditions_met (60)
---   D+3       none              near_threshold (0.60)    conditions_met (80)
---   D+4       none              near_threshold (0.60)    conditions_met (100)
---   D+5,D+6   none              conditions_met (1.35)    conditions_met (100)
+--   「画面」は警告として出す日。警告が続く日は repeatDays（灰色かび病 3 日）おきにだけ出し、間の日は ongoingSince が付いて出ない
+--   日        べと病(DM-1)              灰色かび病(BOT-1, logit)                 画面
+--   D-20      conditions_met            none                                     べと病
+--   D-5       conditions_met            none                                     べと病
+--   D-3       none（D-3 から収穫後）     near_threshold (0.60, 濡れA)             灰色かび病（近い）
+--   D-2       none                      near_threshold (0.60)  続いている         なし
+--   D-1       none                      conditions_met (1.35, 濡れB) 続いている   なし（上がっても出し直さない）
+--   D         none                      conditions_met (1.35)                    灰色かび病（該当。D-3 から3日）
+--   D+1〜D+6  none                      none                                     なし（今日以降は本物の予報で変わり得る）
+--   ほかの日  none                      none                                     なし
+--   うどんこ病（PM-1）は着色期まで（stage <= 8）なので、収穫期以降の「今ごろ」は全部 none（指数は計算しない）。
 --   0時台に実行すると今日の実測雨量がまだ無いが、予報の雨量で補うので結果は変わらない。
 --
 -- 発生記録のフィードバックの確認（感度の段階）
@@ -183,7 +185,7 @@ WITH hours AS (
                          interval '1 hour') AS ts
 ), flags AS (
   SELECT ts,
-         yr = 0 AND ((o = 2 AND h >= 20) OR (o = 3 AND h <= 8) OR (o = 4 AND h >= 20) OR (o = 5 AND h <= 11)) AS wet,
+         yr = 0 AND ((o = -4 AND h >= 20) OR (o = -3 AND h <= 8) OR (o = -2 AND h >= 20) OR (o = -1 AND h <= 11)) AS wet,
          CASE WHEN yr = 0 AND o = -20 AND h BETWEEN 6 AND 13 THEN 1.5
               WHEN yr = 0 AND o = -14 AND h BETWEEN 9 AND 12 THEN 1
               WHEN yr = 0 AND o = -7  AND h BETWEEN 6 AND 13 THEN 1
