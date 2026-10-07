@@ -4,10 +4,13 @@ import type {
   LookbackItem,
   Pesticide,
   PesticideApplication,
+  RiskByDate,
   RiskLevel,
+  SeasonWeek,
   Sensitivity,
   SprayForm,
   SprayRecord,
+  WeatherByDate,
 } from "@/components/grape-protect/types";
 
 type WeatherKind = { icon: "sun" | "cloud" | "cloud-rain"; label: string };
@@ -65,8 +68,10 @@ export const buildLookback = (args: {
   transitions: Record<string, number>;
   diseases: DiseaseInfo[];
   stageNames: Record<number, string>;
+  /** メモの1行目をこの文字数で切る */
+  memoMax?: number;
 }): LookbackItem[] => {
-  const { start, end, sprays, observations, diary, transitions, diseases, stageNames } = args;
+  const { start, end, sprays, observations, diary, transitions, diseases, stageNames, memoMax = MEMO_MAX } = args;
   const items: LookbackItem[] = [];
   for (const [date, stage] of Object.entries(transitions)) {
     if (date >= start && date <= end) items.push({ date, kind: "stage", text: stageNames[stage] ?? `生育状態 ${stage}` });
@@ -77,7 +82,7 @@ export const buildLookback = (args: {
   for (const s of sprays) items.push({ date: s.sprayedOn, kind: "spray", text: s.pesticide });
   for (const [date, memo] of Object.entries(diary)) {
     const line = memo.trim().split("\n")[0];
-    if (line) items.push({ date, kind: "memo", text: line.length > MEMO_MAX ? `${line.slice(0, MEMO_MAX)}…` : line });
+    if (line) items.push({ date, kind: "memo", text: line.length > memoMax ? `${line.slice(0, memoMax)}…` : line });
   }
   return items.sort((a, b) => a.date.localeCompare(b.date) || LOOKBACK_ORDER[a.kind] - LOOKBACK_ORDER[b.kind]);
 };
@@ -87,6 +92,131 @@ export const LOOKBACK_KIND_LABEL: Record<LookbackItem["kind"], string> = {
   observation: "発生",
   spray: "散布",
   memo: "メモ",
+};
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const dayNumber = (date: string) =>
+  Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10))) / DAY_MS;
+
+/** YYYY-MM-DD に n 日足す */
+export const addDays = (date: string, n: number) => new Date((dayNumber(date) + n) * DAY_MS).toISOString().slice(0, 10);
+
+/** 月/日（例: 6/19） */
+export const fmtMd = (date: string) => `${Number(date.slice(5, 7))}/${Number(date.slice(8, 10))}`;
+
+/** シーズン（4/1〜11/30）の年。1〜3月は前の年のシーズン。バックエンドのシーズン開始（4/1）に合わせる */
+export const seasonYearOf = (date: string) => {
+  const y = Number(date.slice(0, 4));
+  return Number(date.slice(5, 7)) >= 4 ? y : y - 1;
+};
+
+export const seasonStartOf = (year: number) => `${year}-04-01`;
+export const seasonLastOf = (year: number) => `${year}-11-30`;
+
+/** シーズンのうち、今日までの期間（両端含む）。シーズンが始まっていなければ null */
+export const seasonRange = (year: number, today: string) => {
+  const start = seasonStartOf(year);
+  const last = seasonLastOf(year);
+  if (today < start) return null;
+  return { start, end: today < last ? today : last };
+};
+
+/** シーズン開始から何日目か。年の違う日付を「時期」で比べるのに使う */
+export const seasonDay = (date: string) => dayNumber(date) - dayNumber(seasonStartOf(seasonYearOf(date)));
+
+/** 前のシーズンとの差（日数）の言い方。正なら遅い */
+export const fmtDayDiff = (diff: number) => (diff === 0 ? "同じ時期" : diff > 0 ? `${diff}日遅い` : `${-diff}日早い`);
+
+/** シーズンの週の数（4/1〜11/30 の 244 日を7日ごと） */
+export const SEASON_WEEKS = Math.ceil((dayNumber(seasonLastOf(2001)) - dayNumber(seasonStartOf(2001)) + 1) / 7);
+
+/**
+ * シーズンの記録と判定を週ごとにまとめる（記録タブの発生表）
+ * 週は 4/1 から7日ごとで、最後の週は 11/30 で切る。end より先の週は future にする
+ */
+export const buildSeasonWeeks = (args: {
+  year: number;
+  /** 表示する最後の日（今日か 11/30） */
+  end: string;
+  risk: RiskByDate;
+  weather: WeatherByDate;
+  observations: { date: string; diseaseId: string }[];
+  sprays: SprayRecord[];
+}): SeasonWeek[] => {
+  const { year, end, risk, weather, observations, sprays } = args;
+  const seasonStart = seasonStartOf(year);
+  const last = seasonLastOf(year);
+  const weeks: SeasonWeek[] = Array.from({ length: SEASON_WEEKS }, (_, i) => {
+    const start = addDays(seasonStart, i * 7);
+    const weekEnd = addDays(start, 6);
+    return {
+      start,
+      end: weekEnd < last ? weekEnd : last,
+      future: start > end,
+      stage: null,
+      rainyDays: 0,
+      alerts: {},
+      observed: [],
+      sprays: 0,
+    };
+  });
+  const weekOf = (date: string) =>
+    date >= seasonStart && date <= last ? weeks[Math.floor((dayNumber(date) - dayNumber(seasonStart)) / 7)] : undefined;
+
+  // 週のステージは最後の日のものにするので、日付順に上書きする
+  for (const date of Object.keys(risk).sort()) {
+    const w = weekOf(date);
+    if (!w) continue;
+    const day = risk[date];
+    if (day.stage != null) w.stage = day.stage;
+    for (const d of day.diseases) {
+      if (d.level !== "conditions_met" && d.level !== "near_threshold") continue;
+      const a = (w.alerts[d.diseaseId] ??= { met: 0, near: 0 });
+      if (d.level === "conditions_met") a.met += 1;
+      else a.near += 1;
+    }
+  }
+  for (const [date, entry] of Object.entries(weather)) {
+    const w = weekOf(date);
+    if (w && wIcon(entry.code)?.icon === "cloud-rain") w.rainyDays += 1;
+  }
+  for (const o of observations) {
+    const w = weekOf(o.date);
+    if (w && !w.observed.includes(o.diseaseId)) w.observed.push(o.diseaseId);
+  }
+  for (const s of sprays) {
+    const w = weekOf(s.sprayedOn);
+    if (w) w.sprays += 1;
+  }
+  return weeks;
+};
+
+/** 病害ごとの「感染条件に該当」「条件に近い」の日数と、どれかの病害で該当した日数 */
+export const countAlertDays = (risk: RiskByDate) => {
+  const byDisease: Record<string, { met: number; near: number }> = {};
+  let metDays = 0;
+  for (const day of Object.values(risk)) {
+    let met = false;
+    for (const d of day.diseases) {
+      if (d.level !== "conditions_met" && d.level !== "near_threshold") continue;
+      const a = (byDisease[d.diseaseId] ??= { met: 0, near: 0 });
+      if (d.level === "conditions_met") {
+        a.met += 1;
+        met = true;
+      } else a.near += 1;
+    }
+    if (met) metDays += 1;
+  }
+  return { byDisease, metDays };
+};
+
+/** 期間（両端含む）に入るステージの切り替わり。{ ステージの value: 切り替わり日 }。同じステージが2回あれば最初の日 */
+export const transitionsIn = (transitions: Record<string, number>, start: string, end: string) => {
+  const byStage: Record<number, string> = {};
+  for (const date of Object.keys(transitions).sort()) {
+    if (date >= start && date <= end) byStage[transitions[date]] ??= date;
+  }
+  return byStage;
 };
 
 export const emptySprayForm: SprayForm = {

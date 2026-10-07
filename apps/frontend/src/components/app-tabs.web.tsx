@@ -12,6 +12,9 @@ export default function AppTabs() {
           <TabTrigger name="home" href="/" asChild>
             <TabButton>ホーム</TabButton>
           </TabTrigger>
+          <TabTrigger name="records" href="/records" asChild>
+            <TabButton>記録</TabButton>
+          </TabTrigger>
           <TabTrigger name="pesticides" href="/pesticides" asChild>
             <TabButton>農薬</TabButton>
           </TabTrigger>
