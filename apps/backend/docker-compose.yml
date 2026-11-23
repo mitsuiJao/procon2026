@@ -76,6 +76,8 @@ services:
       - LATITUDE=${latitude}
       - LONGITUDE=${longitude}
       - DATA_DIR=/app/data
+      - API_TOKEN=${API_TOKEN}
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
 
 
 volumes:

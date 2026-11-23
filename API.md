@@ -5,6 +5,7 @@
 - JSON のキーは snake_case（`/calendar/risk` の中身だけは評価エンジンの型のまま camelCase）。
 - エラー: 入力が不正なら `400 { error }`、対象が無ければ `404 { error: "not found" }`。削除の成功は `204`（本文なし）。
 - 実装: `apps/backend/api/src/routes/`
+- 認証: `/api/*` はすべて `Authorization: Bearer <API_TOKEN>` が必要。無い・違う場合は `401`。`GET /`（ヘルスチェック）は認証なし。トークンは環境変数 `API_TOKEN`（`apps/backend/.env`）で設定する。
 
 ## 天気・センサー
 
