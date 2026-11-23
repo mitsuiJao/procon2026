@@ -30,6 +30,11 @@
   - 返り値: `{ "YYYY-MM-DD": { stage, stageSource, diseases: [{ diseaseId, level, rules }] } }`
   - `stageSource`: `recorded`（記録から）、`estimated`（月からの近似）、`unknown`（どちらも無い）。
   - `level`: `conditions_met`、`near_threshold`、`none`、`undetermined`（入力不足で判定できない）。
+  - `ongoingSince`: 警告が続いていて、その日は出し直さないときだけ付く（続き始めた日）。`level` は計算どおりのまま。画面には出さない。
+    - rules.yaml の `repeatDays`（今は全ルール。うどんこ病 7 日、ほか 3 日）で決まる。出すのは続き始めた日と、前に出してから `repeatDays` 日経った日だけ。
+    - 病害ごとの値と、`rules` の各ルールの値の両方に付く。
+    - 続き始めた日はシーズンの初めまでさかのぼり得るので、`start` のシーズン開始（4/1）から計算し、返すのは指定期間だけ。
+  - ルールは、病害ごとの感度の段階（`/sensitivity`）で確定させたものを使う。
 
 ## マスター
 
@@ -76,6 +81,36 @@
 - PUT の body: `{ memo }`
 - メモが空（空白だけ）のときは、その日の日誌を消して `204` を返す。
 
+## 病害の発生記録
+
+| メソッド | パス | 説明 |
+|---|---|---|
+| GET | `/observations?start=&end=` | 期間の発生記録（`{ observed_on, disease_id, note }[]`、日付・`disease_id` の昇順） |
+| PUT | `/observations/:date/:diseaseId` | その日にその病害を見つけたと記録（同じ日・同じ病害は上書き） |
+| DELETE | `/observations/:date/:diseaseId` | 発生記録を消す |
+
+- 記録があれば「その日にその病害を見つけた」。「発生なし」は記録しない。
+- `diseaseId` は `/diseases` の `id`。一覧に無ければ `400`。
+- 未来の日には記録できない（`400`）。
+- PUT の body: `{ note? }`（body ごと省略できる。省くと `note` は空になる）
+- 記録・削除のたびに、その病害の感度の段階を選び直す（下の「感度の段階」）。
+
+## 感度の段階
+
+| メソッド | パス | 説明 |
+|---|---|---|
+| GET | `/sensitivity` | 病害ごとの感度の段階 |
+| POST | `/sensitivity/recompute` | 全病害の段階を選び直す（返り値は GET と同じ） |
+
+- 返り値: `{ disease_id, level, max_level, observed, caught, alert_days, total_days }[]`（全病害）
+  - `level`: 今の段階。0 が標準で、大きいほど早めに知らせる。`/calendar/risk` はこの段階のルールで判定する。
+  - `max_level`: その病害で選べる最大の段階（`rules.yaml` の `levels` の件数）。0 なら段階を持たない。
+  - `observed`: 今シーズンの発生記録の件数。`caught`: そのうち、発見の前（病害ごとの `latentDays` の範囲）に警告が出ていた件数。
+  - `alert_days` / `total_days`: 今の段階で警告が出た日数と、シーズン開始（4/1）から計算した日までの日数。
+- 選び方: 警告日数が全体の 25% 以内の段階のうち、`caught` が最も多いもの。同数なら小さい段階。発生記録が無ければ 0。
+- 段階を選び直すのは、発生記録を変えたときと `recompute` を呼んだときだけ。気象や生育ステージが後から変わっても自動では変わらない。
+- 一度も選んでいない病害は `level` 0 で、件数はすべて 0。
+
 ## 散布記録
 
 | メソッド | パス | 説明 |
@@ -109,4 +144,8 @@ curl -X POST "$API/sprays" -H 'Content-Type: application/json' -d '{"sprayed_on"
 curl -X POST "$API/sprays" -H 'Content-Type: application/json' -d '{"sprayed_on":"2026-09-28","pesticide":"自家製の資材"}'
 curl "$API/sprays/usage?year=2026"
 curl -X PUT "$API/stages/2026-05-20" -H 'Content-Type: application/json' -d '{"stage":4}'
+curl -X PUT "$API/observations/2026-09-28/downy_mildew" -H 'Content-Type: application/json' -d '{"note":"葉裏に白いかび"}'
+curl "$API/observations?start=2026-09-01&end=2026-09-30"
+curl "$API/sensitivity"
+curl -X POST "$API/sensitivity/recompute"
 ```

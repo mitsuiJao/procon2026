@@ -1,0 +1,56 @@
+name: Android APK
+on:
+  push:
+    tags: ['app-v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/frontend/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Check version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#app-v}"
+          APP_VERSION=$(node -p "require('./app.json').expo.version")
+          [ "$TAG_VERSION" = "$APP_VERSION" ] || { echo "tag($TAG_VERSION) != app.json($APP_VERSION)"; exit 1; }
+
+      - run: npm ci
+      - run: npx expo prebuild --platform android --no-install
+
+      - name: Build APK
+        run: |
+          [ -n "$EXPO_PUBLIC_API_URL" ] || { echo "vars.EXPO_PUBLIC_API_URL が未設定"; exit 1; }
+          ./gradlew assembleRelease
+        working-directory: apps/frontend/android
+        env:
+          EXPO_PUBLIC_API_URL: ${{ vars.EXPO_PUBLIC_API_URL }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: apps/frontend/android/app/build/outputs/apk/release/*.apk
+
+      - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: apps/frontend/android/app/build/outputs/apk/release/*.apk

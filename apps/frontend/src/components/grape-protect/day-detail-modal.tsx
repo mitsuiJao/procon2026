@@ -3,10 +3,10 @@ import { Modal, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, Vie
 
 import { Feather } from "@expo/vector-icons";
 
-import { PesticidePicker } from "@/components/nashi-navi/pesticide-picker";
-import { COLORS, styles } from "@/components/nashi-navi/styles";
-import { alertsOf, emptySprayForm, fmtApplication, LEVEL_LABEL, type wIcon as WIcon } from "@/components/nashi-navi/utils";
-import type { DayData, DayRisk, DiseaseInfo, Pesticide, SprayForm, SprayRecord, SprayUsage, WeatherEntry } from "@/components/nashi-navi/types";
+import { PesticidePicker } from "@/components/grape-protect/pesticide-picker";
+import { COLORS, styles } from "@/components/grape-protect/styles";
+import { alertsOf, emptySprayForm, fmtApplication, LEVEL_LABEL, LOOKBACK_KIND_LABEL, type wIcon as WIcon } from "@/components/grape-protect/utils";
+import type { DayData, DayRisk, DiseaseInfo, LookbackItem, Pesticide, SprayForm, SprayRecord, SprayUsage, WeatherEntry } from "@/components/grape-protect/types";
 
 export type Flash = { text: string; error: boolean } | null;
 
@@ -27,9 +27,15 @@ type DayDetailModalProps = {
   isStageTransition: boolean;
   /** true ならステージを変えられる（今日と過去の日） */
   stageEditable: boolean;
+  /** true なら病害の発生を記録できる（今日と過去の日） */
+  observable: boolean;
   /** 今日より後の日（予報を含む判定） */
   forecast: boolean;
   day: DayData;
+  /** 去年の同じ時期の記録。空なら欄を出さない */
+  lookback: LookbackItem[];
+  /** その期間の見出し（例: 2025年 9/24〜10/8） */
+  lookbackLabel: string;
   pesticides: Pesticide[];
   usage: SprayUsage | null;
   /** 開いている散布のフォーム。null なら閉じている */
@@ -47,6 +53,8 @@ type DayDetailModalProps = {
   onSaveMemo: () => void;
   onSaveStage: (stage: number) => void;
   onClearStage: () => void;
+  /** 病害の発生を記録する。記録済みなら取り消す */
+  onToggleObservation: (disease: DiseaseInfo) => void;
 };
 
 const fmtTitle = (date: string) => {
@@ -76,8 +84,11 @@ export function DayDetailModal({
   stageNames,
   isStageTransition,
   stageEditable,
+  observable,
   forecast,
   day,
+  lookback,
+  lookbackLabel,
   pesticides,
   usage,
   sprayForm,
@@ -93,9 +104,13 @@ export function DayDetailModal({
   onSaveMemo,
   onSaveStage,
   onClearStage,
+  onToggleObservation,
 }: DayDetailModalProps) {
   const [picking, setPicking] = useState(false);
   const [stagePicking, setStagePicking] = useState(false);
+  // 「去年の今ごろ」を開いている日付。別の日を開くと閉じた状態に戻る
+  const [lookbackOpenFor, setLookbackOpenFor] = useState<string | null>(null);
+  const lookbackOpen = date != null && lookbackOpenFor === date;
 
   const openForm = (next: SprayForm | null) => {
     setPicking(false);
@@ -105,6 +120,7 @@ export function DayDetailModal({
   const close = () => {
     setPicking(false);
     setStagePicking(false);
+    setLookbackOpenFor(null);
     onClose();
   };
 
@@ -113,6 +129,8 @@ export function DayDetailModal({
   const stageOptions = Object.entries(stageNames)
     .map(([value, name]) => ({ value: Number(value), name }))
     .sort((a, b) => a.value - b.value);
+
+  const observationOptions = [...diseases].sort((a, b) => b.priority - a.priority);
 
   const selected = sprayForm?.pesticideId ? pesticides.find((p) => p.id === sprayForm.pesticideId) : undefined;
 
@@ -231,6 +249,28 @@ export function DayDetailModal({
               </>
             )}
 
+            {observable && observationOptions.length > 0 && (
+              <>
+                <Text style={styles.legend2}>病害の発生</Text>
+                <Text style={styles.forecastNote}>見つけた病害を押して記録します。もう一度押すと取り消します</Text>
+                <View style={styles.chipRow}>
+                  {observationOptions.map((d) => {
+                    const on = day.observed.includes(d.id);
+                    return (
+                      <TouchableOpacity
+                        key={d.id}
+                        style={on ? styles.chipOn : styles.chip}
+                        onPress={() => onToggleObservation(d)}
+                        accessibilityLabel={on ? `${d.name}の発生記録を取り消す` : `${d.name}の発生を記録する`}
+                      >
+                        <Text style={on ? styles.chipTextOn : styles.chipText}>{d.name}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </>
+            )}
+
             <Text style={styles.legend2}>散布</Text>
             {day.sprays.length === 0 && !sprayForm && <Text style={styles.emptyNote}>この日の散布記録はありません</Text>}
             {day.sprays.map((s) => (
@@ -310,6 +350,33 @@ export function DayDetailModal({
             </View>
 
             {flash ? <Text style={flash.error ? styles.errorFlash : styles.saveFlash}>{flash.text}</Text> : null}
+
+            {lookback.length > 0 && (
+              <>
+                <TouchableOpacity
+                  style={styles.accordionHead}
+                  onPress={() => setLookbackOpenFor(lookbackOpen ? null : date)}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: lookbackOpen }}
+                  accessibilityLabel={`去年の今ごろの記録 ${lookback.length}件`}
+                >
+                  <Text style={styles.accordionTitle}>去年の今ごろ（{lookback.length}件）</Text>
+                  <Feather name={lookbackOpen ? "chevron-up" : "chevron-down"} size={20} color={COLORS.inkSoft} />
+                </TouchableOpacity>
+                {lookbackOpen && (
+                  <View>
+                    <Text style={styles.forecastNote}>{lookbackLabel} の記録</Text>
+                    {lookback.map((it, i) => (
+                      <View key={i} style={styles.lookbackRow}>
+                        <Text style={styles.lookbackDate}>{`${Number(it.date.slice(5, 7))}/${Number(it.date.slice(8))}`}</Text>
+                        <Text style={styles.lookbackKind}>{LOOKBACK_KIND_LABEL[it.kind]}</Text>
+                        <Text style={styles.lookbackText}>{it.text}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </>
+            )}
           </ScrollView>
         )}
       </SafeAreaView>

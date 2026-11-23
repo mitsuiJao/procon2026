@@ -6,33 +6,39 @@ import { useFocusEffect } from "expo-router";
 import {
   clearStage,
   createSpray,
+  deleteObservation,
   deleteSpray,
   fetchCalendar,
   fetchCurrent,
   fetchDiary,
   fetchDiseases,
+  fetchObservations,
   fetchPesticides,
   fetchRecentSprays,
   fetchRisk,
+  fetchSensitivity,
   fetchSensors,
   fetchSprays,
   fetchStages,
   fetchUsage,
   saveDiary,
+  saveObservation,
   setStage,
   updateSpray,
-} from "@/components/nashi-navi/api";
-import { DayDetailModal, type Flash } from "@/components/nashi-navi/day-detail-modal";
-import { DiseaseRiskModal } from "@/components/nashi-navi/disease-risk-modal";
-import { HomeScreenContent } from "@/components/nashi-navi/home-screen-content";
-import { SensorStatusModal, type SensorsState } from "@/components/nashi-navi/sensor-status-modal";
-import { styles } from "@/components/nashi-navi/styles";
+} from "@/components/grape-protect/api";
+import { DayDetailModal, type Flash } from "@/components/grape-protect/day-detail-modal";
+import { DiseaseRiskModal } from "@/components/grape-protect/disease-risk-modal";
+import { HomeScreenContent } from "@/components/grape-protect/home-screen-content";
+import { SensorStatusModal, type SensorsState } from "@/components/grape-protect/sensor-status-modal";
+import { styles } from "@/components/grape-protect/styles";
 import type {
   DayData,
   DiseaseInfo,
+  LookbackItem,
   Pesticide,
   PesticideMaster,
   RiskByDate,
+  Sensitivity,
   SensorStatus,
   SprayForm,
   SprayRecord,
@@ -40,17 +46,33 @@ import type {
   StageData,
   TodayWeather,
   WeatherByDate,
-} from "@/components/nashi-navi/types";
-import { dateKeyOf, emptySprayForm, RISK_DAYS_AHEAD, toDiseaseInfo, WEEKDAYS, wIcon } from "@/components/nashi-navi/utils";
+} from "@/components/grape-protect/types";
+import {
+  buildLookback,
+  dateKeyOf,
+  emptySprayForm,
+  fmtLookbackRange,
+  lookbackRange,
+  RISK_DAYS_AHEAD,
+  toDiseaseInfo,
+  WEEKDAYS,
+  wIcon,
+} from "@/components/grape-protect/utils";
 
-const EMPTY_DAY: DayData = { memo: "", sprays: [] };
+const EMPTY_DAY: DayData = { memo: "", sprays: [], observed: [] };
 const SAVE_FAILED = "保存できませんでした。通信状況を確認してください";
 
-/** 日誌と散布記録を日付ごとにまとめる */
-function groupByDate(diary: Record<string, string>, sprays: SprayRecord[]): Record<string, DayData> {
+/** 日誌・散布記録・病害の発生記録を日付ごとにまとめる */
+function groupByDate(
+  diary: Record<string, string>,
+  sprays: SprayRecord[],
+  observations: { date: string; diseaseId: string }[],
+): Record<string, DayData> {
   const days: Record<string, DayData> = {};
-  for (const [date, memo] of Object.entries(diary)) days[date] = { memo, sprays: [] };
-  for (const s of sprays) (days[s.sprayedOn] ??= { memo: "", sprays: [] }).sprays.push(s);
+  const dayOf = (date: string) => (days[date] ??= { memo: "", sprays: [], observed: [] });
+  for (const [date, memo] of Object.entries(diary)) dayOf(date).memo = memo;
+  for (const s of sprays) dayOf(s.sprayedOn).sprays.push(s);
+  for (const o of observations) dayOf(o.date).observed.push(o.diseaseId);
   return days;
 }
 
@@ -66,6 +88,8 @@ export default function App() {
   const [monthRisk, setMonthRisk] = useState<RiskByDate>({});
   const [diseases, setDiseases] = useState<DiseaseInfo[]>([]);
   const [stages, setStages] = useState<StageData>({ names: {}, transitions: {} });
+  // 病害ごとの感度の段階。取れなければ空で、病害の画面に出さない
+  const [sensitivity, setSensitivity] = useState<Record<string, Sensitivity>>({});
   // 保存・削除のたびに増やして、記録を取り直す
   const [version, setVersion] = useState(0);
 
@@ -75,6 +99,8 @@ export default function App() {
   // null なら未編集で、取得したメモをそのまま出す
   const [memoDraft, setMemoDraft] = useState<string | null>(null);
   const [flash, setFlash] = useState<Flash>(null);
+  // 去年の同じ時期の記録と、それを取った日付。取れなければ空で、欄を出さない
+  const [lookbackData, setLookbackData] = useState<{ date: string; items: LookbackItem[] } | null>(null);
 
   const [diseaseModalVisible, setDiseaseModalVisible] = useState(false);
   const [selectedDisease, setSelectedDisease] = useState<DiseaseInfo | null>(null);
@@ -145,12 +171,23 @@ export default function App() {
     };
   }, [version]);
 
+  // 発生を記録・取り消すと段階が選び直されるので、そのたびに取り直す
+  useEffect(() => {
+    let alive = true;
+    fetchSensitivity()
+      .then((s) => alive && setSensitivity(s))
+      .catch(() => alive && setSensitivity({}));
+    return () => {
+      alive = false;
+    };
+  }, [version]);
+
   useEffect(() => {
     let alive = true;
     const start = dateKeyOf(y, m, 1);
     const end = dateKeyOf(y, m, new Date(y, m + 1, 0).getDate());
-    Promise.all([fetchDiary(start, end), fetchSprays(start, end)])
-      .then(([diary, sprays]) => alive && setMonthData(groupByDate(diary, sprays)))
+    Promise.all([fetchDiary(start, end), fetchSprays(start, end), fetchObservations(start, end)])
+      .then(([diary, sprays, observations]) => alive && setMonthData(groupByDate(diary, sprays, observations)))
       .catch(() => alive && setMonthData({}));
     fetchCalendar(start, end)
       .then((w) => alive && setWeatherByDate(w))
@@ -172,6 +209,23 @@ export default function App() {
       alive = false;
     };
   }, [thisYear, version]);
+
+  // 日付を開くたびに、去年の同じ時期（前後7日）の記録を取る
+  useEffect(() => {
+    if (!selectedDate) return;
+    let alive = true;
+    const { start, end } = lookbackRange(selectedDate);
+    Promise.all([fetchSprays(start, end), fetchObservations(start, end), fetchDiary(start, end)])
+      .then(([sprays, observations, diary]) => {
+        if (!alive) return;
+        const items = buildLookback({ start, end, sprays, observations, diary, transitions: stages.transitions, diseases, stageNames: stages.names });
+        setLookbackData({ date: selectedDate, items });
+      })
+      .catch(() => alive && setLookbackData(null));
+    return () => {
+      alive = false;
+    };
+  }, [selectedDate, stages, diseases]);
 
   const openSensors = async () => {
     setSensorsState("loading");
@@ -201,6 +255,8 @@ export default function App() {
   };
 
   const day = (selectedDate && monthData[selectedDate]) || EMPTY_DAY;
+  // 別の日を開いた直後は、前の日の分を出さない
+  const lookback = lookbackData && lookbackData.date === selectedDate ? lookbackData.items : [];
   const memo = memoDraft ?? day.memo;
 
   const saveSpray = async () => {
@@ -278,6 +334,19 @@ export default function App() {
     }
   };
 
+  const toggleObservation = async (disease: DiseaseInfo) => {
+    if (!selectedDate) return;
+    const recorded = day.observed.includes(disease.id);
+    try {
+      if (recorded) await deleteObservation(selectedDate, disease.id);
+      else await saveObservation(selectedDate, disease.id);
+      setFlash({ text: recorded ? `${disease.name}の発生記録を取り消しました` : `${disease.name}の発生を記録しました`, error: false });
+      setVersion((v) => v + 1);
+    } catch {
+      setFlash({ text: SAVE_FAILED, error: true });
+    }
+  };
+
   const applyPesticide = (pesticide: Pesticide, diseaseName: string) => {
     setCurrent(new Date());
     setDiseaseModalVisible(false);
@@ -326,6 +395,7 @@ export default function App() {
       <DiseaseRiskModal
         visible={diseaseModalVisible}
         selectedDisease={selectedDisease}
+        sensitivity={(selectedDisease && sensitivity[selectedDisease.id]) || null}
         master={master}
         usage={usage}
         onClose={() => setDiseaseModalVisible(false)}
@@ -342,8 +412,11 @@ export default function App() {
         stageNames={stages.names}
         isStageTransition={!!selectedDate && selectedDate in stages.transitions}
         stageEditable={!!selectedDate && selectedDate <= todayStr}
+        observable={!!selectedDate && selectedDate <= todayStr}
         forecast={!!selectedDate && selectedDate > todayStr}
         day={day}
+        lookback={lookback}
+        lookbackLabel={selectedDate ? fmtLookbackRange(lookbackRange(selectedDate)) : ""}
         pesticides={master?.pesticides ?? []}
         usage={usage}
         sprayForm={sprayForm}
@@ -364,6 +437,7 @@ export default function App() {
         onSaveMemo={saveMemo}
         onSaveStage={saveStage}
         onClearStage={removeStage}
+        onToggleObservation={toggleObservation}
       />
     </SafeAreaView>
   );

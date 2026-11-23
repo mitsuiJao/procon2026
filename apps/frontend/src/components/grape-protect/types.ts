@@ -13,8 +13,16 @@ export type SprayRecord = {
 
 export type SprayInput = Omit<SprayRecord, "id">;
 
-/** 日付ごとの記録 */
-export type DayData = { memo: string; sprays: SprayRecord[] };
+/** 日付ごとの記録。observed はその日に発生を記録した病害の id */
+export type DayData = { memo: string; sprays: SprayRecord[]; observed: string[] };
+
+/** 「去年の今ごろ」に出す1行 */
+export type LookbackItem = {
+  /** YYYY-MM-DD */
+  date: string;
+  kind: "spray" | "observation" | "stage" | "memo";
+  text: string;
+};
 
 /** 散布の入力フォーム。id が null なら新規 */
 export type SprayForm = {
@@ -112,6 +120,20 @@ export type DiseaseInfo = {
   symptom: string;
 };
 
+/** 病害ごとの感度の段階。発生記録からバックエンドが選ぶ（/sensitivity） */
+export type Sensitivity = {
+  /** 0 が標準。大きいほど早めに知らせる */
+  level: number;
+  /** その病害で選べる最大の段階。0 なら段階を持たない */
+  maxLevel: number;
+  /** 今シーズンの発生記録の件数 */
+  observed: number;
+  /** そのうち、発見の前に警告が出ていた件数 */
+  caught: number;
+  /** 今の段階で警告が出た日数 */
+  alertDays: number;
+};
+
 /** undetermined は入力不足で判定不能 */
 export type RiskLevel = "conditions_met" | "near_threshold" | "undetermined" | "none";
 
@@ -121,7 +143,8 @@ export type StageSource = "recorded" | "estimated" | "unknown";
 export type DayRisk = {
   stage: number | null;
   stageSource: StageSource;
-  diseases: { diseaseId: string; level: RiskLevel }[];
+  /** ongoingSince は、警告が続いていて、この日は出し直さないときだけ付く（続き始めた日）。画面には出さない */
+  diseases: { diseaseId: string; level: RiskLevel; ongoingSince?: string }[];
 };
 
 export type RiskByDate = Record<string, DayRisk>;

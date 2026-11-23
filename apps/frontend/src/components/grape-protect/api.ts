@@ -1,9 +1,10 @@
-import { clearToken, getToken } from "@/components/nashi-navi/auth";
+import { clearToken, getToken } from "@/components/grape-protect/auth";
 import type {
   DayRisk,
   PesticideMaster,
   RiskByDate,
   RiskLevel,
+  Sensitivity,
   SensorReading,
   SensorStatus,
   SprayInput,
@@ -12,7 +13,7 @@ import type {
   StageData,
   TodayWeather,
   WeatherByDate,
-} from "@/components/nashi-navi/types";
+} from "@/components/grape-protect/types";
 
 // 実機で確認するときは .env.local に EXPO_PUBLIC_API_URL=http://<PCのIP>:3000/api を書く
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000/api";
@@ -154,6 +155,44 @@ export async function fetchDiary(start: string, end: string): Promise<Record<str
 /** 日誌を保存する。空なら API 側で削除される */
 export async function saveDiary(date: string, memo: string): Promise<void> {
   await send("PUT", `/diary/${date}`, { memo });
+}
+
+type ObservationResponse = { observed_on: string; disease_id: string; note: string };
+
+/** 期間の病害の発生記録 */
+export async function fetchObservations(start: string, end: string): Promise<{ date: string; diseaseId: string }[]> {
+  const data = await getJson<ObservationResponse[]>(`/observations?start=${start}&end=${end}`);
+  return data.map((o) => ({ date: o.observed_on, diseaseId: o.disease_id }));
+}
+
+/** その日にその病害を見つけたと記録する */
+export async function saveObservation(date: string, diseaseId: string): Promise<void> {
+  await send("PUT", `/observations/${date}/${encodeURIComponent(diseaseId)}`);
+}
+
+/** 病害の発生記録を消す */
+export async function deleteObservation(date: string, diseaseId: string): Promise<void> {
+  await send("DELETE", `/observations/${date}/${encodeURIComponent(diseaseId)}`);
+}
+
+type SensitivityResponse = {
+  disease_id: string;
+  level: number;
+  max_level: number;
+  observed: number;
+  caught: number;
+  alert_days: number;
+};
+
+/** 病害ごとの感度の段階。{ 病害の id: 段階 } */
+export async function fetchSensitivity(): Promise<Record<string, Sensitivity>> {
+  const data = await getJson<SensitivityResponse[]>("/sensitivity");
+  return Object.fromEntries(
+    data.map((s) => [
+      s.disease_id,
+      { level: s.level, maxLevel: s.max_level, observed: s.observed, caught: s.caught, alertDays: s.alert_days },
+    ]),
+  );
 }
 
 type SprayResponse = {

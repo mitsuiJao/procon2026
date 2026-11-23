@@ -3,9 +3,9 @@ import { FlatList, Text, TextInput, TouchableOpacity, View } from "react-native"
 
 import { Feather } from "@expo/vector-icons";
 
-import { COLORS, styles } from "@/components/nashi-navi/styles";
-import { searchPesticides } from "@/components/nashi-navi/utils";
-import type { Pesticide, SprayUsage } from "@/components/nashi-navi/types";
+import { COLORS, styles } from "@/components/grape-protect/styles";
+import { searchPesticides } from "@/components/grape-protect/utils";
+import type { Pesticide, SprayUsage } from "@/components/grape-protect/types";
 
 type PesticidePickerProps = {
   pesticides: Pesticide[];

@@ -3,9 +3,9 @@ import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 import { Feather } from "@expo/vector-icons";
 
-import { COLORS, styles } from "@/components/nashi-navi/styles";
-import { maxLevel, type wIcon as WIcon } from "@/components/nashi-navi/utils";
-import type { DayData, RiskByDate, SprayRecord, TodayWeather, WeatherByDate } from "@/components/nashi-navi/types";
+import { COLORS, styles } from "@/components/grape-protect/styles";
+import { maxLevel, type wIcon as WIcon } from "@/components/grape-protect/utils";
+import type { DayData, RiskByDate, SprayRecord, TodayWeather, WeatherByDate } from "@/components/grape-protect/types";
 
 const fmtDeg = (v: number | null) => (v == null ? "—" : `${Math.round(v)}`);
 
@@ -124,6 +124,7 @@ export function HomeScreenContent({
             >
               <View style={styles.dayRow}>
                 <Text style={isToday ? styles.dayNumToday : styles.dayNum}>{day}</Text>
+                {entry?.observed.length ? <View style={[styles.dot, styles.dotObserved]} /> : null}
                 {entry?.sprays.length ? <View style={[styles.dot, styles.dotSpray]} /> : null}
                 {entry?.memo ? <View style={[styles.dot, styles.dotMemo]} /> : null}
               </View>
@@ -144,6 +145,7 @@ export function HomeScreenContent({
       <View style={styles.legend}>
         <View style={styles.legendItem}><View style={[styles.legendSwatch, styles.cellRiskMet]} /><Text style={styles.legendText}>感染条件に該当</Text></View>
         <View style={styles.legendItem}><View style={[styles.legendSwatch, styles.cellRiskNear]} /><Text style={styles.legendText}>条件に近い</Text></View>
+        <View style={styles.legendItem}><View style={[styles.dot, styles.dotObserved]} /><Text style={styles.legendText}>病害の発生</Text></View>
         <View style={styles.legendItem}><View style={[styles.dot, styles.dotSpray]} /><Text style={styles.legendText}>散布</Text></View>
         <View style={styles.legendItem}><View style={[styles.dot, styles.dotMemo]} /><Text style={styles.legendText}>日誌メモ</Text></View>
       </View>

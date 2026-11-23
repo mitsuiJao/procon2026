@@ -4,7 +4,7 @@ import { useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
-import { AuthGate } from '@/components/nashi-navi/auth-gate';
+import { AuthGate } from '@/components/grape-protect/auth-gate';
 
 SplashScreen.preventAutoHideAsync();
 

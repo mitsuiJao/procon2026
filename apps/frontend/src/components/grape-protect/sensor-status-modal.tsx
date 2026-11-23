@@ -3,8 +3,8 @@ import { Modal, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "r
 
 import { Feather } from "@expo/vector-icons";
 
-import { COLORS, styles } from "@/components/nashi-navi/styles";
-import type { SensorReading, SensorStatus } from "@/components/nashi-navi/types";
+import { COLORS, styles } from "@/components/grape-protect/styles";
+import type { SensorReading, SensorStatus } from "@/components/grape-protect/types";
 
 export type SensorsState = "loading" | "error" | "ok";
 

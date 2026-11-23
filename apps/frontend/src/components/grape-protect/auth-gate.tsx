@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useSyncExternalStore } from "react";
 import { SafeAreaView, Text, TextInput, TouchableOpacity, View } from "react-native";
 
-import { COLORS, styles } from "@/components/nashi-navi/styles";
-import { getToken, loadToken, setToken, subscribeToken } from "@/components/nashi-navi/auth";
+import { COLORS, styles } from "@/components/grape-protect/styles";
+import { getToken, loadToken, setToken, subscribeToken } from "@/components/grape-protect/auth";
 
 /** トークンが無い間はトークン入力画面を出し、あるときだけ children を描画する */
 export function AuthGate({ children }: { children: React.ReactNode }) {

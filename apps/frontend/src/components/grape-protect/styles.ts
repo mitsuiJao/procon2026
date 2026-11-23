@@ -50,6 +50,8 @@ export const styles = StyleSheet.create({
   cellTempMin: text(13, COLORS.inkSoft),
   dayRow: { flexDirection: "row", alignItems: "center", gap: 3 },
   dot: { width: 6, height: 6, borderRadius: 3 },
+  // 発生の印は、リスクの背景色（danger 系）の上でも見分けられる色にする
+  dotObserved: { backgroundColor: COLORS.ink },
   dotSpray: { backgroundColor: COLORS.danger },
   dotMemo: { backgroundColor: COLORS.leaf },
 
@@ -70,6 +72,13 @@ export const styles = StyleSheet.create({
   panelDate: text(22, COLORS.ink, true),
   closeBtn: { width: 36, height: 36, alignItems: "center", justifyContent: "center" },
   legend2: { ...text(15, COLORS.ink, true), marginTop: 20, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: COLORS.ink },
+  // 「去年の今ごろ」。見出しの行を押すと開閉する
+  accordionHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 20, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: COLORS.ink },
+  accordionTitle: text(15, COLORS.ink, true),
+  lookbackRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, borderBottomWidth: 1, borderBottomColor: COLORS.line, paddingVertical: 8 },
+  lookbackDate: { ...text(14, COLORS.inkSoft), width: 44 },
+  lookbackKind: { ...text(14, COLORS.inkSoft), width: 34 },
+  lookbackText: { ...text(15), flex: 1 },
   tableRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderBottomWidth: 1, borderBottomColor: COLORS.line, paddingVertical: 8 },
   tableLabel: text(15, COLORS.inkSoft),
   tableValue: text(15),
@@ -148,4 +157,16 @@ export const styles = StyleSheet.create({
   refMain: { flex: 1 },
   refSwitch: { alignItems: "center", gap: 2 },
   refSwitchLabel: text(11, COLORS.inkSoft),
+
+  // 記録タブ
+  summaryItem: { borderBottomWidth: 1, borderBottomColor: COLORS.line, paddingVertical: 10 },
+  summaryName: text(16, COLORS.ink, true),
+  summaryLine: { ...text(14, COLORS.inkSoft), marginTop: 4, lineHeight: 20 },
+  compareHead: { flexDirection: "row", paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: COLORS.line },
+  compareRow: { flexDirection: "row", alignItems: "center", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: COLORS.line },
+  compareName: { ...text(15), flex: 1 },
+  compareCell: { ...text(15), width: 64, textAlign: "right", fontVariant: ["tabular-nums"] },
+  compareHeadCell: { ...text(13, COLORS.inkSoft), width: 64, textAlign: "right" },
+  compareDiff: { ...text(13, COLORS.inkSoft), width: 72, textAlign: "right" },
+  monthHead: { ...text(14, COLORS.ink, true), marginTop: 14, marginBottom: 2 },
 });

@@ -52,32 +52,62 @@ export function evaluateRule(rule: Rule, input: EvalInput): RuleResult {
 }
 
 /**
- * 全ルールを評価して病害ごとにまとめる
- * 優先順位は conditions_met > near_threshold > undetermined > none
- * 他ルールが none でも、判定不能が1つあれば undetermined を返す
+ * 全ルールを評価する（病害ごとにはまとめない）
  * @param opts.includeDisabled true なら enabled: false のルールも評価する
  * @param opts.hourlyFor ルールごとに hourly を差し替える。省略時は input.hourly をそのまま使う
+ */
+export function evaluateRules(
+  rules: Rule[],
+  input: EvalInput,
+  opts: { includeDisabled?: boolean; hourlyFor?: (rule: Rule) => HourlyPoint[] } = {},
+): RuleResult[] {
+  const results: RuleResult[] = [];
+  for (const rule of rules) {
+    if (!rule.enabled && !opts.includeDisabled) continue;
+    const ruleInput = opts.hourlyFor ? { ...input, hourly: opts.hourlyFor(rule) } : input;
+    results.push(evaluateRule(rule, ruleInput));
+  }
+  return results;
+}
+
+/**
+ * ルールの結果を病害ごとにまとめる
+ * 優先順位は conditions_met > near_threshold > undetermined > none
+ * 他ルールが none でも、判定不能が1つあれば undetermined を返す
+ * ongoingSince は、警告レベルのルールが全部「続いている」ときだけ付ける（一番早い日）
+ */
+export function groupByDisease(results: RuleResult[]): DiseaseResult[] {
+  const byDisease = new Map<string, RuleResult[]>();
+  for (const r of results) {
+    const list = byDisease.get(r.diseaseId);
+    if (list) list.push(r);
+    else byDisease.set(r.diseaseId, [r]);
+  }
+  return [...byDisease].map(([diseaseId, rules]) => {
+    const alerts = rules.filter((r) => r.level === "conditions_met" || r.level === "near_threshold");
+    const ongoing = alerts.length > 0 && alerts.every((r) => r.ongoingSince)
+      ? alerts.map((r) => r.ongoingSince!).sort()[0]
+      : undefined;
+    return {
+      diseaseId,
+      level: rules.reduce<ResultLevel>(
+        (top, r) => (priority[r.level] > priority[top] ? r.level : top),
+        "none",
+      ),
+      ...(ongoing && { ongoingSince: ongoing }),
+      rules,
+    };
+  });
+}
+
+/**
+ * 全ルールを評価して病害ごとにまとめる（1日分。出し直しの間引きはしない）
+ * @param opts evaluateRules と同じ
  */
 export function evaluateRisks(
   rules: Rule[],
   input: EvalInput,
   opts: { includeDisabled?: boolean; hourlyFor?: (rule: Rule) => HourlyPoint[] } = {},
 ): DiseaseResult[] {
-  const byDisease = new Map<string, RuleResult[]>();
-  for (const rule of rules) {
-    if (!rule.enabled && !opts.includeDisabled) continue;
-    const ruleInput = opts.hourlyFor ? { ...input, hourly: opts.hourlyFor(rule) } : input;
-    const r = evaluateRule(rule, ruleInput);
-    const list = byDisease.get(rule.diseaseId);
-    if (list) list.push(r);
-    else byDisease.set(rule.diseaseId, [r]);
-  }
-  return [...byDisease].map(([diseaseId, results]) => ({
-    diseaseId,
-    level: results.reduce<ResultLevel>(
-      (top, r) => (priority[r.level] > priority[top] ? r.level : top),
-      "none",
-    ),
-    rules: results,
-  }));
+  return groupByDisease(evaluateRules(rules, input, opts));
 }
