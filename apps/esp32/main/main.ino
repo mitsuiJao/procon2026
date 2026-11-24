@@ -40,6 +40,8 @@
 #define MQTT_HOST      "broker.mqtt.cool"  // ← 友人のブローカーに変更
 #define MQTT_PORT      1883
 #define MQTT_CLIENT_ID "grape-node-01"
+#define MQTT_USER      "grape"             // ← backend/.env の MQTT_USER と合わせる
+#define MQTT_PASS      "change-me"                // ← backend/.env の MQTT_PASSWORD と合わせる
 #define MQTT_TOPIC     "grape/node01/data"
 
 #define SEND_INTERVAL_MS  (60UL * 1000UL)     // 送信間隔（テスト用に1分）
@@ -130,7 +132,7 @@ bool mqttConnect() {
   sendAT("AT+QMTCLOSE=0", "OK", 3000);           // 前回の接続が残っていれば閉じる
   if (!sendAT(String("AT+QMTOPEN=0,\"") + MQTT_HOST + "\"," + MQTT_PORT,
               "+QMTOPEN: 0,0", 30000)) return false;
-  if (!sendAT(String("AT+QMTCONN=0,\"") + MQTT_CLIENT_ID + "\"",
+  if (!sendAT(String("AT+QMTCONN=0,\"") + MQTT_CLIENT_ID + "\",\"" + MQTT_USER + "\",\"" + MQTT_PASS + "\"",
               "+QMTCONN: 0,0,0", 30000)) return false;
   return true;
 }
