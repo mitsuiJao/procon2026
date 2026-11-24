@@ -1,7 +1,10 @@
 import mqtt from 'mqtt'
 import { checkConnection, insertReading } from './db.js'
 
-const client = mqtt.connect(process.env.MQTT_BROKER_URL ?? 'mqtt://localhost:1883')
+const client = mqtt.connect(process.env.MQTT_BROKER_URL ?? 'mqtt://localhost:1883', {
+    username: process.env.MQTT_USER || undefined,
+    password: process.env.MQTT_PASSWORD || undefined,
+})
 
 // topic: sensor/{device}/data, payload: {"temp":25.3,"humidity":82.1,...}
 const subTopic = 'sensor/+/data'

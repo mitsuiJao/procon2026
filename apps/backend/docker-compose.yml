@@ -34,6 +34,9 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+    environment:
+      - MQTT_USER=${MQTT_USER}
+      - MQTT_PASSWORD=${MQTT_PASSWORD}
     ports:
       - "1883:1883"
 
@@ -48,6 +51,8 @@ services:
         condition: service_started
     environment:
       - MQTT_BROKER_URL=mqtt://mqtt-bro:1883
+      - MQTT_USER=${MQTT_USER}
+      - MQTT_PASSWORD=${MQTT_PASSWORD}
       - PGHOST=db
       - PGPORT=5432
       - PGUSER=${PGUSER}
