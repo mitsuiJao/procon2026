@@ -4,6 +4,7 @@ import { FlatList, SafeAreaView, Switch, Text, TextInput, TouchableOpacity, View
 import { useFocusEffect } from "expo-router";
 
 import { fetchDiseases, fetchPesticides, fetchUsage, setPesticideHidden } from "@/components/grape-protect/api";
+import { clearToken } from "@/components/grape-protect/auth";
 import { Chip } from "@/components/grape-protect/chip";
 import { COLORS, styles } from "@/components/grape-protect/styles";
 import type { Pesticide, PesticideMaster, SprayUsage } from "@/components/grape-protect/types";
@@ -194,7 +195,12 @@ export default function PesticidesScreen() {
   // 検索欄と絞り込みは一覧の上に固定する
   const header = (
     <View style={styles.refHead}>
-      <Text style={styles.title}>農薬</Text>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+        <Text style={styles.title}>農薬</Text>
+        <TouchableOpacity onPress={() => clearToken()}>
+          <Text style={styles.chipText}>ログアウト</Text>
+        </TouchableOpacity>
+      </View>
       <TextInput
         style={styles.search}
         placeholder="薬剤名・種類・FRAC・病害虫名で探す"

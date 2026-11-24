@@ -1,3 +1,4 @@
+import { clearToken, getToken } from "@/components/grape-protect/auth";
 import type {
   DayRisk,
   PesticideMaster,
@@ -17,8 +18,17 @@ import type {
 // 実機で確認するときは .env.local に EXPO_PUBLIC_API_URL=http://<PCのIP>:3000/api を書く
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000/api";
 
+/** Authorization ヘッダ付きで fetch。401 ならトークンを破棄してログイン画面へ戻す */
+async function request(path: string, init: RequestInit = {}): Promise<Response> {
+  const token = getToken();
+  const headers = { ...(init.headers as Record<string, string> | undefined), ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+  const r = await fetch(`${API_BASE}${path}`, { ...init, headers });
+  if (r.status === 401) await clearToken();
+  return r;
+}
+
 async function getJson<T>(path: string): Promise<T> {
-  const r = await fetch(`${API_BASE}${path}`);
+  const r = await request(path);
   if (!r.ok) throw new Error(`GET ${path} failed: ${r.status}`);
   return (await r.json()) as T;
 }
@@ -125,7 +135,7 @@ export async function fetchSensors(): Promise<SensorStatus[]> {
 }
 
 async function send<T>(method: "POST" | "PUT" | "DELETE", path: string, body?: unknown): Promise<T | null> {
-  const r = await fetch(`${API_BASE}${path}`, {
+  const r = await request(path, {
     method,
     headers: body === undefined ? undefined : { "Content-Type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),

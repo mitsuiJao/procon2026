@@ -35,12 +35,15 @@
       [
         "expo-build-properties",
         {
-          "android": 
-          {
+          "android": {
             "usesCleartextTraffic": true
           }
         }
-      ]
+      ],
+      "expo-secure-store",
+      "expo-font",
+      "expo-image",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true,
